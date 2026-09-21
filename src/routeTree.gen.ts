@@ -10,11 +10,17 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ProRouteImport } from './routes/pro'
 import { Route as TorneoIdRouteImport } from './routes/torneo.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProRoute = ProRouteImport.update({
+  id: '/pro',
+  path: '/pro',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TorneoIdRoute = TorneoIdRouteImport.update({
@@ -25,27 +31,31 @@ const TorneoIdRoute = TorneoIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/pro': typeof ProRoute
   '/torneo/$id': typeof TorneoIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/pro': typeof ProRoute
   '/torneo/$id': typeof TorneoIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/pro': typeof ProRoute
   '/torneo/$id': typeof TorneoIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/torneo/$id'
+  fullPaths: '/' | '/pro' | '/torneo/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/torneo/$id'
-  id: '__root__' | '/' | '/torneo/$id'
+  to: '/' | '/pro' | '/torneo/$id'
+  id: '__root__' | '/' | '/pro' | '/torneo/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ProRoute: typeof ProRoute
   TorneoIdRoute: typeof TorneoIdRoute
 }
 
@@ -56,6 +66,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pro': {
+      id: '/pro'
+      path: '/pro'
+      fullPath: '/pro'
+      preLoaderRoute: typeof ProRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/torneo/$id': {
@@ -70,6 +87,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ProRoute: ProRoute,
   TorneoIdRoute: TorneoIdRoute,
 }
 export const routeTree = rootRouteImport

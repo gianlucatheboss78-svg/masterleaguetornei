@@ -1,8 +1,10 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useRef, useState } from "react";
+import { useState } from "react";
+import { LogoPicker } from "@/components/LogoPicker";
 import { SPORTS, getSport } from "@/lib/sports";
-import { readCircleImage } from "@/lib/media";
+import { FREE_TOURNAMENT_LIMIT, PRO_PRICE, usePro } from "@/lib/pro";
 import { uid, useTournaments, type Tournament } from "@/lib/store";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -27,7 +29,10 @@ export const Route = createFileRoute("/")({
 
 function Home() {
   const { data, ready, update } = useTournaments();
+  const pro = usePro();
   const [open, setOpen] = useState(false);
+  const locked = !pro && data.length >= FREE_TOURNAMENT_LIMIT;
+
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-lg px-4 pb-28 pt-8">
@@ -53,9 +58,25 @@ function Home() {
         ))}
       </div>
 
-      <button onClick={() => setOpen(true)} className="btn-gold mt-7 w-full py-3 text-base">
-        + Nuovo torneo
-      </button>
+      {locked ? (
+        <Link to="/pro" className="btn-gold mt-7 block w-full py-3 text-center text-base">
+          👑 Limite gratis raggiunto — passa a PRO {PRO_PRICE}/mese
+        </Link>
+      ) : (
+        <button onClick={() => setOpen(true)} className="btn-gold mt-7 w-full py-3 text-base">
+          + Nuovo torneo
+        </button>
+      )}
+
+      <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
+        <span>
+          {pro ? "👑 PRO attivo · tornei illimitati" : `${data.length}/${FREE_TOURNAMENT_LIMIT} tornei gratis`}
+        </span>
+        <Link to="/pro" className="text-primary">
+          {pro ? "Gestisci PRO" : "Scopri PRO"} ›
+        </Link>
+      </div>
+
 
       <section className="mt-8 space-y-3">
         <h2 className="text-sm tracking-widest text-muted-foreground">I tuoi tornei</h2>
@@ -102,8 +123,8 @@ function NewTournament({
   update: (fn: (l: Tournament[]) => Tournament[]) => void;
 }) {
   const nav = useNavigate();
-  const fileRef = useRef<HTMLInputElement>(null);
   const [logo, setLogo] = useState<string>();
+
   const [name, setName] = useState("");
   const [sport, setSport] = useState(SPORTS[0]!.id);
   const [city, setCity] = useState("");
@@ -134,29 +155,13 @@ function NewTournament({
       <div className="card-night max-h-[92vh] w-full overflow-y-auto p-5 sm:mx-auto sm:max-w-lg">
         <h2 className="text-xl gold-text">Nuovo torneo</h2>
 
-        <button
-          onClick={() => fileRef.current?.click()}
-          className="mx-auto mt-4 block h-24 w-24 overflow-hidden rounded-full border-2 border-primary/50 bg-secondary"
-        >
-          {logo ? (
-            <img src={logo} alt="logo" className="h-full w-full object-cover" />
-          ) : (
-            <span className="text-xs text-muted-foreground">Logo 📷</span>
-          )}
-        </button>
-        <p className="mt-2 text-center text-xs text-muted-foreground">
-          Scegli dalla galleria — ritaglio tondo automatico
-        </p>
-        <input
-          ref={fileRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={async (e) => {
-            const f = e.target.files?.[0];
-            if (f) setLogo(await readCircleImage(f));
-          }}
-        />
+        <div className="mt-4 flex flex-col items-center">
+          <LogoPicker value={logo} onChange={setLogo} />
+          <p className="mt-2 text-center text-xs text-muted-foreground">
+            Galleria telefono · 1000 loghi · 195 bandiere
+          </p>
+        </div>
+
 
         <div className="mt-5 space-y-3">
           <input

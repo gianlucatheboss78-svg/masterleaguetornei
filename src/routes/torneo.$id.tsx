@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useRef, useState } from "react";
+import { LogoPicker } from "@/components/LogoPicker";
 import { COUNTRIES, countryName, flagFor } from "@/lib/countries";
+
 import { ageFrom, readCircleImage } from "@/lib/media";
 import { getSport } from "@/lib/sports";
 import {
@@ -189,28 +191,9 @@ function TeamsTab({ t, patch }: { t: Tournament; patch: Patch }) {
 }
 
 function TeamLogo({ team, onPick }: { team: Team; onPick: (d: string) => void }) {
-  const ref = useRef<HTMLInputElement>(null);
-  return (
-    <>
-      <button
-        onClick={() => ref.current?.click()}
-        className="h-12 w-12 shrink-0 overflow-hidden rounded-full border border-primary/40 bg-secondary text-lg"
-      >
-        {team.logo ? <img src={team.logo} alt="" className="h-full w-full object-cover" /> : "📷"}
-      </button>
-      <input
-        ref={ref}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={async (e) => {
-          const f = e.target.files?.[0];
-          if (f) onPick(await readCircleImage(f, 200));
-        }}
-      />
-    </>
-  );
+  return <LogoPicker size="sm" value={team.logo} onChange={onPick} />;
 }
+
 
 function Roster({ t, team, patch }: { t: Tournament; team: Team; patch: Patch }) {
   const sport = getSport(t.sport);
