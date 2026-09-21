@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { LogoPicker } from "@/components/LogoPicker";
 import { SPORTS, getSport } from "@/lib/sports";
-import { FREE_TOURNAMENT_LIMIT, PRO_PRICE, usePro } from "@/lib/pro";
+import { PRO_PRICE, usePro } from "@/lib/pro";
 import { uid, useTournaments, type Tournament } from "@/lib/store";
 
 
@@ -31,7 +31,7 @@ function Home() {
   const { data, ready, update } = useTournaments();
   const pro = usePro();
   const [open, setOpen] = useState(false);
-  const locked = !pro && data.length >= FREE_TOURNAMENT_LIMIT;
+  const locked = !pro;
 
 
   return (
@@ -60,7 +60,7 @@ function Home() {
 
       {locked ? (
         <Link to="/pro" className="btn-gold mt-7 block w-full py-3 text-center text-base">
-          👑 Limite gratis raggiunto — passa a PRO {PRO_PRICE}/mese
+          + Nuovo torneo
         </Link>
       ) : (
         <button onClick={() => setOpen(true)} className="btn-gold mt-7 w-full py-3 text-base">
@@ -70,7 +70,7 @@ function Home() {
 
       <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
         <span>
-          {pro ? "👑 PRO attivo · tornei illimitati" : `${data.length}/${FREE_TOURNAMENT_LIMIT} tornei gratis`}
+          {pro ? "👑 PRO attivo · tornei illimitati" : `Prova 7 giorni gratis, poi ${PRO_PRICE}/mese`}
         </span>
         <Link to="/pro" className="text-primary">
           {pro ? "Gestisci PRO" : "Scopri PRO"} ›
