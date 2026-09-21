@@ -134,29 +134,13 @@ function NewTournament({
       <div className="card-night max-h-[92vh] w-full overflow-y-auto p-5 sm:mx-auto sm:max-w-lg">
         <h2 className="text-xl gold-text">Nuovo torneo</h2>
 
-        <button
-          onClick={() => fileRef.current?.click()}
-          className="mx-auto mt-4 block h-24 w-24 overflow-hidden rounded-full border-2 border-primary/50 bg-secondary"
-        >
-          {logo ? (
-            <img src={logo} alt="logo" className="h-full w-full object-cover" />
-          ) : (
-            <span className="text-xs text-muted-foreground">Logo 📷</span>
-          )}
-        </button>
-        <p className="mt-2 text-center text-xs text-muted-foreground">
-          Scegli dalla galleria — ritaglio tondo automatico
-        </p>
-        <input
-          ref={fileRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={async (e) => {
-            const f = e.target.files?.[0];
-            if (f) setLogo(await readCircleImage(f));
-          }}
-        />
+        <div className="mt-4 flex flex-col items-center">
+          <LogoPicker value={logo} onChange={setLogo} />
+          <p className="mt-2 text-center text-xs text-muted-foreground">
+            Galleria telefono · 1000 loghi · 195 bandiere
+          </p>
+        </div>
+
 
         <div className="mt-5 space-y-3">
           <input
