@@ -1,19 +1,22 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { FREE_TOURNAMENT_LIMIT, PRO_PRICE, setPro, usePro } from "@/lib/pro";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { PRO_PRICE, setPro, usePro } from "@/lib/pro";
+import { createProCheckout } from "@/lib/billing.functions";
 
 export const Route = createFileRoute("/pro")({
   head: () => ({
     meta: [
-      { title: "Master League PRO — Tornei illimitati a 9,99 €/mese" },
+      { title: "Prova Master League PRO — 7 giorni gratis, poi 9,99 €/mese" },
       {
         name: "description",
         content:
-          "Passa a PRO: tornei illimitati, libreria loghi completa e locandine senza limiti a 9,99 € al mese.",
+          "7 giorni gratis, poi 9,99 € al mese: tornei illimitati, 15 sport, 1000 loghi, 195 bandiere, classifica live e locandina.",
       },
-      { property: "og:title", content: "Master League PRO" },
+      { property: "og:title", content: "Prova Master League PRO" },
       {
         property: "og:description",
-        content: "Tornei illimitati e tutte le funzioni premium a 9,99 € al mese.",
+        content: "7 giorni gratis, poi 9,99 € al mese. Disdici quando vuoi.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -22,8 +25,44 @@ export const Route = createFileRoute("/pro")({
   component: ProPage,
 });
 
+const BENEFITS = [
+  "Tornei illimitati",
+  "15 sport disponibili",
+  "Libreria 1000 loghi",
+  "195 bandiere nazionali",
+  "Upload foto e logo da galleria",
+  "Classifica live automatica",
+  "Esporta PDF",
+  "Link condivisibile",
+];
+
 function ProPage() {
   const pro = usePro();
+  const nav = useNavigate();
+  const checkout = useServerFn(createProCheckout);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string>();
+
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search);
+    if (p.get("checkout") === "success") {
+      setPro(true);
+      nav({ to: "/" });
+    }
+  }, [nav]);
+
+  const start = async () => {
+    setLoading(true);
+    setError(undefined);
+    try {
+      const res = await checkout({ data: { origin: window.location.origin } });
+      if (res.ok) window.location.href = res.url;
+      else setError(res.error);
+    } catch {
+      setError("Collega Stripe nelle Environment Variables");
+    }
+    setLoading(false);
+  };
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-lg px-4 pb-24 pt-6">
@@ -35,19 +74,13 @@ function ProPage() {
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full btn-gold text-3xl">
           👑
         </div>
-        <h1 className="mt-4 text-3xl gold-text">Master League PRO</h1>
-        <p className="display mt-1 text-4xl text-primary">{PRO_PRICE}</p>
-        <p className="text-xs uppercase tracking-widest text-muted-foreground">al mese</p>
+        <h1 className="mt-4 text-3xl gold-text">Prova Master League PRO</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          7 giorni gratis, poi {PRO_PRICE} al mese — Disdici quando vuoi
+        </p>
 
         <ul className="mt-6 space-y-3 text-left text-sm">
-          {[
-            "Tornei illimitati (gratis: 3)",
-            "Squadre e giocatori illimitati",
-            "Libreria 1000 loghi + 195 bandiere",
-            "Calendario automatico e partite live",
-            "Locandina in 1 click senza filigrana",
-            "Gestione incassi iscrizioni",
-          ].map((f) => (
+          {BENEFITS.map((f) => (
             <li key={f} className="flex gap-2">
               <span className="text-primary">✔</span>
               <span>{f}</span>
@@ -61,28 +94,29 @@ function ProPage() {
               PRO attivo — tornei illimitati sbloccati.
             </p>
             <button onClick={() => setPro(false)} className="btn-ghost-gold mt-3 w-full py-2 text-xs">
-              Disattiva PRO (prova)
+              Disattiva PRO
             </button>
           </>
         ) : (
           <>
-            <button className="btn-gold mt-6 w-full py-3 text-base" disabled>
-              💳 Abbonati con Stripe
+            <button
+              onClick={start}
+              disabled={loading}
+              className="btn-gold mt-6 w-full py-3 text-base disabled:opacity-60"
+            >
+              {loading ? "Attendi…" : "Inizia 7 giorni gratis"}
             </button>
+            {error && (
+              <p className="mt-3 rounded-xl bg-destructive/15 p-3 text-xs text-destructive">
+                {error}
+              </p>
+            )}
             <p className="mt-3 text-xs text-muted-foreground">
-              Il pagamento con carta si attiva collegando Stripe al progetto. Nel frattempo puoi
-              provare le funzioni PRO in modalità demo.
+              Nessun addebito oggi. Dopo 7 giorni {PRO_PRICE} al mese, rinnovo automatico.
             </p>
-            <button onClick={() => setPro(true)} className="btn-ghost-gold mt-3 w-full py-2 text-xs">
-              Prova PRO in demo
-            </button>
           </>
         )}
       </div>
-
-      <p className="mt-6 text-center text-xs text-muted-foreground">
-        Piano gratuito: fino a {FREE_TOURNAMENT_LIMIT} tornei, tutte le altre funzioni incluse.
-      </p>
     </main>
   );
 }
