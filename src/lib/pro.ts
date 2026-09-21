@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 
 const KEY = "mlt.pro.v1";
-export const FREE_TOURNAMENT_LIMIT = 3;
 export const PRO_PRICE = "9,99 €";
+export const PRO_TRIAL_DAYS = 7;
 
 const listeners = new Set<() => void>();
 
