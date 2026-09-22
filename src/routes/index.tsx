@@ -52,7 +52,7 @@ function Home() {
   const locked = !pro;
 
   const shareUrl = torneoDaCondividere
-    ? `${typeof window === "undefined" ? "https://masterleaguetornei.lovable.app" : window.location.origin}/torneo/${torneoDaCondividere.id}`
+    ? `https://masterleaguetornei.lovable.app/torneo/${torneoDaCondividere.id}`
     : "";
 
   const copyShareLink = async () => {
