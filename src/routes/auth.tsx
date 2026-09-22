@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { getSupabase } from "@/lib/supabase-safe";
 import { useSession, signOut } from "@/lib/auth";
 import { syncFromCloud } from "@/lib/store";
 import { LOGO_URL } from "@/components/AppHeader";
