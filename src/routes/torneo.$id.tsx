@@ -7,10 +7,17 @@ import { ageFrom, readCircleImage } from "@/lib/media";
 import { getSport } from "@/lib/sports";
 import {
   autoCalendar,
+  autoCalendarGroups,
+  buildKnockout,
+  groupPhaseDone,
+  koRoundLabelKey,
   scorers,
+  splitGroups,
   standings,
+  syncKnockout,
   uid,
   useTournament,
+  type GroupId,
   type Match,
   type Player,
   type Team,
@@ -42,6 +49,7 @@ const TABS = [
   { id: "calendario", key: "tab.calendar", icon: "📅" },
   { id: "live", key: "tab.live", icon: "🔴" },
   { id: "classifica", key: "tab.table", icon: "🏅" },
+  { id: "finale", key: "tab.final", icon: "🏆" },
   { id: "cassa", key: "tab.money", icon: "💶" },
   { id: "locandina", key: "tab.poster", icon: "🖼️" },
 ] as const;
@@ -89,7 +97,7 @@ function TournamentPage() {
       </header>
 
       <nav className="-mx-4 mt-4 flex gap-2 overflow-x-auto px-4 pb-1">
-        {TABS.map((t) => (
+        {TABS.filter((x) => x.id !== "finale" || tournament.format === "groups").map((t) => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
@@ -107,6 +115,7 @@ function TournamentPage() {
         {tab === "calendario" && <CalendarTab t={tournament} patch={patch} />}
         {tab === "live" && <LiveTab t={tournament} patch={patch} />}
         {tab === "classifica" && <TableTab t={tournament} />}
+        {tab === "finale" && <FinalTab t={tournament} patch={patch} />}
         {tab === "cassa" && <MoneyTab t={tournament} patch={patch} />}
         {tab === "locandina" && <PosterTab t={tournament} />}
       </div>
