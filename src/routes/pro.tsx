@@ -7,6 +7,7 @@ import {
   usePro,
   useOwner,
   signInOwner,
+  isOwnerEmail,
   signOutOwner,
   ownerEmail,
 } from "@/lib/pro";
@@ -58,7 +59,6 @@ function ProPage() {
 
   const start = async () => {
     setError(undefined);
-    setOwnerError(false);
     // OWNER BYPASS: nessun redirect a Stripe per l'email del proprietario
     if (isOwnerEmail(ownerInput)) {
       signInOwner(ownerInput);
