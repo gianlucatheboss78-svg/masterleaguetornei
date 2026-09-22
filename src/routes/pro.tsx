@@ -140,7 +140,7 @@ function ProPage() {
             <button
               onClick={start}
               disabled={loading}
-              className="btn-gold mt-6 w-full py-3 text-base disabled:opacity-60"
+              className="btn-gold mt-3 w-full py-3 text-base disabled:opacity-60"
             >
               {loading ? t("pro.wait") : t("pro.cta")}
             </button>
