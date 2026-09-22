@@ -54,6 +54,8 @@ export type Tournament = {
   id: string;
   name: string;
   sport: string;
+  /** Variante del calcio: a5 | a6 | a7 | a8 | a11 */
+  variant?: string;
   logo?: string;
   city: string;
   startDate: string;
