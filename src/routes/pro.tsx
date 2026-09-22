@@ -48,6 +48,7 @@ function ProPage() {
   const [ownerOpen, setOwnerOpen] = useState(false);
   const [ownerInput, setOwnerInput] = useState("");
   const [ownerError, setOwnerError] = useState(false);
+  const ownerEmailLabel = owner ? (ownerEmail() ?? "") : "";
 
   useEffect(() => {
     const p = new URLSearchParams(window.location.search);
