@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from "react";
-import { COUNTRIES } from "@/lib/countries";
+import { getCountries } from "@/lib/countries";
 import { LOGO_LIBRARY, PALETTES, renderLogo } from "@/lib/logos";
+import { useI18n } from "@/lib/i18n";
 import { readCircleImage } from "@/lib/media";
 
 type Props = {
@@ -10,9 +11,11 @@ type Props = {
   placeholder?: string;
 };
 
-export function LogoPicker({ value, onChange, size = "lg", placeholder = "Logo" }: Props) {
+export function LogoPicker({ value, onChange, size = "lg", placeholder }: Props) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const box = size === "lg" ? "h-24 w-24 text-xs" : "h-12 w-12 text-lg";
+  const label = placeholder ?? t("lp.logo");
 
   return (
     <>
@@ -24,7 +27,7 @@ export function LogoPicker({ value, onChange, size = "lg", placeholder = "Logo" 
         {value ? (
           <img src={value} alt="" className="h-full w-full object-cover" />
         ) : (
-          <span className="text-muted-foreground">{size === "lg" ? `${placeholder} 📷` : "📷"}</span>
+          <span className="text-muted-foreground">{size === "lg" ? `${label} 📷` : "📷"}</span>
         )}
       </button>
       {open && (
@@ -41,6 +44,7 @@ export function LogoPicker({ value, onChange, size = "lg", placeholder = "Logo" 
 }
 
 function LogoSheet({ onClose, onPick }: { onClose: () => void; onPick: (d: string) => void }) {
+  const { t, lang } = useI18n();
   const [tab, setTab] = useState<"galleria" | "loghi" | "bandiere">("loghi");
   const [q, setQ] = useState("");
   const [paletteId, setPaletteId] = useState<string>("all");
@@ -60,16 +64,16 @@ function LogoSheet({ onClose, onPick }: { onClose: () => void; onPick: (d: strin
 
   const flags = useMemo(() => {
     const term = q.trim().toLowerCase();
-    return COUNTRIES.filter(
+    return getCountries(lang).filter(
       (c) => !term || c.name.toLowerCase().includes(term) || c.code.toLowerCase() === term,
     );
-  }, [q]);
+  }, [q, lang]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-end bg-black/75 sm:items-center sm:p-4">
       <div className="card-night flex max-h-[88vh] w-full flex-col p-4 sm:mx-auto sm:max-w-lg">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg gold-text">Scegli logo</h2>
+          <h2 className="text-lg gold-text">{t("lp.title")}</h2>
           <button onClick={onClose} className="text-muted-foreground">
             ✕
           </button>
@@ -78,9 +82,9 @@ function LogoSheet({ onClose, onPick }: { onClose: () => void; onPick: (d: strin
         <div className="mt-3 flex gap-2 text-xs">
           {(
             [
-              ["galleria", "📷 Galleria"],
-              ["loghi", "🛡️ 1000 loghi"],
-              ["bandiere", "🏳️ 195 bandiere"],
+              ["galleria", t("lp.gallery")],
+              ["loghi", t("lp.logos")],
+              ["bandiere", t("lp.flags")],
             ] as const
           ).map(([id, label]) => (
             <button
@@ -96,11 +100,9 @@ function LogoSheet({ onClose, onPick }: { onClose: () => void; onPick: (d: strin
         {tab === "galleria" ? (
           <div className="mt-6 pb-4 text-center">
             <button onClick={() => fileRef.current?.click()} className="btn-gold w-full py-3">
-              📱 Apri galleria telefono
+              {t("lp.open")}
             </button>
-            <p className="mt-2 text-xs text-muted-foreground">
-              La foto viene ritagliata tonda in automatico.
-            </p>
+            <p className="mt-2 text-xs text-muted-foreground">{t("lp.crop")}</p>
             <input
               ref={fileRef}
               type="file"
@@ -116,7 +118,7 @@ function LogoSheet({ onClose, onPick }: { onClose: () => void; onPick: (d: strin
           <>
             <input
               className="field mt-3"
-              placeholder={tab === "loghi" ? "Cerca: leone, scudo, fuoco…" : "Cerca paese: Italia…"}
+              placeholder={tab === "loghi" ? t("lp.searchLogos") : t("lp.searchFlags")}
               value={q}
               onChange={(e) => setQ(e.target.value)}
             />
@@ -126,7 +128,7 @@ function LogoSheet({ onClose, onPick }: { onClose: () => void; onPick: (d: strin
                   onClick={() => setPaletteId("all")}
                   className={`shrink-0 px-3 py-1 ${paletteId === "all" ? "btn-gold" : "btn-ghost-gold"}`}
                 >
-                  Tutti
+                  {t("lp.all")}
                 </button>
                 {PALETTES.map((p) => (
                   <button

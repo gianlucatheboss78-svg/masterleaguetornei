@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 import { LogoPicker } from "@/components/LogoPicker";
-import { COUNTRIES, countryName, flagFor } from "@/lib/countries";
-
+import { getCountries, countryName, flagFor } from "@/lib/countries";
+import { useI18n } from "@/lib/i18n";
 import { ageFrom, readCircleImage } from "@/lib/media";
 import { getSport } from "@/lib/sports";
 import {
@@ -38,26 +38,27 @@ export const Route = createFileRoute("/torneo/$id")({
 });
 
 const TABS = [
-  { id: "squadre", label: "Squadre", icon: "👥" },
-  { id: "calendario", label: "Calendario", icon: "📅" },
-  { id: "live", label: "Live", icon: "🔴" },
-  { id: "classifica", label: "Classifica", icon: "🏅" },
-  { id: "cassa", label: "Cassa", icon: "💶" },
-  { id: "locandina", label: "Locandina", icon: "🖼️" },
+  { id: "squadre", key: "tab.teams", icon: "👥" },
+  { id: "calendario", key: "tab.calendar", icon: "📅" },
+  { id: "live", key: "tab.live", icon: "🔴" },
+  { id: "classifica", key: "tab.table", icon: "🏅" },
+  { id: "cassa", key: "tab.money", icon: "💶" },
+  { id: "locandina", key: "tab.poster", icon: "🖼️" },
 ] as const;
 
 function TournamentPage() {
   const { id } = Route.useParams();
   const { tournament, ready, patch } = useTournament(id);
+  const { t: tr, sportName } = useI18n();
   const [tab, setTab] = useState<string>("squadre");
 
-  if (!ready) return <div className="p-8 text-center text-muted-foreground">Caricamento…</div>;
+  if (!ready) return <div className="p-8 text-center text-muted-foreground">{tr("common.loading")}</div>;
   if (!tournament)
     return (
       <div className="p-8 text-center">
-        <p className="text-muted-foreground">Torneo non trovato.</p>
+        <p className="text-muted-foreground">{tr("t.notFound")}</p>
         <Link to="/" className="btn-gold mt-4 inline-block px-5 py-2">
-          Home
+          {tr("common.home")}
         </Link>
       </div>
     );
@@ -67,7 +68,7 @@ function TournamentPage() {
   return (
     <main className="mx-auto min-h-screen w-full max-w-lg px-4 pb-24 pt-6">
       <Link to="/" className="text-sm text-muted-foreground">
-        ‹ Tornei
+        {tr("common.back")}
       </Link>
 
       <header className="card-night mt-3 flex items-center gap-3 p-4">
@@ -81,8 +82,8 @@ function TournamentPage() {
         <div className="min-w-0">
           <h1 className="truncate text-xl gold-text">{tournament.name}</h1>
           <p className="text-xs text-muted-foreground">
-            {sport.icon} {sport.name} · {tournament.city || "—"} ·{" "}
-            {tournament.startDate || "data da definire"}
+            {sport.icon} {sportName(sport.id, sport.name)} · {tournament.city || "—"} ·{" "}
+            {tournament.startDate || tr("t.tbd")}
           </p>
         </div>
       </header>
@@ -96,7 +97,7 @@ function TournamentPage() {
               tab === t.id ? "btn-gold" : "btn-ghost-gold"
             }`}
           >
-            {t.icon} {t.label}
+            {t.icon} {tr(t.key)}
           </button>
         ))}
       </nav>
@@ -118,6 +119,7 @@ type Patch = (fn: (t: Tournament) => Tournament) => void;
 /* ---------------- Squadre ---------------- */
 
 function TeamsTab({ t, patch }: { t: Tournament; patch: Patch }) {
+  const { t: tr } = useI18n();
   const [name, setName] = useState("");
   const [openTeam, setOpenTeam] = useState<string | null>(null);
 
@@ -135,7 +137,7 @@ function TeamsTab({ t, patch }: { t: Tournament; patch: Patch }) {
       <div className="flex gap-2">
         <input
           className="field"
-          placeholder="Nome squadra"
+          placeholder={tr("teams.name")}
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
@@ -158,20 +160,22 @@ function TeamsTab({ t, patch }: { t: Tournament; patch: Patch }) {
             />
             <div className="min-w-0 flex-1">
               <p className="display truncate text-primary">{team.name}</p>
-              <p className="text-xs text-muted-foreground">{team.players.length} giocatori</p>
+              <p className="text-xs text-muted-foreground">
+                {team.players.length} {tr("teams.players")}
+              </p>
             </div>
             <button
               onClick={() => setOpenTeam(openTeam === team.id ? null : team.id)}
               className="btn-ghost-gold px-3 py-1 text-xs"
             >
-              {openTeam === team.id ? "Chiudi" : "Rosa"}
+              {openTeam === team.id ? tr("common.close") : tr("teams.roster")}
             </button>
             <button
               onClick={() =>
                 patch((cur) => ({ ...cur, teams: cur.teams.filter((x) => x.id !== team.id) }))
               }
               className="text-destructive"
-              aria-label="Elimina squadra"
+              aria-label={tr("teams.del")}
             >
               🗑
             </button>
@@ -197,6 +201,7 @@ function TeamLogo({ team, onPick }: { team: Team; onPick: (d: string) => void })
 
 function Roster({ t, team, patch }: { t: Tournament; team: Team; patch: Patch }) {
   const sport = getSport(t.sport);
+  const { t: tr, lang, roleName } = useI18n();
   const photoRef = useRef<HTMLInputElement>(null);
   const [draft, setDraft] = useState<Omit<Player, "id">>({
     name: "",
@@ -245,7 +250,7 @@ function Roster({ t, team, patch }: { t: Tournament; team: Team; patch: Patch })
           />
           <input
             className="field"
-            placeholder="Nome giocatore"
+            placeholder={tr("roster.name")}
             value={draft.name}
             onChange={(e) => setDraft({ ...draft, name: e.target.value })}
           />
@@ -255,7 +260,7 @@ function Roster({ t, team, patch }: { t: Tournament; team: Team; patch: Patch })
           value={draft.country}
           onChange={(e) => setDraft({ ...draft, country: e.target.value })}
         >
-          {COUNTRIES.map((c) => (
+          {getCountries(lang).map((c) => (
             <option key={c.code} value={c.code}>
               {c.flag} {c.name}
             </option>
@@ -269,7 +274,9 @@ function Roster({ t, team, patch }: { t: Tournament; team: Team; patch: Patch })
             onChange={(e) => setDraft({ ...draft, birth: e.target.value })}
           />
           <span className="flex items-center whitespace-nowrap text-xs text-muted-foreground">
-            {ageFrom(draft.birth) !== null ? `${ageFrom(draft.birth)} anni` : "età"}
+            {ageFrom(draft.birth) !== null
+              ? `${ageFrom(draft.birth)} ${tr("common.years")}`
+              : tr("common.age")}
           </span>
         </div>
         <select
@@ -279,12 +286,12 @@ function Roster({ t, team, patch }: { t: Tournament; team: Team; patch: Patch })
         >
           {sport.roles.map((r) => (
             <option key={r.id} value={r.id}>
-              {r.icon} {r.name}
+              {r.icon} {roleName(r.name)}
             </option>
           ))}
         </select>
         <button onClick={addPlayer} className="btn-gold w-full py-2 text-sm">
-          + Aggiungi giocatore
+          {tr("roster.add")}
         </button>
       </div>
 
@@ -306,8 +313,9 @@ function Roster({ t, team, patch }: { t: Tournament; team: Team; patch: Patch })
                   {flagFor(p.country)} {p.name}
                 </p>
                 <p className="truncate text-xs text-muted-foreground">
-                  {role?.icon} {role?.name}
-                  {age !== null ? ` · ${age} anni` : ""} · {countryName(p.country)}
+                  {role?.icon} {role ? roleName(role.name) : ""}
+                  {age !== null ? ` · ${age} ${tr("common.years")}` : ""} ·{" "}
+                  {countryName(p.country, lang)}
                 </p>
               </div>
               <button
@@ -330,7 +338,7 @@ function Roster({ t, team, patch }: { t: Tournament; team: Team; patch: Patch })
                   p.paid ? "bg-primary text-primary-foreground" : "btn-ghost-gold"
                 }`}
               >
-                {p.paid ? "PAGATO" : "DA PAGARE"}
+                {p.paid ? tr("roster.paid") : tr("roster.topay")}
               </button>
               <button
                 onClick={() =>
@@ -344,7 +352,7 @@ function Roster({ t, team, patch }: { t: Tournament; team: Team; patch: Patch })
                   }))
                 }
                 className="text-destructive"
-                aria-label="Elimina giocatore"
+                aria-label={tr("roster.del")}
               >
                 ✕
               </button>
@@ -360,6 +368,7 @@ function Roster({ t, team, patch }: { t: Tournament; team: Team; patch: Patch })
 
 function CalendarTab({ t, patch }: { t: Tournament; patch: Patch }) {
   const sport = getSport(t.sport);
+  const { t: tr, venueName } = useI18n();
   const [m, setM] = useState({
     teamA: "",
     teamB: "",
@@ -387,14 +396,14 @@ function CalendarTab({ t, patch }: { t: Tournament; patch: Patch }) {
   return (
     <div className="space-y-4">
       <div className="card-night space-y-2 p-4">
-        <p className="text-sm text-primary">Inserimento manuale</p>
+        <p className="text-sm text-primary">{tr("cal.manual")}</p>
         <div className="flex gap-2">
           <select
             className="field"
             value={m.teamA}
             onChange={(e) => setM({ ...m, teamA: e.target.value })}
           >
-            <option value="">Squadra 1</option>
+            <option value="">{tr("cal.team1")}</option>
             {t.teams.map((x) => (
               <option key={x.id} value={x.id}>
                 {x.name}
@@ -406,7 +415,7 @@ function CalendarTab({ t, patch }: { t: Tournament; patch: Patch }) {
             value={m.teamB}
             onChange={(e) => setM({ ...m, teamB: e.target.value })}
           >
-            <option value="">Squadra 2</option>
+            <option value="">{tr("cal.team2")}</option>
             {t.teams.map((x) => (
               <option key={x.id} value={x.id}>
                 {x.name}
@@ -431,7 +440,7 @@ function CalendarTab({ t, patch }: { t: Tournament; patch: Patch }) {
         <div className="flex gap-2">
           <input
             className="field"
-            placeholder={sport.venue}
+            placeholder={venueName(sport.venue)}
             value={m.venue}
             onChange={(e) => setM({ ...m, venue: e.target.value })}
           />
@@ -444,7 +453,7 @@ function CalendarTab({ t, patch }: { t: Tournament; patch: Patch }) {
           />
         </div>
         <button onClick={add} className="btn-gold w-full py-2 text-sm">
-          + Aggiungi partita
+          {tr("cal.add")}
         </button>
       </div>
 
@@ -457,17 +466,17 @@ function CalendarTab({ t, patch }: { t: Tournament; patch: Patch }) {
         }
         className="btn-ghost-gold w-full py-3 text-sm"
       >
-        ⚡ Genera calendario automatico (all'italiana)
+        {tr("cal.auto")}
       </button>
 
       <div className="space-y-2">
         {sorted.map((match) => (
           <div key={match.id} className="card-night p-3">
             <p className="text-[11px] uppercase tracking-widest text-muted-foreground">
-              Giornata {match.round} · {match.date} {match.time} · {match.venue}
+              {tr("cal.round")} {match.round} · {match.date} {match.time} · {match.venue}
             </p>
             <p className="mt-1 text-sm font-semibold">
-              {nameOf(t, match.teamA)} <span className="text-primary">vs</span>{" "}
+              {nameOf(t, match.teamA)} <span className="text-primary">{tr("cal.vs")}</span>{" "}
               {nameOf(t, match.teamB)}
             </p>
           </div>
@@ -484,6 +493,9 @@ const nameOf = (t: Tournament, id: string) => t.teams.find((x) => x.id === id)?.
 function LiveTab({ t, patch }: { t: Tournament; patch: Patch }) {
   const [openId, setOpenId] = useState<string | null>(null);
   const sport = getSport(t.sport);
+  const { t: tr, scoreName } = useI18n();
+  const statusLabel = (s: string) =>
+    s === "live" ? tr("live.live") : s === "finita" ? tr("live.ended") : tr("live.scheduled");
 
   const setMatch = (id: string, fn: (m: Match) => Match) =>
     patch((cur) => ({ ...cur, matches: cur.matches.map((m) => (m.id === id ? fn(m) : m)) }));
@@ -491,7 +503,7 @@ function LiveTab({ t, patch }: { t: Tournament; patch: Patch }) {
   if (t.matches.length === 0)
     return (
       <p className="card-night p-6 text-center text-sm text-muted-foreground">
-        Nessuna partita in calendario.
+        {tr("live.none")}
       </p>
     );
 
@@ -514,7 +526,7 @@ function LiveTab({ t, patch }: { t: Tournament; patch: Patch }) {
                       : "text-primary"
                 }
               >
-                {m.status === "live" ? "● LIVE" : m.status}
+                {m.status === "live" ? `● ${tr("live.live").toUpperCase()}` : statusLabel(m.status)}
               </span>
             </div>
 
@@ -537,13 +549,13 @@ function LiveTab({ t, patch }: { t: Tournament; patch: Patch }) {
                 onClick={() => setMatch(m.id, (x) => ({ ...x, scoreA: x.scoreA + 1 }))}
                 className="btn-gold px-3"
               >
-                +1 {sport.scoreLabel} casa
+                {tr("live.home", { label: scoreName(sport.scoreLabel) })}
               </button>
               <button
                 onClick={() => setMatch(m.id, (x) => ({ ...x, scoreB: x.scoreB + 1 }))}
                 className="btn-gold px-3"
               >
-                +1 ospiti
+                {tr("live.away")}
               </button>
               <button
                 onClick={() => setMatch(m.id, (x) => ({ ...x, scoreB: Math.max(0, x.scoreB - 1) }))}
@@ -560,7 +572,7 @@ function LiveTab({ t, patch }: { t: Tournament; patch: Patch }) {
                   onClick={() => setMatch(m.id, (x) => ({ ...x, status: s }))}
                   className={`flex-1 py-1 ${m.status === s ? "btn-gold" : "btn-ghost-gold"}`}
                 >
-                  {s}
+                  {statusLabel(s)}
                 </button>
               ))}
             </div>
@@ -569,7 +581,7 @@ function LiveTab({ t, patch }: { t: Tournament; patch: Patch }) {
               onClick={() => setOpenId(open ? null : m.id)}
               className="mt-3 w-full text-xs text-muted-foreground"
             >
-              {open ? "Nascondi eventi" : `Eventi (${m.events.length})`}
+              {open ? tr("live.hide") : tr("live.events", { n: m.events.length })}
             </button>
 
             {open && <Events t={t} m={m} setMatch={setMatch} />}
@@ -589,6 +601,7 @@ function Events({
   m: Match;
   setMatch: (id: string, fn: (m: Match) => Match) => void;
 }) {
+  const { t: tr } = useI18n();
   const roster = t.teams
     .filter((x) => x.id === m.teamA || x.id === m.teamB)
     .flatMap((x) => x.players.map((p) => ({ p, team: x })));
@@ -613,10 +626,10 @@ function Events({
           value={type}
           onChange={(e) => setType(e.target.value as typeof type)}
         >
-          <option value="goal">⚽ Gol</option>
-          <option value="yellow">🟨 Giallo</option>
-          <option value="red">🟥 Rosso</option>
-          <option value="mvp">⭐ MVP</option>
+          <option value="goal">{tr("ev.goal")}</option>
+          <option value="yellow">{tr("ev.yellow")}</option>
+          <option value="red">{tr("ev.red")}</option>
+          <option value="mvp">{tr("ev.mvp")}</option>
         </select>
         <input
           className="field w-16"
@@ -637,7 +650,7 @@ function Events({
         }}
         className="btn-gold mt-2 w-full py-2 text-sm"
       >
-        + Registra evento
+        {tr("ev.add")}
       </button>
 
       <ul className="mt-3 space-y-1 text-xs">
@@ -668,6 +681,7 @@ function Events({
 /* ---------------- Classifica ---------------- */
 
 function TableTab({ t }: { t: Tournament }) {
+  const { t: tr } = useI18n();
   const sport = getSport(t.sport);
   const rows = standings(t, sport.winPoints, sport.drawPoints);
   const top = scorers(t);
@@ -679,13 +693,13 @@ function TableTab({ t }: { t: Tournament }) {
           <thead className="bg-secondary/70 text-muted-foreground">
             <tr>
               <th className="p-2 text-left">#</th>
-              <th className="p-2 text-left">Squadra</th>
-              <th className="p-2">G</th>
-              <th className="p-2">V</th>
-              {sport.hasDraw && <th className="p-2">N</th>}
-              <th className="p-2">P</th>
+              <th className="p-2 text-left">{tr("tbl.team")}</th>
+              <th className="p-2">{tr("tbl.g")}</th>
+              <th className="p-2">{tr("tbl.v")}</th>
+              {sport.hasDraw && <th className="p-2">{tr("tbl.n")}</th>}
+              <th className="p-2">{tr("tbl.p")}</th>
               <th className="p-2">+/−</th>
-              <th className="p-2 text-primary">Pt</th>
+              <th className="p-2 text-primary">{tr("tbl.pts")}</th>
             </tr>
           </thead>
           <tbody>
@@ -709,12 +723,12 @@ function TableTab({ t }: { t: Tournament }) {
           </tbody>
         </table>
         {rows.length === 0 && (
-          <p className="p-4 text-center text-sm text-muted-foreground">Nessuna squadra.</p>
+          <p className="p-4 text-center text-sm text-muted-foreground">{tr("tbl.noTeams")}</p>
         )}
       </div>
 
       <div className="card-night p-4">
-        <h2 className="text-sm text-primary">Marcatori & MVP</h2>
+        <h2 className="text-sm text-primary">{tr("tbl.scorers")}</h2>
         <ul className="mt-3 space-y-2 text-sm">
           {top.map((s) => (
             <li key={s.player.id} className="flex items-center gap-2">
@@ -733,7 +747,9 @@ function TableTab({ t }: { t: Tournament }) {
               <span className="text-primary">⭐ {s.mvp}</span>
             </li>
           ))}
-          {top.length === 0 && <p className="text-xs text-muted-foreground">Nessun evento.</p>}
+          {top.length === 0 && (
+            <p className="text-xs text-muted-foreground">{tr("tbl.noEvents")}</p>
+          )}
         </ul>
       </div>
     </div>
@@ -743,6 +759,7 @@ function TableTab({ t }: { t: Tournament }) {
 /* ---------------- Cassa ---------------- */
 
 function MoneyTab({ t, patch }: { t: Tournament; patch: Patch }) {
+  const { t: tr } = useI18n();
   const players = t.teams.flatMap((x) => x.players);
   const paid = players.filter((p) => p.paid).length;
   const incasso = paid * t.fee;
@@ -751,7 +768,7 @@ function MoneyTab({ t, patch }: { t: Tournament; patch: Patch }) {
   return (
     <div className="space-y-4">
       <div className="card-night p-4">
-        <label className="text-xs text-muted-foreground">Quota iscrizione per giocatore (€)</label>
+        <label className="text-xs text-muted-foreground">{tr("money.fee")}</label>
         <input
           className="field mt-1"
           type="number"
@@ -763,9 +780,9 @@ function MoneyTab({ t, patch }: { t: Tournament; patch: Patch }) {
 
       <div className="grid grid-cols-3 gap-2 text-center">
         {[
-          { l: "Incassato", v: `€${incasso}` },
-          { l: "Atteso", v: `€${atteso}` },
-          { l: "Pagati", v: `${paid}/${players.length}` },
+          { l: tr("money.in"), v: `€${incasso}` },
+          { l: tr("money.exp"), v: `€${atteso}` },
+          { l: tr("money.paid"), v: `${paid}/${players.length}` },
         ].map((k) => (
           <div key={k.l} className="card-night p-3">
             <p className="display text-lg text-primary">{k.v}</p>
@@ -775,7 +792,7 @@ function MoneyTab({ t, patch }: { t: Tournament; patch: Patch }) {
       </div>
 
       <div className="card-night p-4">
-        <h2 className="text-sm text-primary">Iscrizioni</h2>
+        <h2 className="text-sm text-primary">{tr("money.signups")}</h2>
         <ul className="mt-3 space-y-2 text-sm">
           {t.teams.map((team) => (
             <li key={team.id} className="flex justify-between">
@@ -788,8 +805,7 @@ function MoneyTab({ t, patch }: { t: Tournament; patch: Patch }) {
           ))}
         </ul>
         <p className="mt-4 rounded-xl bg-secondary/60 p-3 text-xs text-muted-foreground">
-          Pagamenti online con carta: chiedimi “attiva i pagamenti” e collego Stripe al torneo, così
-          i giocatori pagano dall’app e la spunta “pagato” si aggiorna da sola.
+          {tr("money.hint")}
         </p>
       </div>
     </div>
@@ -800,6 +816,7 @@ function MoneyTab({ t, patch }: { t: Tournament; patch: Patch }) {
 
 function PosterTab({ t }: { t: Tournament }) {
   const [url, setUrl] = useState<string>();
+  const { t: tr, sportName } = useI18n();
   const sport = getSport(t.sport);
 
   const generate = async () => {
@@ -848,9 +865,13 @@ function PosterTab({ t }: { t: Tournament }) {
 
     ctx.fillStyle = "#EEE8DA";
     ctx.font = "40px Manrope, sans-serif";
-    ctx.fillText(`${sport.name.toUpperCase()} · ${t.city || ""}`.trim(), W / 2, 660);
-    if (t.startDate) ctx.fillText(`Inizio ${t.startDate}`, W / 2, 720);
-    ctx.fillText(`${t.teams.length} squadre · ${t.matches.length} partite`, W / 2, 780);
+    ctx.fillText(
+      `${sportName(sport.id, sport.name).toUpperCase()} · ${t.city || ""}`.trim(),
+      W / 2,
+      660,
+    );
+    if (t.startDate) ctx.fillText(`${tr("poster.start")} ${t.startDate}`, W / 2, 720);
+    ctx.fillText(tr("poster.summary", { teams: t.teams.length, matches: t.matches.length }), W / 2, 780);
 
     ctx.fillStyle = "rgba(255,255,255,0.85)";
     ctx.font = "34px Manrope, sans-serif";
@@ -868,13 +889,13 @@ function PosterTab({ t }: { t: Tournament }) {
   return (
     <div className="space-y-4">
       <button onClick={generate} className="btn-gold w-full py-3">
-        ✨ Genera locandina (1 click)
+        {tr("poster.gen")}
       </button>
       {url && (
         <>
-          <img src={url} alt="Locandina torneo" className="w-full rounded-xl border border-primary/30" />
+          <img src={url} alt={tr("poster.alt")} className="w-full rounded-xl border border-primary/30" />
           <a href={url} download={`${t.name}-locandina.png`} className="btn-ghost-gold block py-3 text-center">
-            ⬇ Scarica / condividi
+            {tr("poster.dl")}
           </a>
         </>
       )}

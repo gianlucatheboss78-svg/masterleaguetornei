@@ -1,3 +1,5 @@
+import type { Lang } from "./i18n-core";
+
 const CODES = [
   "AF","AL","DZ","AD","AO","AG","AR","AM","AU","AT","AZ","BS","BH","BD","BB","BY","BE","BZ","BJ","BT",
   "BO","BA","BW","BR","BN","BG","BF","BI","CV","KH","CM","CA","CF","TD","CL","CN","CO","KM","CG","CD",
@@ -16,19 +18,29 @@ export type Country = { code: string; name: string; flag: string };
 const flagOf = (code: string) =>
   String.fromCodePoint(...code.split("").map((c) => 127397 + c.charCodeAt(0)));
 
-let names: Intl.DisplayNames | null = null;
-try {
-  names = new Intl.DisplayNames(["it"], { type: "region" });
-} catch {
-  names = null;
+const cache = new Map<string, Country[]>();
+
+export function getCountries(lang: string = "it"): Country[] {
+  const hit = cache.get(lang);
+  if (hit) return hit;
+  let names: Intl.DisplayNames | null = null;
+  try {
+    names = new Intl.DisplayNames([lang], { type: "region" });
+  } catch {
+    names = null;
+  }
+  const list = CODES.map((code) => ({
+    code,
+    name: names?.of(code) ?? code,
+    flag: flagOf(code),
+  })).sort((a, b) => a.name.localeCompare(b.name, lang));
+  cache.set(lang, list);
+  return list;
 }
 
-export const COUNTRIES: Country[] = CODES.map((code) => ({
-  code,
-  name: names?.of(code) ?? code,
-  flag: flagOf(code),
-})).sort((a, b) => a.name.localeCompare(b.name, "it"));
+/** Default Italian list, kept for non-reactive usages. */
+export const COUNTRIES: Country[] = getCountries("it");
 
 export const flagFor = (code: string) => (code ? flagOf(code) : "🏳️");
-export const countryName = (code: string) =>
-  COUNTRIES.find((c) => c.code === code)?.name ?? "";
+export const countryName = (code: string, lang: Lang | string = "it") =>
+  getCountries(lang).find((c) => c.code === code)?.name ?? "";
