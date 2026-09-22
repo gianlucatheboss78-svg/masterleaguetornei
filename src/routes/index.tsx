@@ -6,6 +6,7 @@ import { LogoPicker } from "@/components/LogoPicker";
 import { LOGO_URL } from "@/components/AppHeader";
 import { SPORTS, getSport, FOOTBALL_VARIANTS, isFootball, variantLabel } from "@/lib/sports";
 import { useI18n } from "@/lib/i18n";
+import { isRacket } from "@/lib/tennis";
 import { usePro, useOwner } from "@/lib/pro";
 import { uid, useTournaments, type Tournament } from "@/lib/store";
 
@@ -289,6 +290,12 @@ function NewTournament({
               <p className="mt-2 text-[11px] text-muted-foreground">
                 {FOOTBALL_VARIANTS.find((v) => v.id === variant)?.players} {t("nt.playersPerTeam")}
               </p>
+            </div>
+          )}
+          {isRacket(sport) && (
+            <div className="rounded-xl border border-primary/30 bg-secondary/40 p-3">
+              <p className="text-xs text-primary">🎾 {t("tn.rules")}</p>
+              <p className="mt-1 text-[11px] text-muted-foreground">{t("tn.tableHint")}</p>
             </div>
           )}
           <label className="block text-xs text-muted-foreground">{t("nt.format")}</label>

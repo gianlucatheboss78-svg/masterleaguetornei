@@ -6,6 +6,16 @@ import { useI18n } from "@/lib/i18n";
 import { ageFrom, readCircleImage } from "@/lib/media";
 import { getSport, isFootball, variantLabel } from "@/lib/sports";
 import {
+  addPoint,
+  emptyTennis,
+  gamesTotal,
+  inTieBreak,
+  isRacket,
+  pointLabels,
+  setsWon,
+  type TennisState,
+} from "@/lib/tennis";
+import {
   autoCalendar,
   autoCalendarGroups,
   buildKnockout,
@@ -733,6 +743,7 @@ function LiveTab({
 }) {
   const [openId, setOpenId] = useState<string | null>(initialOpen ?? null);
   const sport = getSport(t.sport);
+  const racket = isRacket(t.sport);
   const { t: tr, scoreName } = useI18n();
   const statusLabel = (s: string) =>
     s === "live" ? tr("live.live") : s === "finita" ? tr("live.ended") : tr("live.scheduled");
@@ -778,32 +789,36 @@ function LiveTab({
               <p className="text-sm font-semibold">{nameOf(t, m.teamB)}</p>
             </div>
 
-            <div className="mt-3 flex justify-center gap-2">
-              <button
-                onClick={() => setMatch(m.id, (x) => ({ ...x, scoreA: Math.max(0, x.scoreA - 1) }))}
-                className="btn-ghost-gold px-3"
-              >
-                −
-              </button>
-              <button
-                onClick={() => setMatch(m.id, (x) => ({ ...x, scoreA: x.scoreA + 1 }))}
-                className="btn-gold px-3"
-              >
-                {tr("live.home", { label: scoreName(sport.scoreLabel) })}
-              </button>
-              <button
-                onClick={() => setMatch(m.id, (x) => ({ ...x, scoreB: x.scoreB + 1 }))}
-                className="btn-gold px-3"
-              >
-                {tr("live.away")}
-              </button>
-              <button
-                onClick={() => setMatch(m.id, (x) => ({ ...x, scoreB: Math.max(0, x.scoreB - 1) }))}
-                className="btn-ghost-gold px-3"
-              >
-                −
-              </button>
-            </div>
+            {racket ? (
+              <TennisBoard m={m} setMatch={setMatch} />
+            ) : (
+              <div className="mt-3 flex justify-center gap-2">
+                <button
+                  onClick={() => setMatch(m.id, (x) => ({ ...x, scoreA: Math.max(0, x.scoreA - 1) }))}
+                  className="btn-ghost-gold px-3"
+                >
+                  −
+                </button>
+                <button
+                  onClick={() => setMatch(m.id, (x) => ({ ...x, scoreA: x.scoreA + 1 }))}
+                  className="btn-gold px-3"
+                >
+                  {tr("live.home", { label: scoreName(sport.scoreLabel) })}
+                </button>
+                <button
+                  onClick={() => setMatch(m.id, (x) => ({ ...x, scoreB: x.scoreB + 1 }))}
+                  className="btn-gold px-3"
+                >
+                  {tr("live.away")}
+                </button>
+                <button
+                  onClick={() => setMatch(m.id, (x) => ({ ...x, scoreB: Math.max(0, x.scoreB - 1) }))}
+                  className="btn-ghost-gold px-3"
+                >
+                  −
+                </button>
+              </div>
+            )}
 
             <div className="mt-3 flex gap-2 text-xs">
               {(["programmata", "live", "finita"] as const).map((s) => (
@@ -828,6 +843,89 @@ function LiveTab({
           </div>
         );
       })}
+    </div>
+  );
+}
+
+/* ---------------- Tennis / Padel ---------------- */
+
+function TennisBoard({
+  m,
+  setMatch,
+}: {
+  m: Match;
+  setMatch: (id: string, fn: (x: Match) => Match) => void;
+}) {
+  const { t: tr } = useI18n();
+  const st: TennisState = m.tennis ?? emptyTennis();
+  const [la, lb] = pointLabels(st);
+  const tie = inTieBreak(st);
+
+  const apply = (next: TennisState) =>
+    setMatch(m.id, (x) => {
+      const w = setsWon(next);
+      const g = gamesTotal(next);
+      return {
+        ...x,
+        tennis: next,
+        scoreA: w.a,
+        scoreB: w.b,
+        gamesA: g.a,
+        gamesB: g.b,
+        status: next.done ? "finita" : x.status === "programmata" ? "live" : x.status,
+      };
+    });
+
+  return (
+    <div className="mt-3 rounded-xl border border-primary/20 bg-secondary/40 p-3">
+      <p className="text-center text-[11px] uppercase tracking-widest text-muted-foreground">
+        {tie ? tr("tn.tiebreak") : tr("tn.game")}
+      </p>
+      <div className="mt-1 grid grid-cols-[1fr_auto_1fr] items-center gap-2 text-center">
+        <p className="display text-3xl text-primary">{la}</p>
+        <span className="text-muted-foreground">·</span>
+        <p className="display text-3xl text-primary">{lb}</p>
+      </div>
+
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <button
+          onClick={() => apply(addPoint(st, "a"))}
+          disabled={st.done}
+          className="btn-gold py-2 text-xs disabled:opacity-40"
+        >
+          + {tr("tn.pointHome")}
+        </button>
+        <button
+          onClick={() => apply(addPoint(st, "b"))}
+          disabled={st.done}
+          className="btn-gold py-2 text-xs disabled:opacity-40"
+        >
+          + {tr("tn.pointAway")}
+        </button>
+      </div>
+
+      <div className="mt-3 space-y-1 text-xs">
+        {st.sets.map((s, i) => (
+          <div key={i} className="flex items-center justify-between">
+            <span className="text-muted-foreground">
+              {tr("tn.set")} {i + 1}
+            </span>
+            <span className="font-bold text-primary">
+              {s.a} - {s.b}
+              {s.tbA !== undefined ? ` (${s.tbA}-${s.tbB})` : ""}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      <p className="mt-2 text-center text-[11px] text-muted-foreground">{tr("tn.rules")}</p>
+
+      <button
+        onClick={() => apply(emptyTennis())}
+        className="btn-ghost-gold mt-2 w-full py-2 text-xs"
+      >
+        {tr("tn.reset")}
+      </button>
     </div>
   );
 }
@@ -1084,6 +1182,9 @@ function StandingsTable({
           ))}
         </tbody>
       </table>
+      {isRacket(t.sport) && (
+        <p className="px-3 pb-3 text-[11px] text-muted-foreground">{tr("tn.tableHint")}</p>
+      )}
       {rows.length === 0 && (
         <p className="p-4 text-center text-sm text-muted-foreground">{tr("tbl.noTeams")}</p>
       )}
