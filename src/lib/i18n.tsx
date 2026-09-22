@@ -816,7 +816,14 @@ const zh: Dict = {
   "lang.title": "语言",
 };
 
-const DICTS: Record<Lang, Dict> = { it, en, es, fr, pt, zh };
+const DICTS: Record<Lang, Dict> = {
+  it: { ...it, ...GROUP_DICTS.it },
+  en: { ...en, ...GROUP_DICTS.en },
+  es: { ...es, ...GROUP_DICTS.es },
+  fr: { ...fr, ...GROUP_DICTS.fr },
+  pt: { ...pt, ...GROUP_DICTS.pt },
+  zh: { ...zh, ...GROUP_DICTS.zh },
+};
 
 type Ctx = {
   lang: Lang;
