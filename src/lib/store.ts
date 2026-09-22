@@ -11,11 +11,14 @@ export type Player = {
   paid: boolean;
 };
 
+export type GroupId = "A" | "B";
+
 export type Team = {
   id: string;
   name: string;
   logo?: string;
   color1?: string;
+  group?: GroupId;
   players: Player[];
 };
 
@@ -26,6 +29,8 @@ export type MatchEvent = {
   type: "goal" | "yellow" | "red" | "mvp";
   minute: string;
 };
+
+export type KoInfo = { round: number; index: number; kind?: "third" };
 
 export type Match = {
   id: string;
@@ -39,7 +44,11 @@ export type Match = {
   scoreB: number;
   status: "programmata" | "live" | "finita";
   events: MatchEvent[];
+  group?: GroupId;
+  ko?: KoInfo;
 };
+
+export type TournamentFormat = "single" | "groups";
 
 export type Tournament = {
   id: string;
@@ -49,6 +58,8 @@ export type Tournament = {
   city: string;
   startDate: string;
   fee: number;
+  format?: TournamentFormat;
+  qualifiers?: number;
   teams: Team[];
   matches: Match[];
 };
