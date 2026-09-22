@@ -61,6 +61,10 @@
   --color-sidebar-ring: var(--sidebar-ring);
   --color-gold: var(--gold);
   --color-gold-soft: var(--gold-soft);
+  --color-qr: var(--qr);
+  --color-qr-foreground: var(--qr-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
   --font-display: "Anton", system-ui, sans-serif;
   --font-sans: "Manrope", system-ui, sans-serif;
 }
@@ -69,6 +73,10 @@
   --radius: 1rem;
   --gold: #d4af37;
   --gold-soft: #e8cc72;
+  --qr: #ffffff;
+  --qr-foreground: #0a1931;
+  --success: #1f9d55;
+  --success-foreground: #ffffff;
   --background: #0a1931;
   --foreground: oklch(0.97 0.01 250);
   --card: #122544;
