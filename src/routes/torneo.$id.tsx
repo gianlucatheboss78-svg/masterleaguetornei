@@ -625,10 +625,10 @@ function Events({
           value={type}
           onChange={(e) => setType(e.target.value as typeof type)}
         >
-          <option value="goal">⚽ Gol</option>
-          <option value="yellow">🟨 Giallo</option>
-          <option value="red">🟥 Rosso</option>
-          <option value="mvp">⭐ MVP</option>
+          <option value="goal">{tr("ev.goal")}</option>
+          <option value="yellow">{tr("ev.yellow")}</option>
+          <option value="red">{tr("ev.red")}</option>
+          <option value="mvp">{tr("ev.mvp")}</option>
         </select>
         <input
           className="field w-16"
@@ -649,7 +649,7 @@ function Events({
         }}
         className="btn-gold mt-2 w-full py-2 text-sm"
       >
-        + Registra evento
+        {tr("ev.add")}
       </button>
 
       <ul className="mt-3 space-y-1 text-xs">
@@ -680,6 +680,7 @@ function Events({
 /* ---------------- Classifica ---------------- */
 
 function TableTab({ t }: { t: Tournament }) {
+  const { t: tr } = useI18n();
   const sport = getSport(t.sport);
   const rows = standings(t, sport.winPoints, sport.drawPoints);
   const top = scorers(t);
@@ -691,13 +692,13 @@ function TableTab({ t }: { t: Tournament }) {
           <thead className="bg-secondary/70 text-muted-foreground">
             <tr>
               <th className="p-2 text-left">#</th>
-              <th className="p-2 text-left">Squadra</th>
-              <th className="p-2">G</th>
-              <th className="p-2">V</th>
-              {sport.hasDraw && <th className="p-2">N</th>}
-              <th className="p-2">P</th>
+              <th className="p-2 text-left">{tr("tbl.team")}</th>
+              <th className="p-2">{tr("tbl.g")}</th>
+              <th className="p-2">{tr("tbl.v")}</th>
+              {sport.hasDraw && <th className="p-2">{tr("tbl.n")}</th>}
+              <th className="p-2">{tr("tbl.p")}</th>
               <th className="p-2">+/−</th>
-              <th className="p-2 text-primary">Pt</th>
+              <th className="p-2 text-primary">{tr("tbl.pts")}</th>
             </tr>
           </thead>
           <tbody>
@@ -721,12 +722,12 @@ function TableTab({ t }: { t: Tournament }) {
           </tbody>
         </table>
         {rows.length === 0 && (
-          <p className="p-4 text-center text-sm text-muted-foreground">Nessuna squadra.</p>
+          <p className="p-4 text-center text-sm text-muted-foreground">{tr("tbl.noTeams")}</p>
         )}
       </div>
 
       <div className="card-night p-4">
-        <h2 className="text-sm text-primary">Marcatori & MVP</h2>
+        <h2 className="text-sm text-primary">{tr("tbl.scorers")}</h2>
         <ul className="mt-3 space-y-2 text-sm">
           {top.map((s) => (
             <li key={s.player.id} className="flex items-center gap-2">
@@ -745,7 +746,9 @@ function TableTab({ t }: { t: Tournament }) {
               <span className="text-primary">⭐ {s.mvp}</span>
             </li>
           ))}
-          {top.length === 0 && <p className="text-xs text-muted-foreground">Nessun evento.</p>}
+          {top.length === 0 && (
+            <p className="text-xs text-muted-foreground">{tr("tbl.noEvents")}</p>
+          )}
         </ul>
       </div>
     </div>
@@ -755,6 +758,7 @@ function TableTab({ t }: { t: Tournament }) {
 /* ---------------- Cassa ---------------- */
 
 function MoneyTab({ t, patch }: { t: Tournament; patch: Patch }) {
+  const { t: tr } = useI18n();
   const players = t.teams.flatMap((x) => x.players);
   const paid = players.filter((p) => p.paid).length;
   const incasso = paid * t.fee;
@@ -763,7 +767,7 @@ function MoneyTab({ t, patch }: { t: Tournament; patch: Patch }) {
   return (
     <div className="space-y-4">
       <div className="card-night p-4">
-        <label className="text-xs text-muted-foreground">Quota iscrizione per giocatore (€)</label>
+        <label className="text-xs text-muted-foreground">{tr("money.fee")}</label>
         <input
           className="field mt-1"
           type="number"
@@ -775,9 +779,9 @@ function MoneyTab({ t, patch }: { t: Tournament; patch: Patch }) {
 
       <div className="grid grid-cols-3 gap-2 text-center">
         {[
-          { l: "Incassato", v: `€${incasso}` },
-          { l: "Atteso", v: `€${atteso}` },
-          { l: "Pagati", v: `${paid}/${players.length}` },
+          { l: tr("money.in"), v: `€${incasso}` },
+          { l: tr("money.exp"), v: `€${atteso}` },
+          { l: tr("money.paid"), v: `${paid}/${players.length}` },
         ].map((k) => (
           <div key={k.l} className="card-night p-3">
             <p className="display text-lg text-primary">{k.v}</p>
@@ -787,7 +791,7 @@ function MoneyTab({ t, patch }: { t: Tournament; patch: Patch }) {
       </div>
 
       <div className="card-night p-4">
-        <h2 className="text-sm text-primary">Iscrizioni</h2>
+        <h2 className="text-sm text-primary">{tr("money.signups")}</h2>
         <ul className="mt-3 space-y-2 text-sm">
           {t.teams.map((team) => (
             <li key={team.id} className="flex justify-between">
@@ -800,8 +804,7 @@ function MoneyTab({ t, patch }: { t: Tournament; patch: Patch }) {
           ))}
         </ul>
         <p className="mt-4 rounded-xl bg-secondary/60 p-3 text-xs text-muted-foreground">
-          Pagamenti online con carta: chiedimi “attiva i pagamenti” e collego Stripe al torneo, così
-          i giocatori pagano dall’app e la spunta “pagato” si aggiorna da sola.
+          {tr("money.hint")}
         </p>
       </div>
     </div>
@@ -812,6 +815,7 @@ function MoneyTab({ t, patch }: { t: Tournament; patch: Patch }) {
 
 function PosterTab({ t }: { t: Tournament }) {
   const [url, setUrl] = useState<string>();
+  const { t: tr, sportName } = useI18n();
   const sport = getSport(t.sport);
 
   const generate = async () => {
@@ -860,9 +864,13 @@ function PosterTab({ t }: { t: Tournament }) {
 
     ctx.fillStyle = "#EEE8DA";
     ctx.font = "40px Manrope, sans-serif";
-    ctx.fillText(`${sport.name.toUpperCase()} · ${t.city || ""}`.trim(), W / 2, 660);
-    if (t.startDate) ctx.fillText(`Inizio ${t.startDate}`, W / 2, 720);
-    ctx.fillText(`${t.teams.length} squadre · ${t.matches.length} partite`, W / 2, 780);
+    ctx.fillText(
+      `${sportName(sport.id, sport.name).toUpperCase()} · ${t.city || ""}`.trim(),
+      W / 2,
+      660,
+    );
+    if (t.startDate) ctx.fillText(`${tr("poster.start")} ${t.startDate}`, W / 2, 720);
+    ctx.fillText(tr("poster.summary", { teams: t.teams.length, matches: t.matches.length }), W / 2, 780);
 
     ctx.fillStyle = "rgba(255,255,255,0.85)";
     ctx.font = "34px Manrope, sans-serif";
@@ -880,13 +888,13 @@ function PosterTab({ t }: { t: Tournament }) {
   return (
     <div className="space-y-4">
       <button onClick={generate} className="btn-gold w-full py-3">
-        ✨ Genera locandina (1 click)
+        {tr("poster.gen")}
       </button>
       {url && (
         <>
-          <img src={url} alt="Locandina torneo" className="w-full rounded-xl border border-primary/30" />
+          <img src={url} alt={tr("poster.alt")} className="w-full rounded-xl border border-primary/30" />
           <a href={url} download={`${t.name}-locandina.png`} className="btn-ghost-gold block py-3 text-center">
-            ⬇ Scarica / condividi
+            {tr("poster.dl")}
           </a>
         </>
       )}
