@@ -40,6 +40,11 @@ function AuthPage() {
   }, [user]);
 
   const submit = async () => {
+    const supabase = getSupabase();
+    if (!supabase) {
+      setMsg("Servizio account non disponibile. Riprova più tardi.");
+      return;
+    }
     setBusy(true);
     setMsg("");
     const fn =

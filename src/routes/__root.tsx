@@ -122,8 +122,9 @@ function RootComponent() {
 
   useEffect(() => {
     let cancelled = false;
-    void import("@/integrations/supabase/client").then(({ supabase }) => {
-      if (cancelled) return;
+    void import("@/lib/supabase-safe").then(({ getSupabase }) => {
+      const supabase = getSupabase();
+      if (cancelled || !supabase) return;
       supabase.auth.onAuthStateChange((event) => {
         if (event !== "SIGNED_IN" && event !== "USER_UPDATED") return;
         void import("@/lib/store").then(({ syncFromCloud }) => syncFromCloud());
