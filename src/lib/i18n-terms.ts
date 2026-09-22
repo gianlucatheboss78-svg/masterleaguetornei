@@ -14,17 +14,14 @@ export const SPORT_NAMES: Record<string, M> = {
   calcio: m("Calcio", "Football", "Fútbol", "Football", "Futebol", "足球"),
   calcio5: m("Calcio a 5", "Futsal", "Fútbol sala", "Futsal", "Futsal", "五人制足球"),
   pallamano: m("Pallamano", "Handball", "Balonmano", "Handball", "Andebol", "手球"),
-  pallanuoto: m("Pallanuoto", "Water polo", "Waterpolo", "Water-polo", "Polo aquático", "水球"),
-  pallavolo: m("Pallavolo", "Volleyball", "Voleibol", "Volleyball", "Voleibol", "排球"),
+  pallavolo: m("Volley", "Volleyball", "Voleibol", "Volleyball", "Voleibol", "排球"),
   beachvolley: m("Beach Volley", "Beach Volley", "Vóley playa", "Beach-volley", "Vôlei de praia", "沙滩排球"),
   basket: m("Basket", "Basketball", "Baloncesto", "Basketball", "Basquetebol", "篮球"),
   padel: m("Padel", "Padel", "Pádel", "Padel", "Padel", "板式网球"),
   tennis: m("Tennis", "Tennis", "Tenis", "Tennis", "Ténis", "网球"),
   pingpong: m("Ping Pong", "Table tennis", "Tenis de mesa", "Tennis de table", "Ténis de mesa", "乒乓球"),
-  biliardino: m("Biliardino", "Foosball", "Futbolín", "Baby-foot", "Matraquilhos", "桌上足球"),
   freccette: m("Freccette", "Darts", "Dardos", "Fléchettes", "Dardos", "飞镖"),
   rugby: m("Rugby", "Rugby", "Rugby", "Rugby", "Râguebi", "橄榄球"),
-  hockey: m("Hockey", "Hockey", "Hockey", "Hockey", "Hóquei", "曲棍球"),
   beachsoccer: m("Beach Soccer", "Beach soccer", "Fútbol playa", "Beach soccer", "Futebol de praia", "沙滩足球"),
 };
 

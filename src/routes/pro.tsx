@@ -22,7 +22,7 @@ export const Route = createFileRoute("/pro")({
       {
         name: "description",
         content:
-          "7 giorni gratis, poi 9,99 € al mese: tornei illimitati, 15 sport, 1000 loghi, 195 bandiere, classifica live e locandina.",
+          "7 giorni gratis, poi 9,99 € al mese: tornei illimitati, 12 sport, 1000 loghi, 195 bandiere, classifica live e locandina.",
       },
       { property: "og:title", content: "Prova Master League PRO" },
       {

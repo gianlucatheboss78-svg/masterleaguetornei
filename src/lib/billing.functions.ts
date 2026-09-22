@@ -19,7 +19,7 @@ export const createProCheckout = createServerFn({ method: "POST" })
     body.set("line_items[0][price_data][product_data][name]", "Master League PRO");
     body.set(
       "line_items[0][price_data][product_data][description]",
-      "Tornei illimitati, 15 sport, 1000 loghi, 195 bandiere",
+      "Tornei illimitati, 12 sport, 1000 loghi, 195 bandiere",
     );
     body.set("subscription_data[trial_period_days]", "7");
     body.set("allow_promotion_codes", "true");
