@@ -217,6 +217,7 @@ function NewTournament({
   const [city, setCity] = useState("");
   const [startDate, setStartDate] = useState("");
   const [fee, setFee] = useState(0);
+  const [format, setFormat] = useState<"single" | "groups">("single");
 
   const create = () => {
     if (!name.trim()) return;
@@ -229,6 +230,7 @@ function NewTournament({
       city,
       startDate,
       fee,
+      format,
       teams: [],
       matches: [],
     };
