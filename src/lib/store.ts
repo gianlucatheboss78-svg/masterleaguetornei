@@ -128,13 +128,20 @@ export type Row = {
   pts: number;
 };
 
-export function standings(t: Tournament, winPts: number, drawPts: number): Row[] {
+export function standings(
+  t: Tournament,
+  winPts: number,
+  drawPts: number,
+  group?: GroupId,
+): Row[] {
   const rows = new Map<string, Row>();
-  t.teams.forEach((team) =>
-    rows.set(team.id, { team, g: 0, v: 0, n: 0, p: 0, gf: 0, gs: 0, pts: 0 }),
-  );
+  t.teams
+    .filter((team) => (group ? team.group === group : true))
+    .forEach((team) =>
+      rows.set(team.id, { team, g: 0, v: 0, n: 0, p: 0, gf: 0, gs: 0, pts: 0 }),
+    );
   t.matches
-    .filter((m) => m.status === "finita")
+    .filter((m) => m.status === "finita" && !m.ko && (group ? m.group === group : true))
     .forEach((m) => {
       const a = rows.get(m.teamA);
       const b = rows.get(m.teamB);
