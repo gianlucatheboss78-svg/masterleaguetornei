@@ -155,6 +155,48 @@ function TeamsTab({ t, patch }: { t: Tournament; patch: Patch }) {
         </button>
       </div>
 
+      {t.format === "groups" && (
+        <div className="card-night space-y-3 p-4">
+          <p className="text-sm text-primary">{tr("groups.title")}</p>
+          <button
+            onClick={() => patch((cur) => ({ ...cur, teams: splitGroups(cur.teams) }))}
+            className="btn-gold w-full py-2 text-sm"
+            disabled={t.teams.length < 2}
+          >
+            {tr("groups.split")}
+          </button>
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            {(["A", "B"] as GroupId[]).map((g) => (
+              <div
+                key={g}
+                className={`rounded-xl border p-2 ${
+                  g === "A"
+                    ? "border-primary/40 bg-primary/10"
+                    : "border-emerald-400/40 bg-emerald-400/10"
+                }`}
+              >
+                <p
+                  className={`text-[11px] font-bold tracking-widest ${
+                    g === "A" ? "text-primary" : "text-emerald-300"
+                  }`}
+                >
+                  {tr(g === "A" ? "groups.a" : "groups.b")} ({t.teams.filter((x) => x.group === g).length})
+                </p>
+                <ul className="mt-1 space-y-0.5">
+                  {t.teams
+                    .filter((x) => x.group === g)
+                    .map((x) => (
+                      <li key={x.id} className="truncate" translate="no">
+                        {x.name}
+                      </li>
+                    ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {t.teams.map((team) => (
         <div key={team.id} className="card-night p-4">
           <div className="flex items-center gap-3">
@@ -195,6 +237,29 @@ function TeamsTab({ t, patch }: { t: Tournament; patch: Patch }) {
               <p className="text-xs text-muted-foreground">
                 {team.players.length} {tr("teams.players")}
               </p>
+              {t.format === "groups" && (
+                <select
+                  className="mt-1 rounded-lg border border-primary/30 bg-secondary/60 px-2 py-1 text-[11px]"
+                  aria-label={tr("groups.move")}
+                  value={team.group ?? ""}
+                  onChange={(e) =>
+                    patch((cur) => ({
+                      ...cur,
+                      teams: cur.teams.map((x) =>
+                        x.id === team.id
+                          ? e.target.value
+                            ? { ...x, group: e.target.value as GroupId }
+                            : { ...x, group: undefined }
+                          : x,
+                      ),
+                    }))
+                  }
+                >
+                  <option value="">{tr("groups.none")}</option>
+                  <option value="A">{tr("groups.a")}</option>
+                  <option value="B">{tr("groups.b")}</option>
+                </select>
+              )}
             </div>
             <button
               onClick={() => setOpenTeam(openTeam === team.id ? null : team.id)}
@@ -551,12 +616,18 @@ function CalendarTab({ t, patch }: { t: Tournament; patch: Patch }) {
         onClick={() =>
           patch((cur) => ({
             ...cur,
-            matches: autoCalendar(cur.teams, cur.startDate, getSport(cur.sport).venue),
+            matches:
+              cur.format === "groups"
+                ? [
+                    ...autoCalendarGroups(cur, getSport(cur.sport).venue),
+                    ...cur.matches.filter((m) => m.ko),
+                  ]
+                : autoCalendar(cur.teams, cur.startDate, getSport(cur.sport).venue),
           }))
         }
         className="btn-ghost-gold w-full py-3 text-sm"
       >
-        {tr("cal.auto")}
+        {tr(t.format === "groups" ? "cal.autoGroups" : "cal.auto")}
       </button>
 
       <div className="space-y-2">
