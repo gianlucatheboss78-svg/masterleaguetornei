@@ -210,3 +210,145 @@ export function autoCalendar(teams: Team[], startDate: string, venue: string): M
   }
   return matches;
 }
+
+/* ---------------- 2 Gironi + Fase finale ---------------- */
+
+/** Divide le squadre in 2 gironi equilibrati (totale / 2, sempre dinamico). */
+export function splitGroups(teams: Team[]): Team[] {
+  return teams.map((team, i) => ({ ...team, group: (i % 2 === 0 ? "A" : "B") as GroupId }));
+}
+
+export const teamsOfGroup = (t: Tournament, g: GroupId) => t.teams.filter((x) => x.group === g);
+
+/** Calendario all'italiana separato per Girone A e Girone B. */
+export function autoCalendarGroups(t: Tournament, venue: string): Match[] {
+  const out: Match[] = [];
+  (["A", "B"] as GroupId[]).forEach((g) => {
+    const list = teamsOfGroup(t, g);
+    autoCalendar(list, t.startDate, `${venue} ${g}`).forEach((m) => out.push({ ...m, group: g }));
+  });
+  return out;
+}
+
+export const groupPhaseMatches = (t: Tournament) => t.matches.filter((m) => !m.ko);
+export const koMatches = (t: Tournament) => t.matches.filter((m) => m.ko);
+
+/** La fase a gironi è finita quando ci sono partite e sono tutte concluse. */
+export function groupPhaseDone(t: Tournament): boolean {
+  const list = groupPhaseMatches(t);
+  return list.length > 0 && list.every((m) => m.status === "finita");
+}
+
+/** Numero di turni a eliminazione diretta per 2*q qualificate. */
+const koRounds = (q: number) => Math.round(Math.log2(q * 2));
+
+/** Crea il tabellone: q qualificate per girone (1, 2, 4...). */
+export function buildKnockout(
+  t: Tournament,
+  q: number,
+  winPts: number,
+  drawPts: number,
+): Match[] {
+  const a = standings(t, winPts, drawPts, "A").slice(0, q);
+  const b = standings(t, winPts, drawPts, "B").slice(0, q);
+  if (a.length < q || b.length < q) return [];
+
+  const seeds: string[] = [];
+  for (let i = 0; i < q; i++) {
+    seeds.push(a[i]!.team.id);
+    seeds.push(b[q - 1 - i]!.team.id);
+  }
+
+  const R = koRounds(q);
+  const out: Match[] = [];
+  const base = t.startDate ? new Date(t.startDate) : new Date();
+
+  for (let r = 1; r <= R; r++) {
+    const count = 2 ** (R - r);
+    for (let i = 0; i < count; i++) {
+      const day = new Date(base);
+      day.setDate(base.getDate() + 30 + r * 3);
+      out.push({
+        id: uid(),
+        round: 100 + r,
+        teamA: r === 1 ? (seeds[i * 2] ?? "") : "",
+        teamB: r === 1 ? (seeds[i * 2 + 1] ?? "") : "",
+        date: day.toISOString().slice(0, 10),
+        time: "18:00",
+        venue: "",
+        scoreA: 0,
+        scoreB: 0,
+        status: "programmata",
+        events: [],
+        ko: { round: r, index: i },
+      });
+    }
+  }
+
+  if (R >= 2) {
+    const day = new Date(base);
+    day.setDate(base.getDate() + 30 + R * 3);
+    out.push({
+      id: uid(),
+      round: 100 + R,
+      teamA: "",
+      teamB: "",
+      date: day.toISOString().slice(0, 10),
+      time: "15:00",
+      venue: "",
+      scoreA: 0,
+      scoreB: 0,
+      status: "programmata",
+      events: [],
+      ko: { round: R, index: 1, kind: "third" },
+    });
+  }
+
+  return syncKnockout(out);
+}
+
+const winnerOf = (m?: Match) =>
+  m && m.status === "finita" && m.scoreA !== m.scoreB
+    ? m.scoreA > m.scoreB
+      ? m.teamA
+      : m.teamB
+    : "";
+const loserOf = (m?: Match) =>
+  m && m.status === "finita" && m.scoreA !== m.scoreB
+    ? m.scoreA > m.scoreB
+      ? m.teamB
+      : m.teamA
+    : "";
+
+/** Propaga vincitori (e perdenti in finale 3°/4°) nei turni successivi. */
+export function syncKnockout(matches: Match[]): Match[] {
+  const ko = matches.filter((m) => m.ko);
+  if (ko.length === 0) return matches;
+  const R = Math.max(...ko.map((m) => m.ko!.round));
+  const at = (r: number, i: number) =>
+    ko.find((m) => m.ko!.round === r && m.ko!.index === i && m.ko!.kind !== "third");
+
+  const next = matches.map((m) => {
+    if (!m.ko) return m;
+    const { round, index, kind } = m.ko;
+    if (kind === "third") {
+      const s1 = at(R - 1, 0);
+      const s2 = at(R - 1, 1);
+      return { ...m, teamA: loserOf(s1), teamB: loserOf(s2) };
+    }
+    if (round === 1) return m;
+    const p1 = at(round - 1, index * 2);
+    const p2 = at(round - 1, index * 2 + 1);
+    return { ...m, teamA: winnerOf(p1), teamB: winnerOf(p2) };
+  });
+  return next;
+}
+
+export function koRoundLabelKey(round: number, total: number, kind?: "third"): string {
+  if (kind === "third") return "final.third";
+  const left = total - round;
+  if (left === 0) return "final.final";
+  if (left === 1) return "final.semis";
+  if (left === 2) return "final.quarters";
+  return "final.round16";
+}
