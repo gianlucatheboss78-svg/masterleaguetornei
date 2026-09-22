@@ -186,7 +186,23 @@ export function useTournaments() {
 
 export function useTournament(id: string) {
   const { data, ready, update } = useTournaments();
-  const tournament = data.find((t) => t.id === id) ?? null;
+  const [remote, setRemote] = useState<Tournament | null>(null);
+  const local = data.find((t) => t.id === id) ?? null;
+
+  // Legge prima dal database, poi ricade sui dati del dispositivo.
+  useEffect(() => {
+    let alive = true;
+    void (async () => {
+      const { fetchTournament } = await import("./cloud");
+      const found = await fetchTournament(id);
+      if (alive && found) setRemote(found);
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [id]);
+
+  const tournament = remote && !local ? remote : local;
   const patch = useCallback(
     (fn: (t: Tournament) => Tournament) =>
       update((list) => list.map((t) => (t.id === id ? fn(t) : t))),
