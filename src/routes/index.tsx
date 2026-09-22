@@ -263,6 +263,15 @@ function NewTournament({
               </option>
             ))}
           </select>
+          <label className="block text-xs text-muted-foreground">{t("nt.format")}</label>
+          <select
+            className="field"
+            value={format}
+            onChange={(e) => setFormat(e.target.value as "single" | "groups")}
+          >
+            <option value="single">{t("nt.fmtSingle")}</option>
+            <option value="groups">{t("nt.fmtGroups")}</option>
+          </select>
           <input
             className="field"
             placeholder={t("nt.city")}
