@@ -1,4 +1,4 @@
-export type Lang = "it" | "en" | "es" | "fr" | "pt";
+export type Lang = "it" | "en" | "es" | "fr" | "pt" | "zh";
 
 export const LANGS: { code: Lang; label: string; flag: string }[] = [
   { code: "it", label: "Italiano", flag: "🇮🇹" },
@@ -6,6 +6,7 @@ export const LANGS: { code: Lang; label: string; flag: string }[] = [
   { code: "es", label: "Español", flag: "🇪🇸" },
   { code: "fr", label: "Français", flag: "🇫🇷" },
   { code: "pt", label: "Português", flag: "🇵🇹" },
+  { code: "zh", label: "中文", flag: "🇨🇳" },
 ];
 
 export const LANG_KEY = "mlt.lang.v1";

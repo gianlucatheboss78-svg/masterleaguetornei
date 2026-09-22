@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { LogoPicker } from "@/components/LogoPicker";
+import { LOGO_URL } from "@/components/AppHeader";
 import { SPORTS, getSport } from "@/lib/sports";
 import { useI18n } from "@/lib/i18n";
 import { usePro } from "@/lib/pro";
@@ -38,9 +39,11 @@ function Home() {
   return (
     <main className="mx-auto min-h-screen w-full max-w-lg px-4 pb-28 pt-8">
       <header className="text-center">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full btn-gold text-3xl">
-          🏆
-        </div>
+        <img
+          src={LOGO_URL}
+          alt="Master League Tornei"
+          className="mx-auto h-28 w-28 rounded-3xl border border-primary/40 object-cover shadow-lg"
+        />
         <h1 className="mt-4 text-3xl leading-none gold-text">Master League</h1>
         <p className="display text-lg tracking-[0.35em] text-muted-foreground">
           {t("home.tornei")}
