@@ -101,28 +101,42 @@ function Home() {
           </p>
         )}
         {data.map((x) => (
-          <Link
-            key={x.id}
-            to="/torneo/$id"
-            params={{ id: x.id }}
-            className="card-night flex items-center gap-3 p-3"
-          >
-            {x.logo ? (
-              <img src={x.logo} alt={x.name} className="h-14 w-14 rounded-full object-cover" />
-            ) : (
-              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-secondary text-2xl">
-                {getSport(x.sport).icon}
+          <div key={x.id} className="relative">
+            <Link
+              to="/torneo/$id"
+              params={{ id: x.id }}
+              className="card-night flex items-center gap-3 py-3 pl-3 pr-14"
+            >
+              {x.logo ? (
+                <img src={x.logo} alt={x.name} className="h-14 w-14 rounded-full object-cover" />
+              ) : (
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-secondary text-2xl">
+                  {getSport(x.sport).icon}
+                </div>
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="display truncate text-base text-primary">{x.name}</p>
+                <p className="truncate text-xs text-muted-foreground">
+                  {sportName(x.sport, getSport(x.sport).name)} · {x.teams.length} {t("home.teams")} ·{" "}
+                  {x.city || "—"}
+                </p>
               </div>
-            )}
-            <div className="min-w-0 flex-1">
-              <p className="display truncate text-base text-primary">{x.name}</p>
-              <p className="truncate text-xs text-muted-foreground">
-                {sportName(x.sport, getSport(x.sport).name)} · {x.teams.length} {t("home.teams")} ·{" "}
-                {x.city || "—"}
-              </p>
-            </div>
-            <span className="text-primary">›</span>
-          </Link>
+              <span className="text-primary">›</span>
+            </Link>
+            <button
+              type="button"
+              aria-label={t("home.delete")}
+              title={t("home.delete")}
+              onClick={() => {
+                if (window.confirm(t("home.deleteConfirm", { name: x.name }))) {
+                  update((list) => list.filter((tournament) => tournament.id !== x.id));
+                }
+              }}
+              className="absolute right-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-destructive/15 text-lg text-destructive"
+            >
+              🗑️
+            </button>
+          </div>
         ))}
       </section>
 

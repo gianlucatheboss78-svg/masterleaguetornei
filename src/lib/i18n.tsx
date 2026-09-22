@@ -25,6 +25,8 @@ const it: Dict = {
   "home.yours": "I tuoi tornei",
   "home.empty": "Nessun torneo. Creane uno per iniziare.",
   "home.teams": "squadre",
+  "home.delete": "Elimina torneo",
+  "home.deleteConfirm": "Eliminare definitivamente {name}?",
 
   "nt.title": "Nuovo torneo",
   "nt.logoHint": "Galleria telefono · 1000 loghi · 195 bandiere",
@@ -74,9 +76,11 @@ const it: Dict = {
 
   "teams.name": "Nome squadra",
   "teams.players": "giocatori",
-  "teams.roster": "Rosa",
+  "teams.roster": "Giocatori",
   "teams.del": "Elimina squadra",
   "roster.name": "Nome giocatore",
+  "roster.season": "Stagione",
+  "roster.foot": "Piede",
   "roster.add": "+ Aggiungi giocatore",
   "roster.del": "Elimina giocatore",
   "roster.paid": "PAGATO",
@@ -149,6 +153,8 @@ const en: Dict = {
   "home.yours": "Your tournaments",
   "home.empty": "No tournaments yet. Create one to get started.",
   "home.teams": "teams",
+  "home.delete": "Delete tournament",
+  "home.deleteConfirm": "Permanently delete {name}?",
 
   "nt.title": "New tournament",
   "nt.logoHint": "Phone gallery · 1000 logos · 195 flags",
@@ -201,6 +207,8 @@ const en: Dict = {
   "teams.roster": "Squad",
   "teams.del": "Delete team",
   "roster.name": "Player name",
+  "roster.season": "Season",
+  "roster.foot": "Foot",
   "roster.add": "+ Add player",
   "roster.del": "Delete player",
   "roster.paid": "PAID",
@@ -273,6 +281,8 @@ const es: Dict = {
   "home.yours": "Tus torneos",
   "home.empty": "Ningún torneo. Crea uno para empezar.",
   "home.teams": "equipos",
+  "home.delete": "Eliminar torneo",
+  "home.deleteConfirm": "¿Eliminar definitivamente {name}?",
 
   "nt.title": "Nuevo torneo",
   "nt.logoHint": "Galería del móvil · 1000 logos · 195 banderas",
@@ -325,6 +335,8 @@ const es: Dict = {
   "teams.roster": "Plantilla",
   "teams.del": "Eliminar equipo",
   "roster.name": "Nombre del jugador",
+  "roster.season": "Temporada",
+  "roster.foot": "Pie",
   "roster.add": "+ Añadir jugador",
   "roster.del": "Eliminar jugador",
   "roster.paid": "PAGADO",
@@ -397,6 +409,8 @@ const fr: Dict = {
   "home.yours": "Vos tournois",
   "home.empty": "Aucun tournoi. Créez-en un pour commencer.",
   "home.teams": "équipes",
+  "home.delete": "Supprimer le tournoi",
+  "home.deleteConfirm": "Supprimer définitivement {name} ?",
 
   "nt.title": "Nouveau tournoi",
   "nt.logoHint": "Galerie du téléphone · 1000 logos · 195 drapeaux",
@@ -449,6 +463,8 @@ const fr: Dict = {
   "teams.roster": "Effectif",
   "teams.del": "Supprimer l'équipe",
   "roster.name": "Nom du joueur",
+  "roster.season": "Saison",
+  "roster.foot": "Pied",
   "roster.add": "+ Ajouter un joueur",
   "roster.del": "Supprimer le joueur",
   "roster.paid": "PAYÉ",
@@ -521,6 +537,8 @@ const pt: Dict = {
   "home.yours": "Os teus torneios",
   "home.empty": "Nenhum torneio. Cria um para começar.",
   "home.teams": "equipas",
+  "home.delete": "Eliminar torneio",
+  "home.deleteConfirm": "Eliminar definitivamente {name}?",
 
   "nt.title": "Novo torneio",
   "nt.logoHint": "Galeria do telemóvel · 1000 logos · 195 bandeiras",
@@ -573,6 +591,8 @@ const pt: Dict = {
   "teams.roster": "Plantel",
   "teams.del": "Eliminar equipa",
   "roster.name": "Nome do jogador",
+  "roster.season": "Época",
+  "roster.foot": "Pé",
   "roster.add": "+ Adicionar jogador",
   "roster.del": "Eliminar jogador",
   "roster.paid": "PAGO",
@@ -645,6 +665,8 @@ const zh: Dict = {
   "home.yours": "我的赛事",
   "home.empty": "暂无赛事。创建一个开始吧。",
   "home.teams": "支球队",
+  "home.delete": "删除赛事",
+  "home.deleteConfirm": "永久删除 {name}？",
 
   "nt.title": "新建赛事",
   "nt.logoHint": "手机相册 · 1000 个队徽 · 195 面国旗",
@@ -697,6 +719,8 @@ const zh: Dict = {
   "teams.roster": "阵容",
   "teams.del": "删除球队",
   "roster.name": "球员姓名",
+  "roster.season": "赛季",
+  "roster.foot": "惯用脚",
   "roster.add": "+ 添加球员",
   "roster.del": "删除球员",
   "roster.paid": "已付款",
@@ -768,11 +792,14 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>("it");
 
   useEffect(() => {
-    setLangState(detectLang());
+    const detected = detectLang();
+    setLangState(detected);
+    document.documentElement.lang = detected;
   }, []);
 
   const setLang = useCallback((l: Lang) => {
     setLangState(l);
+    document.documentElement.lang = l;
     try {
       window.localStorage.setItem(LANG_KEY, l);
     } catch {
