@@ -22,11 +22,23 @@ export type Team = {
   players: Player[];
 };
 
+export type EventType =
+  | "goal"
+  | "owngoal"
+  | "pengoal"
+  | "pensaved"
+  | "penmissed"
+  | "yellow"
+  | "red"
+  | "dblyellow"
+  | "sub"
+  | "mvp";
+
 export type MatchEvent = {
   id: string;
   playerId: string;
   teamId: string;
-  type: "goal" | "yellow" | "red" | "mvp";
+  type: EventType;
   minute: string;
 };
 
@@ -168,7 +180,7 @@ export function scorers(t: Tournament) {
       const player = team?.players.find((p) => p.id === e.playerId);
       if (!team || !player) return;
       const cur = map.get(player.id) ?? { player, team, goals: 0, mvp: 0 };
-      if (e.type === "goal") cur.goals++;
+      if (e.type === "goal" || e.type === "pengoal") cur.goals++;
       if (e.type === "mvp") cur.mvp++;
       map.set(player.id, cur);
     }),
