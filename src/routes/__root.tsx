@@ -122,7 +122,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <I18nProvider>
-        <LanguageSwitcher />
+        <AppHeader />
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
         <Outlet />
       </I18nProvider>

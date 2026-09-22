@@ -16,7 +16,7 @@ export function LanguageSwitcher() {
   }, []);
 
   return (
-    <div ref={ref} className="fixed right-3 top-3 z-[60]" aria-label={t("lang.title")}>
+    <div ref={ref} className="relative z-[60]" aria-label={t("lang.title")}>
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
