@@ -536,7 +536,15 @@ function Roster({ t, team, patch }: { t: Tournament; team: Team; patch: Patch })
 
 /* ---------------- Calendario ---------------- */
 
-function CalendarTab({ t, patch }: { t: Tournament; patch: Patch }) {
+function CalendarTab({
+  t,
+  patch,
+  onOpen,
+}: {
+  t: Tournament;
+  patch: Patch;
+  onOpen: (id: string) => void;
+}) {
   const sport = getSport(t.sport);
   const { t: tr, venueName } = useI18n();
   const [m, setM] = useState({
@@ -658,7 +666,14 @@ function CalendarTab({ t, patch }: { t: Tournament; patch: Patch }) {
 
       <div className="space-y-2">
         {sorted.map((match) => (
-          <div key={match.id} className="card-night relative p-3 pr-14">
+          <div
+            key={match.id}
+            role="button"
+            tabIndex={0}
+            onClick={() => onOpen(match.id)}
+            onKeyDown={(e) => e.key === "Enter" && onOpen(match.id)}
+            className="card-night relative cursor-pointer p-3 pr-14"
+          >
             <p className="text-[11px] uppercase tracking-widest text-muted-foreground">
               {match.group ? `${tr(match.group === "A" ? "groups.a" : "groups.b")} · ` : ""}
               {tr("cal.round")} {match.round} · {match.date} {match.time} · {match.venue}
@@ -668,9 +683,10 @@ function CalendarTab({ t, patch }: { t: Tournament; patch: Patch }) {
               {nameOf(t, match.teamB)}
             </p>
             <button
-              onClick={() =>
-                patch((cur) => ({ ...cur, matches: cur.matches.filter((x) => x.id !== match.id) }))
-              }
+              onClick={(e) => {
+                e.stopPropagation();
+                patch((cur) => ({ ...cur, matches: cur.matches.filter((x) => x.id !== match.id) }));
+              }}
               aria-label={tr("cal.delMatch")}
               title={tr("cal.delMatch")}
               className="absolute right-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-red-500/15 text-destructive"
@@ -688,8 +704,16 @@ const nameOf = (t: Tournament, id: string) => t.teams.find((x) => x.id === id)?.
 
 /* ---------------- Live ---------------- */
 
-function LiveTab({ t, patch }: { t: Tournament; patch: Patch }) {
-  const [openId, setOpenId] = useState<string | null>(null);
+function LiveTab({
+  t,
+  patch,
+  initialOpen,
+}: {
+  t: Tournament;
+  patch: Patch;
+  initialOpen?: string | null;
+}) {
+  const [openId, setOpenId] = useState<string | null>(initialOpen ?? null);
   const sport = getSport(t.sport);
   const { t: tr, scoreName } = useI18n();
   const statusLabel = (s: string) =>
