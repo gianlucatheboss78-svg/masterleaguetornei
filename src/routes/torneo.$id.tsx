@@ -149,10 +149,21 @@ function TeamsTab({ t, patch }: { t: Tournament; patch: Patch }) {
 
   const addTeam = () => {
     if (!name.trim()) return;
-    patch((cur) => ({
-      ...cur,
-      teams: [...cur.teams, { id: uid(), name: name.trim(), players: [] }],
-    }));
+    patch((cur) => {
+      const auto =
+        cur.format === "groups"
+          ? {
+              group: (cur.teams.filter((x) => x.group === "A").length <=
+              cur.teams.filter((x) => x.group === "B").length
+                ? "A"
+                : "B") as GroupId,
+            }
+          : {};
+      return {
+        ...cur,
+        teams: [...cur.teams, { id: uid(), name: name.trim(), players: [], ...auto }],
+      };
+    });
     setName("");
   };
 
