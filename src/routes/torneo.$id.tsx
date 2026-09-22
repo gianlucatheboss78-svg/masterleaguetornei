@@ -159,7 +159,7 @@ function TeamsTab({ t, patch }: { t: Tournament; patch: Patch }) {
               }
             />
             <div className="min-w-0 flex-1">
-              <p className="display truncate text-primary">{team.name}</p>
+              <p className="display truncate text-primary" translate="no">{team.name}</p>
               <p className="text-xs text-muted-foreground">
                 {team.players.length} {tr("teams.players")}
               </p>
@@ -209,6 +209,7 @@ function Roster({ t, team, patch }: { t: Tournament; team: Team; patch: Patch })
     birth: "",
     role: sport.roles[0]!.id,
     paid: false,
+    season: "",
   });
 
   const addPlayer = () => {
@@ -221,7 +222,7 @@ function Roster({ t, team, patch }: { t: Tournament; team: Team; patch: Patch })
           : x,
       ),
     }));
-    setDraft({ name: "", country: "IT", birth: "", role: sport.roles[0]!.id, paid: false });
+    setDraft({ name: "", country: "IT", birth: "", season: "", role: sport.roles[0]!.id, paid: false });
   };
 
   return (
@@ -248,24 +249,39 @@ function Roster({ t, team, patch }: { t: Tournament; team: Team; patch: Patch })
               if (f) setDraft({ ...draft, photo: await readCircleImage(f, 200) });
             }}
           />
-          <input
-            className="field"
-            placeholder={tr("roster.name")}
-            value={draft.name}
-            onChange={(e) => setDraft({ ...draft, name: e.target.value })}
-          />
+          <label className="min-w-0 flex-1 text-xs text-muted-foreground">
+            {tr("roster.name")}
+            <input
+              className="field mt-1"
+              placeholder={tr("roster.name")}
+              value={draft.name}
+              onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+            />
+          </label>
         </div>
-        <select
-          className="field"
-          value={draft.country}
-          onChange={(e) => setDraft({ ...draft, country: e.target.value })}
-        >
-          {getCountries(lang).map((c) => (
-            <option key={c.code} value={c.code}>
-              {c.flag} {c.name}
-            </option>
-          ))}
-        </select>
+        <label className="block text-xs text-muted-foreground">
+          {tr("roster.country")}
+          <select
+            className="field mt-1"
+            value={draft.country}
+            onChange={(e) => setDraft({ ...draft, country: e.target.value })}
+          >
+            {getCountries(lang).map((c) => (
+              <option key={c.code} value={c.code}>
+                {c.flag} {c.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="block text-xs text-muted-foreground">
+          {tr("roster.season")}
+          <input
+            className="field mt-1"
+            placeholder={tr("roster.season")}
+            value={draft.season ?? ""}
+            onChange={(e) => setDraft({ ...draft, season: e.target.value })}
+          />
+        </label>
         <div className="flex gap-2">
           <input
             className="field"
@@ -279,17 +295,20 @@ function Roster({ t, team, patch }: { t: Tournament; team: Team; patch: Patch })
               : tr("common.age")}
           </span>
         </div>
-        <select
-          className="field"
-          value={draft.role}
-          onChange={(e) => setDraft({ ...draft, role: e.target.value })}
-        >
-          {sport.roles.map((r) => (
-            <option key={r.id} value={r.id}>
-              {r.icon} {roleName(r.name)}
-            </option>
-          ))}
-        </select>
+        <label className="block text-xs text-muted-foreground">
+          {tr("roster.foot")}
+          <select
+            className="field mt-1"
+            value={draft.role}
+            onChange={(e) => setDraft({ ...draft, role: e.target.value })}
+          >
+            {sport.roles.map((r) => (
+              <option key={r.id} value={r.id}>
+                {r.icon} {roleName(r.name)}
+              </option>
+            ))}
+          </select>
+        </label>
         <button onClick={addPlayer} className="btn-gold w-full py-2 text-sm">
           {tr("roster.add")}
         </button>

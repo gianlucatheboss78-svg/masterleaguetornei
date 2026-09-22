@@ -79,7 +79,7 @@ function LogoSheet({ onClose, onPick }: { onClose: () => void; onPick: (d: strin
           </button>
         </div>
 
-        <div className="mt-3 flex gap-2 text-xs">
+        <div className="mt-3 flex gap-2 overflow-x-auto whitespace-nowrap px-2 pb-3 text-xs">
           {(
             [
               ["galleria", t("lp.gallery")],
@@ -90,7 +90,7 @@ function LogoSheet({ onClose, onPick }: { onClose: () => void; onPick: (d: strin
             <button
               key={id}
               onClick={() => setTab(id)}
-              className={`flex-1 py-2 font-bold ${tab === id ? "btn-gold" : "btn-ghost-gold"}`}
+              className={`min-w-fit shrink-0 px-4 py-1.5 font-bold ${tab === id ? "btn-gold" : "btn-ghost-gold"}`}
             >
               {label}
             </button>
@@ -123,10 +123,10 @@ function LogoSheet({ onClose, onPick }: { onClose: () => void; onPick: (d: strin
               onChange={(e) => setQ(e.target.value)}
             />
             {tab === "loghi" && (
-              <div className="-mx-1 mt-2 flex gap-1 overflow-x-auto px-1 pb-1 text-[10px]">
+              <div className="mt-2 flex gap-2 overflow-x-auto whitespace-nowrap px-2 pb-3 text-[10px]">
                 <button
                   onClick={() => setPaletteId("all")}
-                  className={`shrink-0 px-3 py-1 ${paletteId === "all" ? "btn-gold" : "btn-ghost-gold"}`}
+                  className={`min-w-fit shrink-0 px-4 py-1.5 ${paletteId === "all" ? "btn-gold" : "btn-ghost-gold"}`}
                 >
                   {t("lp.all")}
                 </button>
@@ -134,7 +134,7 @@ function LogoSheet({ onClose, onPick }: { onClose: () => void; onPick: (d: strin
                   <button
                     key={p.id}
                     onClick={() => setPaletteId(p.id)}
-                    className={`shrink-0 px-3 py-1 ${paletteId === p.id ? "btn-gold" : "btn-ghost-gold"}`}
+                    className={`min-w-fit shrink-0 px-4 py-1.5 ${paletteId === p.id ? "btn-gold" : "btn-ghost-gold"}`}
                   >
                     {p.name}
                   </button>

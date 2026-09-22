@@ -6,6 +6,7 @@ export type Player = {
   photo?: string;
   country: string;
   birth: string;
+  season?: string;
   role: string;
   paid: boolean;
 };
