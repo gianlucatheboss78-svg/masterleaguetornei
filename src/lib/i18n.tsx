@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { LANGS, LANG_KEY, detectLang, type Lang } from "./i18n-core";
 import { GROUP_DICTS } from "./i18n-groups";
 import { TENNIS_DICTS } from "./i18n-tennis";
+import { BASKET_DICTS } from "./i18n-basket";
 import { ROLE_NAMES, SCORE_NAMES, SPORT_NAMES, VENUE_NAMES, term } from "./i18n-terms";
 
 export { LANGS, type Lang };
@@ -849,12 +850,12 @@ const zh: Dict = {
 };
 
 const DICTS: Record<Lang, Dict> = {
-  it: { ...it, ...GROUP_DICTS.it, ...TENNIS_DICTS.it },
-  en: { ...en, ...GROUP_DICTS.en, ...TENNIS_DICTS.en },
-  es: { ...es, ...GROUP_DICTS.es, ...TENNIS_DICTS.es },
-  fr: { ...fr, ...GROUP_DICTS.fr, ...TENNIS_DICTS.fr },
-  pt: { ...pt, ...GROUP_DICTS.pt, ...TENNIS_DICTS.pt },
-  zh: { ...zh, ...GROUP_DICTS.zh, ...TENNIS_DICTS.zh },
+  it: { ...it, ...GROUP_DICTS.it, ...TENNIS_DICTS.it, ...BASKET_DICTS.it },
+  en: { ...en, ...GROUP_DICTS.en, ...TENNIS_DICTS.en, ...BASKET_DICTS.en },
+  es: { ...es, ...GROUP_DICTS.es, ...TENNIS_DICTS.es, ...BASKET_DICTS.es },
+  fr: { ...fr, ...GROUP_DICTS.fr, ...TENNIS_DICTS.fr, ...BASKET_DICTS.fr },
+  pt: { ...pt, ...GROUP_DICTS.pt, ...TENNIS_DICTS.pt, ...BASKET_DICTS.pt },
+  zh: { ...zh, ...GROUP_DICTS.zh, ...TENNIS_DICTS.zh, ...BASKET_DICTS.zh },
 };
 
 type Ctx = {

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import type { TennisState } from "./tennis";
+import type { BasketState } from "./basket";
 
 export type Player = {
   id: string;
@@ -64,6 +65,8 @@ export type Match = {
   /** Tennis/Padel: game vinti (usati per la differenza game in classifica). */
   gamesA?: number;
   gamesB?: number;
+  /** Basket: periodo, cronometro e falli persistenti. */
+  basket?: BasketState;
 };
 
 export type TournamentFormat = "single" | "groups";
@@ -336,6 +339,32 @@ export function buildKnockout(
     });
   }
 
+  return syncKnockout(out);
+}
+
+/** Crea playoff Basket a 8 squadre: 1-8, 4-5, 2-7, 3-6. */
+export function buildBasketPlayoffs(t: Tournament): Match[] {
+  const seeds = standings(t, 2, 0).slice(0, 8).map((row) => row.team.id);
+  if (seeds.length < 8) return [];
+  const pairings = [[0, 7], [3, 4], [1, 6], [2, 5]];
+  const out: Match[] = [];
+  const base = t.startDate ? new Date(t.startDate) : new Date();
+  for (let round = 1; round <= 3; round++) {
+    const count = 2 ** (3 - round);
+    for (let index = 0; index < count; index++) {
+      const day = new Date(base);
+      day.setDate(base.getDate() + 30 + round * 3);
+      const pairing = pairings[index];
+      out.push({
+        id: uid(), round: 100 + round,
+        teamA: round === 1 && pairing ? seeds[pairing[0]!] ?? "" : "",
+        teamB: round === 1 && pairing ? seeds[pairing[1]!] ?? "" : "",
+        date: day.toISOString().slice(0, 10), time: "18:00", venue: "",
+        scoreA: 0, scoreB: 0, status: "programmata", events: [],
+        ko: { round, index },
+      });
+    }
+  }
   return syncKnockout(out);
 }
 
