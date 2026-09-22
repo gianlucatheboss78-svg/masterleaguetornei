@@ -4,7 +4,7 @@ import { LogoPicker } from "@/components/LogoPicker";
 import { getCountries, countryName, flagFor } from "@/lib/countries";
 import { useI18n } from "@/lib/i18n";
 import { ageFrom, readCircleImage } from "@/lib/media";
-import { getSport } from "@/lib/sports";
+import { getSport, isFootball, variantLabel } from "@/lib/sports";
 import {
   autoCalendar,
   autoCalendarGroups,
