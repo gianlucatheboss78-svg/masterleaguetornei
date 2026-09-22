@@ -237,7 +237,8 @@ export function useTournament(id: string) {
     };
   }, [id]);
 
-  const tournament = local ?? remote;
+  // Il dato online è autorevole; il salvataggio locale resta il fallback offline.
+  const tournament = remote ?? local;
   const patch = useCallback(
     (fn: (t: Tournament) => Tournament) =>
       update((list) => list.map((t) => (t.id === id ? fn(t) : t))),

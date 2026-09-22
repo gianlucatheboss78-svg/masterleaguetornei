@@ -52,9 +52,9 @@ export async function fetchTournament(id: string): Promise<Tournament | null> {
 }
 
 /** Salva (crea o aggiorna) un torneo nel database. */
-export async function pushTournament(t: Tournament): Promise<void> {
+export async function pushTournament(t: Tournament): Promise<boolean> {
   const supabase = getSupabase();
-  if (!supabase) return;
+  if (!supabase) return false;
   const userId = await currentUserId();
   const { error } = await supabase.from("tournaments").upsert(
     {
@@ -67,7 +67,11 @@ export async function pushTournament(t: Tournament): Promise<void> {
     },
     { onConflict: "id" },
   );
-  if (error) console.error("[cloud] push", error.message);
+  if (error) {
+    console.error("[cloud] push", error.message);
+    return false;
+  }
+  return true;
 }
 
 /** Elimina un torneo dal database. */

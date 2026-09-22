@@ -5,6 +5,7 @@ import { LogoPicker } from "@/components/LogoPicker";
 import { ShareDialog } from "@/components/ShareDialog";
 import { getCountries, countryName, flagFor } from "@/lib/countries";
 import { useI18n } from "@/lib/i18n";
+import { pushTournament } from "@/lib/cloud";
 import { ageFrom, readCircleImage } from "@/lib/media";
 import { getSport, isFootball, variantLabel } from "@/lib/sports";
 import {
@@ -141,7 +142,11 @@ function TournamentPage() {
         </div>
         <button
           type="button"
-          onClick={() => setShareOpen(true)}
+          onClick={async () => {
+            await pushTournament(tournament);
+            setShareUrl(`https://masterleaguetornei.lovable.app/torneo/${tournament.id}`);
+            setShareOpen(true);
+          }}
           className="btn-gold flex shrink-0 items-center gap-1 self-start px-3 py-2 text-xs font-semibold"
         >
           <Share2 className="h-4 w-4" aria-hidden="true" />

@@ -12,6 +12,7 @@ import { isRacket } from "@/lib/tennis";
 import { isBasket } from "@/lib/basket";
 import { usePro, useOwner } from "@/lib/pro";
 import { uid, useTournaments, type Tournament } from "@/lib/store";
+import { pushTournament } from "@/lib/cloud";
 
 
 export const Route = createFileRoute("/")({
@@ -51,7 +52,7 @@ function Home() {
   const locked = !pro;
 
   const shareUrl = torneoDaCondividere
-    ? `${typeof window === "undefined" ? "https://masterleaguetornei.lovable.app" : window.location.origin}/torneo/${torneoDaCondividere.id}`
+    ? `https://masterleaguetornei.lovable.app/torneo/${torneoDaCondividere.id}`
     : "";
 
   const copyShareLink = async () => {
@@ -156,7 +157,8 @@ function Home() {
                 variant="ghost"
                 aria-label={t("home.share")}
                 title={t("home.share")}
-                onClick={() => {
+                onClick={async () => {
+                  await pushTournament(x);
                   setCopied(false);
                   setTorneoDaCondividere(x);
                 }}
@@ -314,7 +316,7 @@ function NewTournament({
   const [format, setFormat] = useState<"single" | "singleko" | "groups">("single");
   const [variant, setVariant] = useState<string>("a11");
 
-  const create = () => {
+  const create = async () => {
     if (!name.trim()) return;
     const id =
       typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : uid();
@@ -332,6 +334,7 @@ function NewTournament({
       matches: [],
     };
     update((l) => [item, ...l]);
+    await pushTournament(item);
     onClose();
     nav({ to: "/torneo/$id", params: { id } });
   };
