@@ -1,5 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { LogoPicker } from "@/components/LogoPicker";
 import { LOGO_URL } from "@/components/AppHeader";
 import { SPORTS, getSport } from "@/lib/sports";
@@ -36,6 +38,10 @@ function Home() {
   const owner = useOwner();
   const [open, setOpen] = useState(false);
   const [boss, setBoss] = useState(false);
+  const [code, setCode] = useState("");
+  const [codeInput, setCodeInput] = useState("");
+  const [openDialog, setOpenDialog] = useState(false);
+  const [torneoDaEliminare, setTorneoDaEliminare] = useState<Tournament | null>(null);
   const locked = !pro;
 
   useEffect(() => {
@@ -128,9 +134,11 @@ function Home() {
               aria-label={t("home.delete")}
               title={t("home.delete")}
               onClick={() => {
-                if (window.confirm(t("home.deleteConfirm", { name: x.name }))) {
-                  update((list) => list.filter((tournament) => tournament.id !== x.id));
-                }
+                const randomCode = (Math.floor(Math.random() * 900) + 100).toString();
+                setCode(randomCode);
+                setCodeInput("");
+                setTorneoDaEliminare(x);
+                setOpenDialog(true);
               }}
               className="absolute right-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-destructive/15 text-lg text-destructive"
             >
@@ -141,6 +149,54 @@ function Home() {
       </section>
 
       {open && <NewTournament onClose={() => setOpen(false)} update={update} />}
+
+      <Dialog open={openDialog} onOpenChange={(v) => { setOpenDialog(v); if (!v) setCodeInput(""); }}>
+        <DialogContent className="card-night max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="gold-text text-lg">
+              {torneoDaEliminare
+                ? t("home.deleteConfirm", { name: torneoDaEliminare.name })
+                : t("home.delete")}
+            </DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              {t("home.deleteIrreversible")}
+            </DialogDescription>
+          </DialogHeader>
+          <p className="text-center text-3xl font-bold tracking-widest text-primary">{code}</p>
+          <input
+            className="field text-center"
+            placeholder={t("home.deleteCodePlaceholder")}
+            value={codeInput}
+            inputMode="numeric"
+            onChange={(e) => setCodeInput(e.target.value)}
+          />
+          <div className="mt-2 flex gap-2">
+            <Button
+              variant="ghost"
+              className="btn-ghost-gold flex-1 py-3"
+              onClick={() => setOpenDialog(false)}
+            >
+              {t("common.cancel")}
+            </Button>
+            <Button
+              disabled={codeInput !== code}
+              className={`flex-1 py-3 text-white ${
+                codeInput !== code
+                  ? "bg-gray-500 cursor-not-allowed"
+                  : "bg-red-600 hover:bg-red-700"
+              }`}
+              onClick={() => {
+                if (!torneoDaEliminare) return;
+                update((list) => list.filter((tournament) => tournament.id !== torneoDaEliminare.id));
+                setOpenDialog(false);
+                setTorneoDaEliminare(null);
+              }}
+            >
+              {t("home.deleteBtn")}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }
