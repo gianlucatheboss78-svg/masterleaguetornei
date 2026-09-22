@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { TennisState } from "./tennis";
 import type { BasketState } from "./basket";
+import type { VolleyState } from "./volley";
 
 export type Player = {
   id: string;
@@ -67,6 +68,8 @@ export type Match = {
   gamesB?: number;
   /** Basket: periodo, cronometro e falli persistenti. */
   basket?: BasketState;
+  /** Volley/Beach Volley: set conclusi e punti del set in corso. */
+  volley?: VolleyState;
 };
 
 export type TournamentFormat = "single" | "groups";
@@ -158,6 +161,11 @@ export type Row = {
   gf: number;
   gs: number;
   pts: number;
+  /** Campi derivati usati dalla classifica Volley/Beach Volley. */
+  sf?: number;
+  sa?: number;
+  pf?: number;
+  pa?: number;
 };
 
 export function standings(

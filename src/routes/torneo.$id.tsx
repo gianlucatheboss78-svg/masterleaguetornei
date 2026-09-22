@@ -25,6 +25,16 @@ import {
   type TennisState,
 } from "@/lib/tennis";
 import {
+  addVolleyPoint,
+  emptyVolley,
+  isBeachVolley,
+  isVolley,
+  volleyPointsTotal,
+  volleyRosterLimit,
+  volleySetsWon,
+  type VolleyState,
+} from "@/lib/volley";
+import {
   autoCalendar,
   autoCalendarGroups,
   buildBasketPlayoffs,
@@ -366,6 +376,9 @@ function Roster({ t, team, patch }: { t: Tournament; team: Team; patch: Patch })
 
   const addPlayer = () => {
     if (!draft.name.trim()) return;
+    const target = t.teams.find((x) => x.id === targetTeamId);
+    const limit = volleyRosterLimit(t.sport);
+    if (limit !== undefined && (target?.players.length ?? 0) >= limit) return;
     patch((cur) => ({
       ...cur,
       teams: cur.teams.map((x) =>
@@ -376,6 +389,8 @@ function Roster({ t, team, patch }: { t: Tournament; team: Team; patch: Patch })
     }));
     setDraft({ name: "", country: "IT", birth: "", season: "", role: sport.roles[0]!.id, paid: false });
   };
+  const rosterLimit = volleyRosterLimit(t.sport);
+  const targetRosterCount = t.teams.find((x) => x.id === targetTeamId)?.players.length ?? 0;
 
   return (
     <div className="mt-4 border-t border-primary/15 pt-4">
@@ -498,7 +513,10 @@ function Roster({ t, team, patch }: { t: Tournament; team: Team; patch: Patch })
             ))}
           </select>
         </label>
-        <button onClick={addPlayer} className="btn-gold w-full py-2 text-sm">
+        {rosterLimit !== undefined && targetRosterCount >= rosterLimit && (
+          <p className="text-xs text-destructive">{tr("vl.rosterFull", { n: rosterLimit })}</p>
+        )}
+        <button disabled={rosterLimit !== undefined && targetRosterCount >= rosterLimit} onClick={addPlayer} className="btn-gold w-full py-2 text-sm disabled:opacity-40">
           {tr("roster.add")}
         </button>
       </div>
@@ -755,6 +773,7 @@ function LiveTab({
   const sport = getSport(t.sport);
   const racket = isRacket(t.sport);
   const basket = isBasket(t.sport);
+  const volley = isVolley(t.sport);
   const { t: tr, scoreName } = useI18n();
   const statusLabel = (s: string) =>
     s === "live" ? tr("live.live") : s === "finita" ? tr("live.ended") : tr("live.scheduled");
@@ -804,6 +823,8 @@ function LiveTab({
               <TennisBoard m={m} setMatch={setMatch} />
             ) : basket ? (
               <BasketBoard t={t} m={m} setMatch={setMatch} />
+            ) : volley ? (
+              <VolleyBoard sportId={t.sport} m={m} setMatch={setMatch} />
             ) : (
               <div className="mt-3 flex justify-center gap-2">
                 <button
@@ -867,6 +888,36 @@ function LiveTab({
           </div>
         );
       })}
+    </div>
+  );
+}
+
+/* ---------------- Volley / Beach Volley ---------------- */
+
+function VolleyBoard({ sportId, m, setMatch }: { sportId: string; m: Match; setMatch: (id: string, fn: (x: Match) => Match) => void }) {
+  const { t: tr } = useI18n();
+  const state: VolleyState = m.volley ?? emptyVolley();
+  const beach = isBeachVolley(sportId);
+  const apply = (next: VolleyState) => setMatch(m.id, (current) => {
+    const wins = volleySetsWon(next);
+    const points = volleyPointsTotal(next);
+    return { ...current, volley: next, scoreA: wins.a, scoreB: wins.b, gamesA: points.a, gamesB: points.b, status: next.done ? "finita" : "live" };
+  });
+  return (
+    <div className="mt-3 rounded-xl border border-primary/30 bg-secondary/40 p-3">
+      <p className="text-center text-[11px] uppercase text-muted-foreground">{tr("vl.current")} {state.sets.length + 1}</p>
+      <div className="mt-1 grid grid-cols-[1fr_auto_1fr] items-center gap-2 text-center">
+        <p className="display text-4xl text-primary">{state.pointsA}</p><span className="text-muted-foreground">-</span><p className="display text-4xl text-primary">{state.pointsB}</p>
+      </div>
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <button disabled={state.done} onClick={() => apply(addVolleyPoint(state, "a", beach))} className="btn-gold py-2 text-xs disabled:opacity-40">+ {tr("vl.pointHome")}</button>
+        <button disabled={state.done} onClick={() => apply(addVolleyPoint(state, "b", beach))} className="btn-gold py-2 text-xs disabled:opacity-40">+ {tr("vl.pointAway")}</button>
+      </div>
+      <div className="mt-3 space-y-1 text-xs">
+        {state.sets.map((set, index) => <div key={index} className="flex justify-between"><span className="text-muted-foreground">{tr("vl.set")} {index + 1}</span><strong className="text-primary">{set.a} - {set.b}</strong></div>)}
+      </div>
+      <p className="mt-3 text-center text-[11px] text-muted-foreground">{tr(beach ? "vl.beachRules" : "vl.volleyRules")}</p>
+      <button onClick={() => apply(emptyVolley())} className="btn-ghost-gold mt-2 w-full py-2 text-xs">{tr("vl.reset")}</button>
     </div>
   );
 }
@@ -1271,6 +1322,20 @@ function StandingsTable({
   const sport = getSport(t.sport);
   const rows = standings(t, sport.winPoints, sport.drawPoints, group);
   const basket = isBasket(t.sport);
+  const volley = isVolley(t.sport);
+  const volleyRows = volley ? rows.map((row) => {
+    let sf = 0, sa = 0, pf = 0, pa = 0, pts = 0;
+    t.matches.filter((m) => m.status === "finita" && !m.ko && (!group || m.group === group) && (m.teamA === row.team.id || m.teamB === row.team.id)).forEach((m) => {
+      const home = m.teamA === row.team.id;
+      const ownSets = home ? m.scoreA : m.scoreB, otherSets = home ? m.scoreB : m.scoreA;
+      const ownPoints = home ? (m.gamesA ?? 0) : (m.gamesB ?? 0), otherPoints = home ? (m.gamesB ?? 0) : (m.gamesA ?? 0);
+      sf += ownSets; sa += otherSets; pf += ownPoints; pa += otherPoints;
+      if (ownSets > otherSets) pts += isBeachVolley(t.sport) ? 2 : otherSets === 2 ? 2 : 3;
+      else if (!isBeachVolley(t.sport) && ownSets === 2) pts += 1;
+    });
+    return { ...row, sf, sa, pf, pa, pts };
+  }).sort((a, b) => b.pts - a.pts || (b.sf - b.sa) - (a.sf - a.sa) || (b.pa ? b.pf / b.pa : b.pf) - (a.pa ? a.pf / a.pa : a.pf)) : [];
+  const shownRows = volley ? volleyRows : rows;
   const accent = group === "B" ? "text-emerald-300" : "text-primary";
 
   return (
@@ -1284,7 +1349,7 @@ function StandingsTable({
           {tr(group === "A" ? "groups.a" : "groups.b")}
         </p>
       )}
-      <table className={`${basket ? "min-w-[34rem]" : "w-full"} text-xs`}>
+      <table className={`${basket || volley ? "min-w-[34rem]" : "w-full"} text-xs`}>
         <thead className="bg-secondary/70 text-muted-foreground">
           <tr>
             <th className="p-2 text-left">#</th>
@@ -1298,13 +1363,13 @@ function StandingsTable({
                 <th className="p-2">{tr("bk.pf")}</th><th className="p-2">{tr("bk.pa")}</th>
                 <th className="p-2">{tr("bk.diff")}</th><th className={`p-2 ${accent}`}>{tr("bk.winPct")}</th>
               </>
-            ) : <><th className="p-2">+/−</th><th className={`p-2 ${accent}`}>{tr("tbl.pts")}</th></>}
+            ) : volley ? <><th className="p-2">{tr("vl.setsFor")}</th><th className="p-2">{tr("vl.setsAgainst")}</th><th className="p-2">{tr("vl.quotient")}</th><th className={`p-2 ${accent}`}>{tr("tbl.pts")}</th></> : <><th className="p-2">+/−</th><th className={`p-2 ${accent}`}>{tr("tbl.pts")}</th></>}
             <th className="p-2" />
 
           </tr>
         </thead>
         <tbody>
-          {rows.map((r, i) => (
+          {shownRows.map((r, i) => (
             <tr key={r.team.id} className="border-t border-primary/10">
               <td className={`p-2 ${accent}`}>{i + 1}</td>
               <td className="flex items-center gap-2 p-2">
@@ -1323,7 +1388,7 @@ function StandingsTable({
                   <td className="p-2 text-center">{r.gf - r.gs}</td>
                   <td className={`p-2 text-center font-bold ${accent}`}>{r.g ? `${Math.round((r.v / r.g) * 100)}%` : "0%"}</td>
                 </>
-              ) : <><td className="p-2 text-center">{r.gf - r.gs}</td><td className={`p-2 text-center font-bold ${accent}`}>{r.pts}</td></>}
+              ) : volley ? <><td className="p-2 text-center">{r.sf ?? 0}</td><td className="p-2 text-center">{r.sa ?? 0}</td><td className="p-2 text-center">{r.pa ? ((r.pf ?? 0) / r.pa).toFixed(3) : r.pf ? "∞" : "0.000"}</td><td className={`p-2 text-center font-bold ${accent}`}>{r.pts}</td></> : <><td className="p-2 text-center">{r.gf - r.gs}</td><td className={`p-2 text-center font-bold ${accent}`}>{r.pts}</td></>}
               <td className="p-2 text-right">
                 <button
                   onClick={() =>
@@ -1350,7 +1415,8 @@ function StandingsTable({
         <p className="px-3 pb-3 text-[11px] text-muted-foreground">{tr("tn.tableHint")}</p>
       )}
       {basket && <p className="px-3 pb-3 text-[11px] text-muted-foreground">{tr("bk.tableHint")}</p>}
-      {rows.length === 0 && (
+      {volley && <p className="px-3 pb-3 text-[11px] text-muted-foreground">{tr("vl.tableHint")}</p>}
+      {shownRows.length === 0 && (
         <p className="p-4 text-center text-sm text-muted-foreground">{tr("tbl.noTeams")}</p>
       )}
     </div>
@@ -1372,7 +1438,7 @@ function TableTab({ t, patch }: { t: Tournament; patch: Patch }) {
         <StandingsTable t={t} patch={patch} />
       )}
 
-      {!isBasket(t.sport) && <div className="card-night p-4">
+      {!isBasket(t.sport) && !isVolley(t.sport) && <div className="card-night p-4">
         <h2 className="text-sm text-primary">{tr("tbl.scorers")}</h2>
         <ul className="mt-3 space-y-2 text-sm">
           {top.map((s) => (

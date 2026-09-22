@@ -393,6 +393,12 @@ function NewTournament({
               <p className="mt-1 text-[11px] text-muted-foreground">{t("bk.tableHint")}</p>
             </div>
           )}
+          {(sport === "pallavolo" || sport === "beachvolley") && (
+            <div className="rounded-xl border border-primary/30 bg-secondary/40 p-3">
+              <p className="text-xs text-primary">🏐 {t(sport === "beachvolley" ? "vl.beachRules" : "vl.volleyRules")}</p>
+              <p className="mt-1 text-[11px] text-muted-foreground">{t("vl.tableHint")}</p>
+            </div>
+          )}
           <label className="block text-xs text-muted-foreground">{t("nt.format")}</label>
           <select
             className="field"
