@@ -1,14 +1,19 @@
 import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
+import { getSupabase } from "./supabase-safe";
 
 export function useSession() {
   const [session, setSession] = useState<Session | null>(null);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
+    const supabase = getSupabase();
+    if (!supabase) {
+      setReady(true);
+      return;
+    }
     let active = true;
-    supabase.auth.getSession().then(({ data }) => {
+    void supabase.auth.getSession().then(({ data }) => {
       if (!active) return;
       setSession(data.session);
       setReady(true);
@@ -27,5 +32,5 @@ export function useSession() {
 }
 
 export async function signOut() {
-  await supabase.auth.signOut();
+  await getSupabase()?.auth.signOut();
 }
