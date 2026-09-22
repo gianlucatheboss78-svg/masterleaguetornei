@@ -1,6 +1,8 @@
 import { Link } from "@tanstack/react-router";
+import { CloudOff, UserRound } from "lucide-react";
 import logoAsset from "@/assets/master-league-logo.jpg.asset.json";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { useSession } from "@/lib/auth";
 
 export const LOGO_URL = logoAsset.url;
 
