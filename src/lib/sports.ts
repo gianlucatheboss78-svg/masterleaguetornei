@@ -29,22 +29,6 @@ export const SPORTS: Sport[] = [
     ],
   },
   {
-    id: "calcio5",
-    name: "Calcio a 5",
-    icon: "🥅",
-    venue: "Campo",
-    scoreLabel: "Gol",
-    winPoints: 3,
-    drawPoints: 1,
-    hasDraw: true,
-    roles: [
-      { id: "por", name: "Portiere", icon: "🧤" },
-      { id: "lat", name: "Laterale", icon: "↔️" },
-      { id: "piv", name: "Pivot", icon: "🔥" },
-      { id: "uni", name: "Universale", icon: "♾️" },
-    ],
-  },
-  {
     id: "pallamano",
     name: "Pallamano",
     icon: "🤾",
@@ -246,4 +230,19 @@ export const SPORTS: Sport[] = [
   },
 ];
 
-export const getSport = (id: string): Sport => SPORTS.find((s) => s.id === id) ?? SPORTS[0]!;
+export const getSport = (id: string): Sport =>
+  SPORTS.find((s) => s.id === id) ?? SPORTS[0]!;
+
+/** Varianti del calcio: un'unica disciplina "Calcio" con formati diversi. */
+export const FOOTBALL_VARIANTS = [
+  { id: "a5", label: "A5", players: 5 },
+  { id: "a6", label: "A6", players: 6 },
+  { id: "a7", label: "A7", players: 7 },
+  { id: "a8", label: "A8", players: 8 },
+  { id: "a11", label: "A11", players: 11 },
+] as const;
+
+export const isFootball = (sportId: string) => sportId === "calcio" || sportId === "calcio5";
+
+export const variantLabel = (variant?: string) =>
+  FOOTBALL_VARIANTS.find((v) => v.id === variant)?.label ?? "";

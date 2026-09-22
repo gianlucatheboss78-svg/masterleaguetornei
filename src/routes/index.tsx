@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from "@/components/ui/button";
 import { LogoPicker } from "@/components/LogoPicker";
 import { LOGO_URL } from "@/components/AppHeader";
-import { SPORTS, getSport } from "@/lib/sports";
+import { SPORTS, getSport, FOOTBALL_VARIANTS, isFootball, variantLabel } from "@/lib/sports";
 import { useI18n } from "@/lib/i18n";
 import { usePro, useOwner } from "@/lib/pro";
 import { uid, useTournaments, type Tournament } from "@/lib/store";
@@ -123,7 +123,11 @@ function Home() {
               <div className="min-w-0 flex-1">
                 <p className="display truncate text-base text-primary">{x.name}</p>
                 <p className="truncate text-xs text-muted-foreground">
-                  {sportName(x.sport, getSport(x.sport).name)} · {x.teams.length} {t("home.teams")} ·{" "}
+                  {sportName(x.sport, getSport(x.sport).name)}
+                  {isFootball(x.sport) && variantLabel(x.variant)
+                    ? ` (${variantLabel(x.variant)})`
+                    : ""}{" "}
+                  · {x.teams.length} {t("home.teams")} ·{" "}
                   {x.city || "—"}
                 </p>
               </div>
@@ -218,6 +222,7 @@ function NewTournament({
   const [startDate, setStartDate] = useState("");
   const [fee, setFee] = useState(0);
   const [format, setFormat] = useState<"single" | "groups">("single");
+  const [variant, setVariant] = useState<string>("a11");
 
   const create = () => {
     if (!name.trim()) return;
@@ -226,6 +231,7 @@ function NewTournament({
       id,
       name: name.trim(),
       sport,
+      ...(isFootball(sport) ? { variant } : {}),
       ...(logo ? { logo } : {}),
       city,
       startDate,
@@ -263,6 +269,28 @@ function NewTournament({
               </option>
             ))}
           </select>
+          {isFootball(sport) && (
+            <div className="rounded-xl border border-primary/30 bg-secondary/40 p-3">
+              <p className="text-xs text-primary">{t("nt.footballType")}</p>
+              <div className="mt-2 grid grid-cols-5 gap-2">
+                {FOOTBALL_VARIANTS.map((v) => (
+                  <button
+                    key={v.id}
+                    type="button"
+                    onClick={() => setVariant(v.id)}
+                    className={`rounded-full py-2 text-xs font-bold ${
+                      variant === v.id ? "btn-gold" : "btn-ghost-gold"
+                    }`}
+                  >
+                    {v.label}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-2 text-[11px] text-muted-foreground">
+                {FOOTBALL_VARIANTS.find((v) => v.id === variant)?.players} {t("nt.playersPerTeam")}
+              </p>
+            </div>
+          )}
           <label className="block text-xs text-muted-foreground">{t("nt.format")}</label>
           <select
             className="field"

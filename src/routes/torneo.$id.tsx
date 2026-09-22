@@ -4,7 +4,7 @@ import { LogoPicker } from "@/components/LogoPicker";
 import { getCountries, countryName, flagFor } from "@/lib/countries";
 import { useI18n } from "@/lib/i18n";
 import { ageFrom, readCircleImage } from "@/lib/media";
-import { getSport } from "@/lib/sports";
+import { getSport, isFootball, variantLabel } from "@/lib/sports";
 import {
   autoCalendar,
   autoCalendarGroups,
@@ -90,7 +90,11 @@ function TournamentPage() {
         <div className="min-w-0">
           <h1 className="truncate text-xl gold-text">{tournament.name}</h1>
           <p className="text-xs text-muted-foreground">
-            {sport.icon} {sportName(sport.id, sport.name)} · {tournament.city || "—"} ·{" "}
+            {sport.icon} {sportName(sport.id, sport.name)}
+          {isFootball(tournament.sport) && variantLabel(tournament.variant)
+            ? ` (${variantLabel(tournament.variant)})`
+            : ""}{" "}
+          · {tournament.city || "—"} ·{" "}
             {tournament.startDate || tr("t.tbd")}
           </p>
         </div>
