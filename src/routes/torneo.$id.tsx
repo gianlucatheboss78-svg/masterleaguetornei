@@ -249,7 +249,7 @@ function TeamsTab({ t, patch }: { t: Tournament; patch: Patch }) {
                         x.id === team.id
                           ? e.target.value
                             ? { ...x, group: e.target.value as GroupId }
-                            : { ...x, group: undefined }
+                            : (({ group: _g, ...rest }) => rest)(x)
                           : x,
                       ),
                     }))
