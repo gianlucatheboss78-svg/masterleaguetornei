@@ -17,6 +17,7 @@ import {
   syncKnockout,
   uid,
   useTournament,
+  type EventType,
   type GroupId,
   type Match,
   type Player,
