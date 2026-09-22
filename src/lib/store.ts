@@ -231,7 +231,7 @@ export function useTournament(id: string) {
       update((list) => list.map((t) => (t.id === id ? fn(t) : t))),
     [id, update],
   );
-  return { tournament, ready, patch };
+  return { tournament, ready: ready && (Boolean(tournament) || remoteDone), patch };
 }
 
 export type Row = {
