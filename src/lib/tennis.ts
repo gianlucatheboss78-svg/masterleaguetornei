@@ -1,7 +1,7 @@
 /** Punteggio tennis/padel: 15-30-40, set a 6 game, tie-break a 7. */
 
 export type TennisSet = { a: number; b: number; tbA?: number; tbB?: number };
-export type TennisState = { sets: TennisSet[]; pA: number; pB: number; done?: boolean };
+export type TennisState = { sets: TennisSet[]; pA: number; pB: number; done?: boolean | undefined };
 
 export const isRacket = (sportId: string) => sportId === "tennis" || sportId === "padel";
 
