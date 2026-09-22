@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { PRO_PRICE, setPro, usePro } from "@/lib/pro";
+import { PRO_PRICE, setPro, usePro, useOwner, signInOwner, signOutOwner } from "@/lib/pro";
 import { useI18n } from "@/lib/i18n";
 import { LOGO_URL } from "@/components/AppHeader";
 import { createProCheckout } from "@/lib/billing.functions";
@@ -31,11 +31,15 @@ const BENEFIT_KEYS = ["pro.b1", "pro.b2", "pro.b3", "pro.b4", "pro.b5", "pro.b6"
 
 function ProPage() {
   const pro = usePro();
+  const owner = useOwner();
   const { t } = useI18n();
   const nav = useNavigate();
   const checkout = useServerFn(createProCheckout);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>();
+  const [ownerOpen, setOwnerOpen] = useState(false);
+  const [ownerInput, setOwnerInput] = useState("");
+  const [ownerError, setOwnerError] = useState(false);
 
   useEffect(() => {
     const p = new URLSearchParams(window.location.search);
