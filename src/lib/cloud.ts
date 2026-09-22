@@ -54,8 +54,8 @@ export async function fetchTournament(id: string): Promise<Tournament | null> {
 /** Salva (crea o aggiorna) un torneo nel database. */
 export async function pushTournament(t: Tournament): Promise<void> {
   const supabase = getSupabase();
+  if (!supabase) return;
   const userId = await currentUserId();
-  if (!supabase || !userId) return;
   const { error } = await supabase.from("tournaments").upsert(
     {
       id: t.id,
@@ -73,8 +73,7 @@ export async function pushTournament(t: Tournament): Promise<void> {
 /** Elimina un torneo dal database. */
 export async function deleteTournament(id: string): Promise<void> {
   const supabase = getSupabase();
-  const userId = await currentUserId();
-  if (!supabase || !userId) return;
+  if (!supabase) return;
   const { error } = await supabase.from("tournaments").delete().eq("id", id);
   if (error) console.error("[cloud] delete", error.message);
 }
