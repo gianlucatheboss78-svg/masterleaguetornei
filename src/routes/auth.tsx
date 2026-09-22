@@ -55,13 +55,13 @@ function AuthPage() {
             password,
             options: { emailRedirectTo: `${window.location.origin}/` },
           });
-    const { error } = await fn;
+    const { data, error } = await fn;
     setBusy(false);
     if (error) {
       setMsg(error.message);
       return;
     }
-    if (mode === "up") {
+    if (mode === "up" && !data.session) {
       setMsg("Controlla la tua email per confermare l'account.");
       return;
     }
