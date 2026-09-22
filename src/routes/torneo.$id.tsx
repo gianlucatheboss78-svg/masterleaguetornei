@@ -203,6 +203,8 @@ function Roster({ t, team, patch }: { t: Tournament; team: Team; patch: Patch })
   const sport = getSport(t.sport);
   const { t: tr, lang, roleName } = useI18n();
   const photoRef = useRef<HTMLInputElement>(null);
+  const [selectedTeamId, setSelectedTeamId] = useState<string>(team.id);
+  const targetTeamId = t.teams.some((x) => x.id === selectedTeamId) ? selectedTeamId : team.id;
   const [draft, setDraft] = useState<Omit<Player, "id">>({
     name: "",
     country: "IT",
@@ -217,7 +219,7 @@ function Roster({ t, team, patch }: { t: Tournament; team: Team; patch: Patch })
     patch((cur) => ({
       ...cur,
       teams: cur.teams.map((x) =>
-        x.id === team.id
+        x.id === targetTeamId
           ? { ...x, players: [...x.players, { ...draft, name: draft.name.trim(), id: uid() }] }
           : x,
       ),
