@@ -160,6 +160,29 @@ function TeamsTab({ t, patch }: { t: Tournament; patch: Patch }) {
             />
             <div className="min-w-0 flex-1">
               <p className="display truncate text-primary" translate="no">{team.name}</p>
+              <label
+                className="mt-0.5 inline-flex items-center gap-1 text-xs text-muted-foreground"
+                title={tr("teams.color")}
+              >
+                <span
+                  className="inline-block h-3.5 w-3.5 rounded-full border border-primary/40"
+                  style={{ backgroundColor: team.color1 ?? "#334155" }}
+                />
+                <input
+                  type="color"
+                  aria-label={tr("teams.color")}
+                  value={team.color1 ?? "#334155"}
+                  onChange={(e) =>
+                    patch((cur) => ({
+                      ...cur,
+                      teams: cur.teams.map((x) =>
+                        x.id === team.id ? { ...x, color1: e.target.value } : x,
+                      ),
+                    }))
+                  }
+                  className="h-4 w-4 cursor-pointer border-0 bg-transparent p-0"
+                />
+              </label>
               <p className="text-xs text-muted-foreground">
                 {team.players.length} {tr("teams.players")}
               </p>
@@ -230,6 +253,43 @@ function Roster({ t, team, patch }: { t: Tournament; team: Team; patch: Patch })
   return (
     <div className="mt-4 border-t border-primary/15 pt-4">
       <div className="space-y-2">
+        <div>
+          <p className="text-xs text-muted-foreground">{tr("roster.team")}</p>
+          <div className="mt-2 grid grid-cols-4 gap-2">
+            {t.teams.map((tm) => {
+              const sel = tm.id === targetTeamId;
+              return (
+                <button
+                  key={tm.id}
+                  type="button"
+                  onClick={() => setSelectedTeamId(tm.id)}
+                  className={`flex flex-col items-center gap-1 rounded-xl p-1 transition-transform ${
+                    sel
+                      ? "scale-110 bg-secondary/60 ring-2 ring-yellow-400"
+                      : "opacity-80 hover:opacity-100"
+                  }`}
+                >
+                  <div
+                    className={`flex h-14 w-14 items-center justify-center overflow-hidden rounded-full border border-primary/40 ${
+                      tm.color1 ? "" : "bg-slate-700"
+                    }`}
+                    style={tm.color1 ? { backgroundColor: tm.color1 } : undefined}
+                  >
+                    {tm.logo ? (
+                      <img src={tm.logo} alt="" className="h-full w-full rounded-full object-cover" />
+                    ) : null}
+                  </div>
+                  <span
+                    className="w-full truncate text-center text-[10px] text-muted-foreground"
+                    translate="no"
+                  >
+                    {tm.name}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
         <div className="flex items-center gap-3">
           <button
             onClick={() => photoRef.current?.click()}
