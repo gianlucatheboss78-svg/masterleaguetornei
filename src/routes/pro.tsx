@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { PRO_PRICE, setPro, usePro } from "@/lib/pro";
 import { useI18n } from "@/lib/i18n";
+import { LOGO_URL } from "@/components/AppHeader";
 import { createProCheckout } from "@/lib/billing.functions";
 
 export const Route = createFileRoute("/pro")({
@@ -64,9 +65,11 @@ function ProPage() {
       </Link>
 
       <div className="card-night mt-4 p-6 text-center">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full btn-gold text-3xl">
-          👑
-        </div>
+        <img
+          src={LOGO_URL}
+          alt="Master League Tornei"
+          className="mx-auto h-24 w-24 rounded-3xl border border-primary/40 object-cover shadow-lg"
+        />
         <h1 className="mt-4 text-3xl gold-text">{t("pro.title")}</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           {t("pro.subtitle", { price: PRO_PRICE })}
