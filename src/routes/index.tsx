@@ -35,7 +35,15 @@ function Home() {
   const pro = usePro();
   const owner = useOwner();
   const [open, setOpen] = useState(false);
+  const [boss, setBoss] = useState(false);
   const locked = !pro;
+
+  useEffect(() => {
+    if (window.sessionStorage.getItem("mlt.boss.welcome") === "1") {
+      window.sessionStorage.removeItem("mlt.boss.welcome");
+      setBoss(true);
+    }
+  }, []);
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-lg px-4 pb-28 pt-8">
