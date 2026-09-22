@@ -128,7 +128,7 @@ function TournamentPage() {
             {sport.icon}
           </div>
         )}
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <h1 className="truncate text-xl gold-text">{tournament.name}</h1>
           <p className="text-xs text-muted-foreground">
             {sport.icon} {sportName(sport.id, sport.name)}
