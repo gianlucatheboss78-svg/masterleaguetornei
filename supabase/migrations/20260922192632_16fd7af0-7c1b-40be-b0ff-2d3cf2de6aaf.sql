@@ -1,0 +1,1 @@
+DELETE FROM public.tournaments WHERE id IN ('7c8043f8-5659-45cc-9fa3-dd5afeff0716','db11bea6-f354-4a99-80a6-fc5dbb838e9c','97b2c06b-0adf-49d4-a9e6-58ec2c659c87','share-check','sharetest1');
