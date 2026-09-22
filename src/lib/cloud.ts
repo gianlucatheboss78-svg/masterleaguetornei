@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import { getSupabase } from "./supabase-safe";
 import type { Tournament } from "./store";
 
 export type CloudRow = {
@@ -9,14 +9,17 @@ export type CloudRow = {
 };
 
 export async function currentUserId(): Promise<string | null> {
+  const supabase = getSupabase();
+  if (!supabase) return null;
   const { data } = await supabase.auth.getSession();
   return data.session?.user.id ?? null;
 }
 
 /** Scarica tutti i tornei dell'utente dal database. */
 export async function pullTournaments(): Promise<Tournament[] | null> {
+  const supabase = getSupabase();
   const userId = await currentUserId();
-  if (!userId) return null;
+  if (!supabase || !userId) return null;
   const { data, error } = await supabase
     .from("tournaments")
     .select("id, data, updated_at")
@@ -32,8 +35,9 @@ export async function pullTournaments(): Promise<Tournament[] | null> {
 
 /** Salva (crea o aggiorna) un torneo nel database. */
 export async function pushTournament(t: Tournament): Promise<void> {
+  const supabase = getSupabase();
   const userId = await currentUserId();
-  if (!userId) return;
+  if (!supabase || !userId) return;
   const { error } = await supabase.from("tournaments").upsert(
     {
       id: t.id,
@@ -50,8 +54,9 @@ export async function pushTournament(t: Tournament): Promise<void> {
 
 /** Elimina un torneo dal database. */
 export async function deleteTournament(id: string): Promise<void> {
+  const supabase = getSupabase();
   const userId = await currentUserId();
-  if (!userId) return;
+  if (!supabase || !userId) return;
   const { error } = await supabase.from("tournaments").delete().eq("id", id);
   if (error) console.error("[cloud] delete", error.message);
 }
