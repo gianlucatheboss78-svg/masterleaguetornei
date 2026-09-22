@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 import { LogoPicker } from "@/components/LogoPicker";
-import { COUNTRIES, countryName, flagFor } from "@/lib/countries";
-
+import { getCountries, countryName, flagFor } from "@/lib/countries";
+import { useI18n } from "@/lib/i18n";
 import { ageFrom, readCircleImage } from "@/lib/media";
 import { getSport } from "@/lib/sports";
 import {
@@ -38,26 +38,27 @@ export const Route = createFileRoute("/torneo/$id")({
 });
 
 const TABS = [
-  { id: "squadre", label: "Squadre", icon: "👥" },
-  { id: "calendario", label: "Calendario", icon: "📅" },
-  { id: "live", label: "Live", icon: "🔴" },
-  { id: "classifica", label: "Classifica", icon: "🏅" },
-  { id: "cassa", label: "Cassa", icon: "💶" },
-  { id: "locandina", label: "Locandina", icon: "🖼️" },
+  { id: "squadre", key: "tab.teams", icon: "👥" },
+  { id: "calendario", key: "tab.calendar", icon: "📅" },
+  { id: "live", key: "tab.live", icon: "🔴" },
+  { id: "classifica", key: "tab.table", icon: "🏅" },
+  { id: "cassa", key: "tab.money", icon: "💶" },
+  { id: "locandina", key: "tab.poster", icon: "🖼️" },
 ] as const;
 
 function TournamentPage() {
   const { id } = Route.useParams();
   const { tournament, ready, patch } = useTournament(id);
+  const { t: tr, sportName } = useI18n();
   const [tab, setTab] = useState<string>("squadre");
 
-  if (!ready) return <div className="p-8 text-center text-muted-foreground">Caricamento…</div>;
+  if (!ready) return <div className="p-8 text-center text-muted-foreground">{tr("common.loading")}</div>;
   if (!tournament)
     return (
       <div className="p-8 text-center">
-        <p className="text-muted-foreground">Torneo non trovato.</p>
+        <p className="text-muted-foreground">{tr("t.notFound")}</p>
         <Link to="/" className="btn-gold mt-4 inline-block px-5 py-2">
-          Home
+          {tr("common.home")}
         </Link>
       </div>
     );
@@ -67,7 +68,7 @@ function TournamentPage() {
   return (
     <main className="mx-auto min-h-screen w-full max-w-lg px-4 pb-24 pt-6">
       <Link to="/" className="text-sm text-muted-foreground">
-        ‹ Tornei
+        {tr("common.back")}
       </Link>
 
       <header className="card-night mt-3 flex items-center gap-3 p-4">
@@ -81,8 +82,8 @@ function TournamentPage() {
         <div className="min-w-0">
           <h1 className="truncate text-xl gold-text">{tournament.name}</h1>
           <p className="text-xs text-muted-foreground">
-            {sport.icon} {sport.name} · {tournament.city || "—"} ·{" "}
-            {tournament.startDate || "data da definire"}
+            {sport.icon} {sportName(sport.id, sport.name)} · {tournament.city || "—"} ·{" "}
+            {tournament.startDate || tr("t.tbd")}
           </p>
         </div>
       </header>
@@ -96,7 +97,7 @@ function TournamentPage() {
               tab === t.id ? "btn-gold" : "btn-ghost-gold"
             }`}
           >
-            {t.icon} {t.label}
+            {t.icon} {tr(t.key)}
           </button>
         ))}
       </nav>
@@ -118,6 +119,7 @@ type Patch = (fn: (t: Tournament) => Tournament) => void;
 /* ---------------- Squadre ---------------- */
 
 function TeamsTab({ t, patch }: { t: Tournament; patch: Patch }) {
+  const { t: tr } = useI18n();
   const [name, setName] = useState("");
   const [openTeam, setOpenTeam] = useState<string | null>(null);
 
@@ -135,7 +137,7 @@ function TeamsTab({ t, patch }: { t: Tournament; patch: Patch }) {
       <div className="flex gap-2">
         <input
           className="field"
-          placeholder="Nome squadra"
+          placeholder={tr("teams.name")}
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
@@ -158,20 +160,22 @@ function TeamsTab({ t, patch }: { t: Tournament; patch: Patch }) {
             />
             <div className="min-w-0 flex-1">
               <p className="display truncate text-primary">{team.name}</p>
-              <p className="text-xs text-muted-foreground">{team.players.length} giocatori</p>
+              <p className="text-xs text-muted-foreground">
+                {team.players.length} {tr("teams.players")}
+              </p>
             </div>
             <button
               onClick={() => setOpenTeam(openTeam === team.id ? null : team.id)}
               className="btn-ghost-gold px-3 py-1 text-xs"
             >
-              {openTeam === team.id ? "Chiudi" : "Rosa"}
+              {openTeam === team.id ? tr("common.close") : tr("teams.roster")}
             </button>
             <button
               onClick={() =>
                 patch((cur) => ({ ...cur, teams: cur.teams.filter((x) => x.id !== team.id) }))
               }
               className="text-destructive"
-              aria-label="Elimina squadra"
+              aria-label={tr("teams.del")}
             >
               🗑
             </button>
@@ -197,6 +201,7 @@ function TeamLogo({ team, onPick }: { team: Team; onPick: (d: string) => void })
 
 function Roster({ t, team, patch }: { t: Tournament; team: Team; patch: Patch }) {
   const sport = getSport(t.sport);
+  const { t: tr, lang, roleName } = useI18n();
   const photoRef = useRef<HTMLInputElement>(null);
   const [draft, setDraft] = useState<Omit<Player, "id">>({
     name: "",
@@ -245,7 +250,7 @@ function Roster({ t, team, patch }: { t: Tournament; team: Team; patch: Patch })
           />
           <input
             className="field"
-            placeholder="Nome giocatore"
+            placeholder={tr("roster.name")}
             value={draft.name}
             onChange={(e) => setDraft({ ...draft, name: e.target.value })}
           />
@@ -255,7 +260,7 @@ function Roster({ t, team, patch }: { t: Tournament; team: Team; patch: Patch })
           value={draft.country}
           onChange={(e) => setDraft({ ...draft, country: e.target.value })}
         >
-          {COUNTRIES.map((c) => (
+          {getCountries(lang).map((c) => (
             <option key={c.code} value={c.code}>
               {c.flag} {c.name}
             </option>
@@ -269,7 +274,9 @@ function Roster({ t, team, patch }: { t: Tournament; team: Team; patch: Patch })
             onChange={(e) => setDraft({ ...draft, birth: e.target.value })}
           />
           <span className="flex items-center whitespace-nowrap text-xs text-muted-foreground">
-            {ageFrom(draft.birth) !== null ? `${ageFrom(draft.birth)} anni` : "età"}
+            {ageFrom(draft.birth) !== null
+              ? `${ageFrom(draft.birth)} ${tr("common.years")}`
+              : tr("common.age")}
           </span>
         </div>
         <select
@@ -279,12 +286,12 @@ function Roster({ t, team, patch }: { t: Tournament; team: Team; patch: Patch })
         >
           {sport.roles.map((r) => (
             <option key={r.id} value={r.id}>
-              {r.icon} {r.name}
+              {r.icon} {roleName(r.name)}
             </option>
           ))}
         </select>
         <button onClick={addPlayer} className="btn-gold w-full py-2 text-sm">
-          + Aggiungi giocatore
+          {tr("roster.add")}
         </button>
       </div>
 
@@ -306,8 +313,9 @@ function Roster({ t, team, patch }: { t: Tournament; team: Team; patch: Patch })
                   {flagFor(p.country)} {p.name}
                 </p>
                 <p className="truncate text-xs text-muted-foreground">
-                  {role?.icon} {role?.name}
-                  {age !== null ? ` · ${age} anni` : ""} · {countryName(p.country)}
+                  {role?.icon} {role ? roleName(role.name) : ""}
+                  {age !== null ? ` · ${age} ${tr("common.years")}` : ""} ·{" "}
+                  {countryName(p.country, lang)}
                 </p>
               </div>
               <button
@@ -330,7 +338,7 @@ function Roster({ t, team, patch }: { t: Tournament; team: Team; patch: Patch })
                   p.paid ? "bg-primary text-primary-foreground" : "btn-ghost-gold"
                 }`}
               >
-                {p.paid ? "PAGATO" : "DA PAGARE"}
+                {p.paid ? tr("roster.paid") : tr("roster.topay")}
               </button>
               <button
                 onClick={() =>
@@ -344,7 +352,7 @@ function Roster({ t, team, patch }: { t: Tournament; team: Team; patch: Patch })
                   }))
                 }
                 className="text-destructive"
-                aria-label="Elimina giocatore"
+                aria-label={tr("roster.del")}
               >
                 ✕
               </button>
