@@ -139,7 +139,18 @@ function TournamentPage() {
             {tournament.startDate || tr("t.tbd")}
           </p>
         </div>
+        <button
+          type="button"
+          onClick={() => setShareOpen(true)}
+          className="btn-gold flex shrink-0 items-center gap-1 self-start px-3 py-2 text-xs font-semibold"
+        >
+          <Share2 className="h-4 w-4" aria-hidden="true" />
+          {tr("home.share")}
+        </button>
       </header>
+
+      <ShareDialog open={shareOpen} onOpenChange={setShareOpen} name={tournament.name} url={shareUrl} />
+
 
       <nav className="-mx-4 mt-4 flex gap-2 overflow-x-auto px-4 pb-1">
         {TABS.filter((x) => x.id !== "finale" || tournament.format === "groups" || tournament.format === "singleko" || isBasket(tournament.sport)).map((t) => (
