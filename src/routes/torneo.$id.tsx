@@ -6,6 +6,15 @@ import { useI18n } from "@/lib/i18n";
 import { ageFrom, readCircleImage } from "@/lib/media";
 import { getSport, isFootball, variantLabel } from "@/lib/sports";
 import {
+  emptyBasket,
+  formatBasketClock,
+  isBasket,
+  periodSeconds,
+  playerFouls,
+  teamPeriodFouls,
+  type BasketState,
+} from "@/lib/basket";
+import {
   addPoint,
   emptyTennis,
   gamesTotal,
@@ -18,6 +27,7 @@ import {
 import {
   autoCalendar,
   autoCalendarGroups,
+  buildBasketPlayoffs,
   buildKnockout,
   groupPhaseDone,
   koRoundLabelKey,
@@ -113,7 +123,7 @@ function TournamentPage() {
       </header>
 
       <nav className="-mx-4 mt-4 flex gap-2 overflow-x-auto px-4 pb-1">
-        {TABS.filter((x) => x.id !== "finale" || tournament.format === "groups").map((t) => (
+        {TABS.filter((x) => x.id !== "finale" || tournament.format === "groups" || isBasket(tournament.sport)).map((t) => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
@@ -744,6 +754,7 @@ function LiveTab({
   const [openId, setOpenId] = useState<string | null>(initialOpen ?? null);
   const sport = getSport(t.sport);
   const racket = isRacket(t.sport);
+  const basket = isBasket(t.sport);
   const { t: tr, scoreName } = useI18n();
   const statusLabel = (s: string) =>
     s === "live" ? tr("live.live") : s === "finita" ? tr("live.ended") : tr("live.scheduled");
@@ -791,6 +802,8 @@ function LiveTab({
 
             {racket ? (
               <TennisBoard m={m} setMatch={setMatch} />
+            ) : basket ? (
+              <BasketBoard t={t} m={m} setMatch={setMatch} />
             ) : (
               <div className="mt-3 flex justify-center gap-2">
                 <button
@@ -824,7 +837,18 @@ function LiveTab({
               {(["programmata", "live", "finita"] as const).map((s) => (
                 <button
                   key={s}
-                  onClick={() => setMatch(m.id, (x) => ({ ...x, status: s }))}
+                  onClick={() => setMatch(m.id, (x) => {
+                    if (basket && s === "finita" && x.scoreA === x.scoreB) {
+                      const state = x.basket ?? emptyBasket();
+                      const period = Math.max(5, state.period + 1);
+                      return {
+                        ...x,
+                        status: "live",
+                        basket: { ...state, period, clockSeconds: periodSeconds(period), running: false },
+                      };
+                    }
+                    return { ...x, status: s };
+                  })}
                   className={`flex-1 py-1 ${m.status === s ? "btn-gold" : "btn-ghost-gold"}`}
                 >
                   {statusLabel(s)}
@@ -843,6 +867,136 @@ function LiveTab({
           </div>
         );
       })}
+    </div>
+  );
+}
+
+/* ---------------- Basket ---------------- */
+
+function BasketBoard({
+  t,
+  m,
+  setMatch,
+}: {
+  t: Tournament;
+  m: Match;
+  setMatch: (id: string, fn: (x: Match) => Match) => void;
+}) {
+  const { t: tr } = useI18n();
+  const state: BasketState = m.basket ?? emptyBasket();
+  const roster = t.teams
+    .filter((team) => team.id === m.teamA || team.id === m.teamB)
+    .flatMap((team) => team.players.map((player) => ({ player, team })));
+  const eligible = roster.filter(({ player }) => playerFouls(state, player.id) < 5);
+  const [playerId, setPlayerId] = useState(eligible[0]?.player.id ?? "");
+
+  useEffect(() => {
+    if (!state.running || state.clockSeconds <= 0) return;
+    const timer = window.setInterval(() => {
+      setMatch(m.id, (current) => {
+        const basket = current.basket ?? emptyBasket();
+        if (!basket.running || basket.clockSeconds <= 0) return current;
+        const clockSeconds = basket.clockSeconds - 1;
+        return {
+          ...current,
+          status: "live",
+          basket: { ...basket, clockSeconds, running: clockSeconds > 0 },
+        };
+      });
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [m.id, setMatch, state.running, state.clockSeconds]);
+
+  const updateBasket = (fn: (basket: BasketState) => BasketState) =>
+    setMatch(m.id, (current) => ({ ...current, basket: fn(current.basket ?? emptyBasket()) }));
+  const addScore = (side: "A" | "B", points: number) =>
+    setMatch(m.id, (current) => ({
+      ...current,
+      status: "live",
+      [side === "A" ? "scoreA" : "scoreB"]: current[side === "A" ? "scoreA" : "scoreB"] + points,
+    }));
+  const nextPeriod = () => {
+    if (state.clockSeconds > 0) return;
+    if (state.period < 4 || m.scoreA === m.scoreB) {
+      updateBasket((basket) => {
+        const period = basket.period + 1;
+        return { ...basket, period, clockSeconds: periodSeconds(period), running: false };
+      });
+    } else {
+      setMatch(m.id, (current) => ({ ...current, status: "finita" }));
+    }
+  };
+  const addFoul = () => {
+    const found = roster.find(({ player }) => player.id === playerId);
+    if (!found || playerFouls(state, found.player.id) >= 5) return;
+    updateBasket((basket) => ({
+      ...basket,
+      fouls: [...basket.fouls, { id: uid(), playerId, teamId: found.team.id, period: basket.period }],
+    }));
+  };
+  const periodLabel = state.period <= 4
+    ? tr("bk.quarter", { n: state.period })
+    : tr("bk.overtime", { n: state.period - 4 });
+
+  return (
+    <div className="mt-3 rounded-xl border border-primary/30 bg-secondary/40 p-3">
+      <div className="flex items-center justify-between text-xs font-bold text-primary">
+        <span>{periodLabel}</span>
+        <span className="display text-3xl tabular-nums">{formatBasketClock(state.clockSeconds)}</span>
+      </div>
+      <div className="mt-2 grid grid-cols-2 gap-2">
+        {(["A", "B"] as const).map((side) => (
+          <div key={side} className="grid grid-cols-3 gap-1">
+            {[1, 2, 3].map((points) => (
+              <button key={points} onClick={() => addScore(side, points)} className="btn-gold py-2 text-xs">
+                +{points}
+              </button>
+            ))}
+          </div>
+        ))}
+      </div>
+      <div className="mt-2 grid grid-cols-2 gap-2 text-center text-[11px]">
+        {[m.teamA, m.teamB].map((teamId) => {
+          const fouls = teamPeriodFouls(state, teamId);
+          return <p key={teamId} className={fouls >= 5 ? "font-bold text-destructive" : "text-muted-foreground"}>
+            {fouls} {tr("bk.foul")} {fouls >= 5 ? `· ${tr("bk.bonus")}` : ""}
+          </p>;
+        })}
+      </div>
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <button
+          onClick={() => updateBasket((basket) => ({ ...basket, running: !basket.running }))}
+          disabled={state.clockSeconds === 0}
+          className="btn-ghost-gold py-2 text-xs disabled:opacity-40"
+        >
+          {state.running ? `⏸ ${tr("bk.pause")}` : `▶ ${tr("bk.start")}`}
+        </button>
+        <button onClick={nextPeriod} disabled={state.clockSeconds > 0} className="btn-ghost-gold py-2 text-xs disabled:opacity-40">
+          {tr("bk.next")}
+        </button>
+      </div>
+      {roster.length ? (
+        <div className="mt-3 flex gap-2">
+          <select className="field" value={playerId} onChange={(event) => setPlayerId(event.target.value)}>
+            {roster.map(({ player, team }) => (
+              <option key={player.id} value={player.id} disabled={playerFouls(state, player.id) >= 5}>
+                {player.name} · {team.name} · {playerFouls(state, player.id)}/5
+              </option>
+            ))}
+          </select>
+          <button onClick={addFoul} className="btn-gold shrink-0 px-3 text-xs">+ {tr("bk.foul")}</button>
+        </div>
+      ) : <p className="mt-3 text-xs text-muted-foreground">{tr("bk.noPlayers")}</p>}
+      {roster.filter(({ player }) => playerFouls(state, player.id) >= 5).map(({ player }) => (
+        <p key={player.id} className="mt-1 text-xs text-destructive">{player.name}: {tr("bk.fouledOut")}</p>
+      ))}
+      <p className="mt-3 text-center text-[11px] text-muted-foreground">{tr("bk.rules")}</p>
+      <button
+        onClick={() => setMatch(m.id, (current) => ({ ...current, scoreA: 0, scoreB: 0, status: "programmata", basket: emptyBasket() }))}
+        className="btn-ghost-gold mt-2 w-full py-2 text-xs"
+      >
+        {tr("bk.reset")}
+      </button>
     </div>
   );
 }
@@ -1116,11 +1270,12 @@ function StandingsTable({
   const { t: tr } = useI18n();
   const sport = getSport(t.sport);
   const rows = standings(t, sport.winPoints, sport.drawPoints, group);
+  const basket = isBasket(t.sport);
   const accent = group === "B" ? "text-emerald-300" : "text-primary";
 
   return (
     <div
-      className={`card-night overflow-hidden ${
+      className={`card-night ${basket ? "overflow-x-auto" : "overflow-hidden"} ${
         group === "B" ? "border border-emerald-400/30" : group === "A" ? "border border-primary/30" : ""
       }`}
     >
@@ -1129,17 +1284,21 @@ function StandingsTable({
           {tr(group === "A" ? "groups.a" : "groups.b")}
         </p>
       )}
-      <table className="w-full text-xs">
+      <table className={`${basket ? "min-w-[34rem]" : "w-full"} text-xs`}>
         <thead className="bg-secondary/70 text-muted-foreground">
           <tr>
             <th className="p-2 text-left">#</th>
             <th className="p-2 text-left">{tr("tbl.team")}</th>
-            <th className="p-2">{tr("tbl.g")}</th>
+            {!basket && <th className="p-2">{tr("tbl.g")}</th>}
             <th className="p-2">{tr("tbl.v")}</th>
             {sport.hasDraw && <th className="p-2">{tr("tbl.n")}</th>}
             <th className="p-2">{tr("tbl.p")}</th>
-            <th className="p-2">+/−</th>
-            <th className={`p-2 ${accent}`}>{tr("tbl.pts")}</th>
+            {basket ? (
+              <>
+                <th className="p-2">{tr("bk.pf")}</th><th className="p-2">{tr("bk.pa")}</th>
+                <th className="p-2">{tr("bk.diff")}</th><th className={`p-2 ${accent}`}>{tr("bk.winPct")}</th>
+              </>
+            ) : <><th className="p-2">+/−</th><th className={`p-2 ${accent}`}>{tr("tbl.pts")}</th></>}
             <th className="p-2" />
 
           </tr>
@@ -1154,12 +1313,17 @@ function StandingsTable({
                 )}
                 <span className="truncate" translate="no">{r.team.name}</span>
               </td>
-              <td className="p-2 text-center">{r.g}</td>
+              {!basket && <td className="p-2 text-center">{r.g}</td>}
               <td className="p-2 text-center">{r.v}</td>
               {sport.hasDraw && <td className="p-2 text-center">{r.n}</td>}
               <td className="p-2 text-center">{r.p}</td>
-              <td className="p-2 text-center">{r.gf - r.gs}</td>
-              <td className={`p-2 text-center font-bold ${accent}`}>{r.pts}</td>
+              {basket ? (
+                <>
+                  <td className="p-2 text-center">{r.gf}</td><td className="p-2 text-center">{r.gs}</td>
+                  <td className="p-2 text-center">{r.gf - r.gs}</td>
+                  <td className={`p-2 text-center font-bold ${accent}`}>{r.g ? `${Math.round((r.v / r.g) * 100)}%` : "0%"}</td>
+                </>
+              ) : <><td className="p-2 text-center">{r.gf - r.gs}</td><td className={`p-2 text-center font-bold ${accent}`}>{r.pts}</td></>}
               <td className="p-2 text-right">
                 <button
                   onClick={() =>
@@ -1185,6 +1349,7 @@ function StandingsTable({
       {isRacket(t.sport) && (
         <p className="px-3 pb-3 text-[11px] text-muted-foreground">{tr("tn.tableHint")}</p>
       )}
+      {basket && <p className="px-3 pb-3 text-[11px] text-muted-foreground">{tr("bk.tableHint")}</p>}
       {rows.length === 0 && (
         <p className="p-4 text-center text-sm text-muted-foreground">{tr("tbl.noTeams")}</p>
       )}
@@ -1207,7 +1372,7 @@ function TableTab({ t, patch }: { t: Tournament; patch: Patch }) {
         <StandingsTable t={t} patch={patch} />
       )}
 
-      <div className="card-night p-4">
+      {!isBasket(t.sport) && <div className="card-night p-4">
         <h2 className="text-sm text-primary">{tr("tbl.scorers")}</h2>
         <ul className="mt-3 space-y-2 text-sm">
           {top.map((s) => (
@@ -1231,7 +1396,7 @@ function TableTab({ t, patch }: { t: Tournament; patch: Patch }) {
             <p className="text-xs text-muted-foreground">{tr("tbl.noEvents")}</p>
           )}
         </ul>
-      </div>
+      </div>}
     </div>
   );
 }
@@ -1241,8 +1406,11 @@ function TableTab({ t, patch }: { t: Tournament; patch: Patch }) {
 function FinalTab({ t, patch }: { t: Tournament; patch: Patch }) {
   const { t: tr } = useI18n();
   const sport = getSport(t.sport);
+  const basket = isBasket(t.sport);
   const ko = t.matches.filter((m) => m.ko);
-  const ready = groupPhaseDone(t);
+  const ready = basket
+    ? t.teams.length >= 8 && t.matches.some((m) => !m.ko) && t.matches.filter((m) => !m.ko).every((m) => m.status === "finita")
+    : groupPhaseDone(t);
   const perGroup = Math.min(
     t.teams.filter((x) => x.group === "A").length,
     t.teams.filter((x) => x.group === "B").length,
@@ -1252,7 +1420,7 @@ function FinalTab({ t, patch }: { t: Tournament; patch: Patch }) {
   const [err, setErr] = useState("");
 
   const generate = () => {
-    const built = buildKnockout(t, q, sport.winPoints, sport.drawPoints);
+    const built = basket ? buildBasketPlayoffs(t) : buildKnockout(t, q, sport.winPoints, sport.drawPoints);
     if (built.length === 0) {
       setErr(tr("final.needTeams"));
       return;
@@ -1274,7 +1442,7 @@ function FinalTab({ t, patch }: { t: Tournament; patch: Patch }) {
   if (!ready && ko.length === 0)
     return (
       <p className="card-night p-6 text-center text-sm text-muted-foreground">
-        {tr("final.notReady")}
+        {tr(basket ? "bk.needEight" : "final.notReady")}
       </p>
     );
 
@@ -1291,7 +1459,8 @@ function FinalTab({ t, patch }: { t: Tournament; patch: Patch }) {
       <div className="card-night space-y-3 border border-emerald-400/30 p-4">
         <p className="text-sm font-bold tracking-widest text-primary">🏆 {tr("final.title")}</p>
         <label className="block text-xs text-muted-foreground">
-          {tr("final.qualifiers")}
+          {basket ? tr("bk.playoffs") : tr("final.qualifiers")}
+          {!basket && (
           <select
             className="field mt-1"
             value={q}
@@ -1303,6 +1472,7 @@ function FinalTab({ t, patch }: { t: Tournament; patch: Patch }) {
               </option>
             ))}
           </select>
+          )}
         </label>
         <button onClick={generate} className="btn-gold w-full py-2 text-sm">
           {ko.length ? tr("final.reset") : tr("final.generate")}
