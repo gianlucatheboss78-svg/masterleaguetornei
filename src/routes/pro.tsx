@@ -59,8 +59,16 @@ function ProPage() {
   }, [nav]);
 
   const start = async () => {
-    setLoading(true);
     setError(undefined);
+    setOwnerError(false);
+    // OWNER BYPASS: nessun redirect a Stripe per l'email del proprietario
+    if (isOwnerEmail(ownerInput)) {
+      signInOwner(ownerInput);
+      window.sessionStorage.setItem("mlt.boss.welcome", "1");
+      nav({ to: "/" });
+      return;
+    }
+    setLoading(true);
     try {
       const res = await checkout({ data: { origin: window.location.origin } });
       if (res.ok) window.location.href = res.url;
