@@ -1182,6 +1182,9 @@ function StandingsTable({
           ))}
         </tbody>
       </table>
+      {isRacket(t.sport) && (
+        <p className="px-3 pb-3 text-[11px] text-muted-foreground">{tr("tn.tableHint")}</p>
+      )}
       {rows.length === 0 && (
         <p className="p-4 text-center text-sm text-muted-foreground">{tr("tbl.noTeams")}</p>
       )}
