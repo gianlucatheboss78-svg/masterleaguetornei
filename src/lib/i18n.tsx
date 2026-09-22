@@ -27,6 +27,9 @@ const it: Dict = {
   "home.teams": "squadre",
   "home.delete": "Elimina torneo",
   "home.deleteConfirm": "Eliminare definitivamente {name}?",
+  "home.deleteIrreversible": "Azione irreversibile. Per confermare inserisci il codice:",
+  "home.deleteCodePlaceholder": "Inserisci codice",
+  "home.deleteBtn": "Elimina",
 
   "nt.title": "Nuovo torneo",
   "nt.logoHint": "Galleria telefono · 1000 loghi · 195 bandiere",
@@ -157,6 +160,9 @@ const en: Dict = {
   "home.teams": "teams",
   "home.delete": "Delete tournament",
   "home.deleteConfirm": "Permanently delete {name}?",
+  "home.deleteIrreversible": "Irreversible action. To confirm, enter the code:",
+  "home.deleteCodePlaceholder": "Enter code",
+  "home.deleteBtn": "Delete",
 
   "nt.title": "New tournament",
   "nt.logoHint": "Phone gallery · 1000 logos · 195 flags",
@@ -287,6 +293,9 @@ const es: Dict = {
   "home.teams": "equipos",
   "home.delete": "Eliminar torneo",
   "home.deleteConfirm": "¿Eliminar definitivamente {name}?",
+  "home.deleteIrreversible": "Acción irreversible. Para confirmar, introduce el código:",
+  "home.deleteCodePlaceholder": "Introduce el código",
+  "home.deleteBtn": "Eliminar",
 
   "nt.title": "Nuevo torneo",
   "nt.logoHint": "Galería del móvil · 1000 logos · 195 banderas",
@@ -417,6 +426,9 @@ const fr: Dict = {
   "home.teams": "équipes",
   "home.delete": "Supprimer le tournoi",
   "home.deleteConfirm": "Supprimer définitivement {name} ?",
+  "home.deleteIrreversible": "Action irréversible. Pour confirmer, saisissez le code :",
+  "home.deleteCodePlaceholder": "Saisir le code",
+  "home.deleteBtn": "Supprimer",
 
   "nt.title": "Nouveau tournoi",
   "nt.logoHint": "Galerie du téléphone · 1000 logos · 195 drapeaux",
@@ -547,6 +559,9 @@ const pt: Dict = {
   "home.teams": "equipas",
   "home.delete": "Eliminar torneio",
   "home.deleteConfirm": "Eliminar definitivamente {name}?",
+  "home.deleteIrreversible": "Ação irreversível. Para confirmar, insira o código:",
+  "home.deleteCodePlaceholder": "Inserir código",
+  "home.deleteBtn": "Eliminar",
 
   "nt.title": "Novo torneio",
   "nt.logoHint": "Galeria do telemóvel · 1000 logos · 195 bandeiras",
@@ -677,6 +692,9 @@ const zh: Dict = {
   "home.teams": "支球队",
   "home.delete": "删除赛事",
   "home.deleteConfirm": "永久删除 {name}？",
+  "home.deleteIrreversible": "此操作不可撤销。确认请输入代码：",
+  "home.deleteCodePlaceholder": "输入代码",
+  "home.deleteBtn": "删除",
 
   "nt.title": "新建赛事",
   "nt.logoHint": "手机相册 · 1000 个队徽 · 195 面国旗",
