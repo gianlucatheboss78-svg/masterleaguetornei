@@ -52,7 +52,7 @@ function ProPage() {
       if (res.ok) window.location.href = res.url;
       else setError(res.error);
     } catch {
-      setError("Collega Stripe nelle Environment Variables");
+      setError(t("pro.err"));
     }
     setLoading(false);
   };
@@ -60,23 +60,23 @@ function ProPage() {
   return (
     <main className="mx-auto min-h-screen w-full max-w-lg px-4 pb-24 pt-6">
       <Link to="/" className="text-sm text-muted-foreground">
-        ‹ Tornei
+        {t("common.back")}
       </Link>
 
       <div className="card-night mt-4 p-6 text-center">
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full btn-gold text-3xl">
           👑
         </div>
-        <h1 className="mt-4 text-3xl gold-text">Prova Master League PRO</h1>
+        <h1 className="mt-4 text-3xl gold-text">{t("pro.title")}</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          7 giorni gratis, poi {PRO_PRICE} al mese — Disdici quando vuoi
+          {t("pro.subtitle", { price: PRO_PRICE })}
         </p>
 
         <ul className="mt-6 space-y-3 text-left text-sm">
-          {BENEFITS.map((f) => (
-            <li key={f} className="flex gap-2">
+          {BENEFIT_KEYS.map((k) => (
+            <li key={k} className="flex gap-2">
               <span className="text-primary">✔</span>
-              <span>{f}</span>
+              <span>{t(k)}</span>
             </li>
           ))}
         </ul>
@@ -84,10 +84,10 @@ function ProPage() {
         {pro ? (
           <>
             <p className="mt-6 rounded-xl bg-primary/15 p-3 text-sm text-primary">
-              PRO attivo — tornei illimitati sbloccati.
+              {t("pro.active")}
             </p>
             <button onClick={() => setPro(false)} className="btn-ghost-gold mt-3 w-full py-2 text-xs">
-              Disattiva PRO
+              {t("pro.off")}
             </button>
           </>
         ) : (
@@ -97,7 +97,7 @@ function ProPage() {
               disabled={loading}
               className="btn-gold mt-6 w-full py-3 text-base disabled:opacity-60"
             >
-              {loading ? "Attendi…" : "Inizia 7 giorni gratis"}
+              {loading ? t("pro.wait") : t("pro.cta")}
             </button>
             {error && (
               <p className="mt-3 rounded-xl bg-destructive/15 p-3 text-xs text-destructive">
@@ -105,7 +105,7 @@ function ProPage() {
               </p>
             )}
             <p className="mt-3 text-xs text-muted-foreground">
-              Nessun addebito oggi. Dopo 7 giorni {PRO_PRICE} al mese, rinnovo automatico.
+              {t("pro.noCharge", { price: PRO_PRICE })}
             </p>
           </>
         )}
