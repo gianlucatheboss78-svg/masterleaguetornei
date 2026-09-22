@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import type { TennisState } from "./tennis";
 
 export type Player = {
   id: string;
@@ -175,8 +176,11 @@ export function standings(
       const b = rows.get(m.teamB);
       if (!a || !b) return;
       a.g++; b.g++;
-      a.gf += m.scoreA; a.gs += m.scoreB;
-      b.gf += m.scoreB; b.gs += m.scoreA;
+      // Tennis/Padel: la differenza in classifica usa i game, non i set.
+      const ga = m.gamesA ?? m.scoreA;
+      const gb = m.gamesB ?? m.scoreB;
+      a.gf += ga; a.gs += gb;
+      b.gf += gb; b.gs += ga;
       if (m.scoreA > m.scoreB) { a.v++; b.p++; a.pts += winPts; }
       else if (m.scoreB > m.scoreA) { b.v++; a.p++; b.pts += winPts; }
       else { a.n++; b.n++; a.pts += drawPts; b.pts += drawPts; }
