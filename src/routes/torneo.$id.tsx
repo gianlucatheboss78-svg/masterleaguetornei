@@ -601,6 +601,7 @@ function Events({
   m: Match;
   setMatch: (id: string, fn: (m: Match) => Match) => void;
 }) {
+  const { t: tr } = useI18n();
   const roster = t.teams
     .filter((x) => x.id === m.teamA || x.id === m.teamB)
     .flatMap((x) => x.players.map((p) => ({ p, team: x })));
