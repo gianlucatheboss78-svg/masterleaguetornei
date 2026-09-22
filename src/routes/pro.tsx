@@ -130,6 +130,43 @@ function ProPage() {
           </>
         )}
       </div>
+
+      {!owner && (
+        <div className="card-night mt-4 p-4">
+          <button
+            onClick={() => setOwnerOpen((v) => !v)}
+            className="w-full text-left text-xs text-muted-foreground"
+          >
+            👑 Accesso proprietario
+          </button>
+          {ownerOpen && (
+            <div className="mt-3 space-y-2">
+              <input
+                className="field"
+                type="email"
+                placeholder="La tua email owner"
+                value={ownerInput}
+                onChange={(e) => setOwnerInput(e.target.value)}
+              />
+              <button
+                onClick={() => {
+                  const ok = signInOwner(ownerInput);
+                  setOwnerError(!ok);
+                  if (ok) nav({ to: "/" });
+                }}
+                className="btn-gold w-full py-2 text-sm"
+              >
+                Entra come owner
+              </button>
+              {ownerError && (
+                <p className="rounded-xl bg-destructive/15 p-2 text-xs text-destructive">
+                  Email non autorizzata.
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </main>
   );
 }
