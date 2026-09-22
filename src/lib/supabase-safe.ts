@@ -1,7 +1,6 @@
-import { supabase as rawSupabase } from "@/integrations/supabase/client";
-import type { supabase as SupabaseClientType } from "@/integrations/supabase/client";
+import * as supabaseModule from "@/integrations/supabase/client";
 
-type Client = typeof SupabaseClientType;
+type Client = typeof supabaseModule.supabase;
 
 /**
  * Il client del backend lancia un errore se le variabili d'ambiente mancano
@@ -11,7 +10,7 @@ type Client = typeof SupabaseClientType;
  */
 export function getSupabase(): Client | null {
   try {
-    return rawSupabase as Client;
+    return supabaseModule.supabase;
   } catch {
     return null;
   }
