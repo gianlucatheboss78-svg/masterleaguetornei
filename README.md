@@ -1,29 +1,23 @@
-# Welcome to your Lovable project
+# Master League Tornei
 
-This project was built with [Lovable](https://lovable.dev).
+App per la creazione e gestione di tornei sportivi (15 sport), con squadre e giocatori illimitati, calendario, partite live, classifiche automatiche, gestione quote di iscrizione e locandine automatiche.
 
-## Build with Lovable
+## Stack
 
-Open your project in the [Lovable editor](https://lovable.dev) and keep building.
+- TanStack Start (React 19, Vite 7)
+- Tailwind CSS v4
+- Tema oro (#D4AF37) e blu notte (#0A1931)
+- 6 lingue: Italiano, Inglese, Spagnolo, Francese, Portoghese, Cinese
 
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: connect the project to GitHub and every change made in Lovable is committed straight to your repository.
-- **Full ownership**: this code is yours. Push to your repository and your changes sync back into Lovable, ready for your next prompt.
+## Sviluppo
 
-## Development
-
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
-
-```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
+```bash
+bun install
+bun run dev
 ```
 
-## Built with
+## Note
 
-- TanStack Start
-- TypeScript
-- React
-- Tailwind CSS
+- Dati salvati in locale (localStorage) sul dispositivo.
+- Abbonamento PRO: 7 giorni gratis, poi 9,99 €/mese via Stripe.
+- Accesso owner gratuito per email autorizzate.
