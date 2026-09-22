@@ -58,6 +58,11 @@ export type Match = {
   events: MatchEvent[];
   group?: GroupId;
   ko?: KoInfo;
+  /** Tennis/Padel: stato punteggio 15-30-40, set e tie-break. */
+  tennis?: TennisState;
+  /** Tennis/Padel: game vinti (usati per la differenza game in classifica). */
+  gamesA?: number;
+  gamesB?: number;
 };
 
 export type TournamentFormat = "single" | "groups";
