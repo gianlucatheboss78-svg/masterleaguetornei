@@ -72,7 +72,7 @@ export type Match = {
   volley?: VolleyState;
 };
 
-export type TournamentFormat = "single" | "groups";
+export type TournamentFormat = "single" | "singleko" | "groups";
 
 export type Tournament = {
   id: string;
@@ -347,6 +347,65 @@ export function buildKnockout(
     });
   }
 
+  return syncKnockout(out);
+}
+
+/** Girone unico + fase eliminatoria: prime n della classifica, 1 vs n, 2 vs n-1... */
+export function buildKnockoutSingle(
+  t: Tournament,
+  n: number,
+  winPts: number,
+  drawPts: number,
+): Match[] {
+  const rows = standings(t, winPts, drawPts).slice(0, n);
+  if (rows.length < n || n < 2) return [];
+  const seeds: string[] = [];
+  for (let i = 0; i < n / 2; i++) {
+    seeds.push(rows[i]!.team.id);
+    seeds.push(rows[n - 1 - i]!.team.id);
+  }
+  const R = Math.round(Math.log2(n));
+  const out: Match[] = [];
+  const base = t.startDate ? new Date(t.startDate) : new Date();
+  for (let r = 1; r <= R; r++) {
+    const count = 2 ** (R - r);
+    for (let i = 0; i < count; i++) {
+      const day = new Date(base);
+      day.setDate(base.getDate() + 30 + r * 3);
+      out.push({
+        id: uid(),
+        round: 100 + r,
+        teamA: r === 1 ? (seeds[i * 2] ?? "") : "",
+        teamB: r === 1 ? (seeds[i * 2 + 1] ?? "") : "",
+        date: day.toISOString().slice(0, 10),
+        time: "18:00",
+        venue: "",
+        scoreA: 0,
+        scoreB: 0,
+        status: "programmata",
+        events: [],
+        ko: { round: r, index: i },
+      });
+    }
+  }
+  if (R >= 2) {
+    const day = new Date(base);
+    day.setDate(base.getDate() + 30 + R * 3);
+    out.push({
+      id: uid(),
+      round: 100 + R,
+      teamA: "",
+      teamB: "",
+      date: day.toISOString().slice(0, 10),
+      time: "15:00",
+      venue: "",
+      scoreA: 0,
+      scoreB: 0,
+      status: "programmata",
+      events: [],
+      ko: { round: R, index: 1, kind: "third" },
+    });
+  }
   return syncKnockout(out);
 }
 
