@@ -17,7 +17,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Crea tornei per 15 sport: squadre, giocatori, calendario, live, classifiche, iscrizioni e locandina automatica.",
+          "Crea tornei per 12 sport: squadre, giocatori, calendario, live, classifiche, iscrizioni e locandina automatica.",
       },
       { property: "og:title", content: "Master League Tornei" },
       {

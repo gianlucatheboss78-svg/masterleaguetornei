@@ -79,13 +79,19 @@ export type Tournament = {
 };
 
 const KEY = "mlt.tournaments.v1";
+const REMOVED_SPORT_IDS = new Set(["biliardino", "hockey", "pallanuoto"]);
 
 export const uid = () => Math.random().toString(36).slice(2, 10);
 
 function read(): Tournament[] {
   if (typeof window === "undefined") return [];
   try {
-    return JSON.parse(window.localStorage.getItem(KEY) ?? "[]") as Tournament[];
+    const parsed = JSON.parse(window.localStorage.getItem(KEY) ?? "[]") as Tournament[];
+    const cleaned = parsed.filter((tournament) => !REMOVED_SPORT_IDS.has(tournament.sport));
+    if (cleaned.length !== parsed.length) {
+      window.localStorage.setItem(KEY, JSON.stringify(cleaned));
+    }
+    return cleaned;
   } catch {
     return [];
   }
@@ -95,7 +101,10 @@ const listeners = new Set<() => void>();
 const emit = () => listeners.forEach((l) => l());
 
 export function saveAll(data: Tournament[]) {
-  window.localStorage.setItem(KEY, JSON.stringify(data));
+  window.localStorage.setItem(
+    KEY,
+    JSON.stringify(data.filter((tournament) => !REMOVED_SPORT_IDS.has(tournament.sport))),
+  );
   emit();
 }
 
