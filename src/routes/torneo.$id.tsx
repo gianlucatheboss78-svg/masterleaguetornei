@@ -1041,7 +1041,15 @@ function FinalTab({ t, patch }: { t: Tournament; patch: Patch }) {
                   {tr(koRoundLabelKey(r, total))}
                 </p>
                 {list.map((m) => (
-                  <KoCard key={m.id} t={t} m={m} total={total} setMatch={setMatch} />
+                  <KoCard
+                    key={m.id}
+                    t={t}
+                    m={m}
+                    total={total}
+                    hasPrev={r > 1 && m.ko!.kind !== "third"}
+                    hasNext={r < total && m.ko!.kind !== "third"}
+                    setMatch={setMatch}
+                  />
                 ))}
               </div>
             );
@@ -1056,11 +1064,15 @@ function KoCard({
   t,
   m,
   total,
+  hasPrev,
+  hasNext,
   setMatch,
 }: {
   t: Tournament;
   m: Match;
   total: number;
+  hasPrev?: boolean;
+  hasNext?: boolean;
   setMatch: (id: string, fn: (m: Match) => Match) => void;
 }) {
   const { t: tr } = useI18n();
@@ -1075,6 +1087,12 @@ function KoCard({
           : "border-emerald-400/40 bg-gradient-to-br from-emerald-400/10 to-primary/10"
       }`}
     >
+      {hasPrev && (
+        <span className="absolute -left-3 top-1/2 h-px w-3 bg-emerald-400/50" aria-hidden />
+      )}
+      {hasNext && (
+        <span className="absolute -right-3 top-1/2 h-px w-3 bg-emerald-400/50" aria-hidden />
+      )}
       <p className="mb-2 text-[10px] uppercase tracking-widest text-muted-foreground">
         {tr(koRoundLabelKey(m.ko!.round, total, m.ko!.kind))}
       </p>
