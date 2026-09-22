@@ -40,7 +40,7 @@ export async function pushTournament(t: Tournament): Promise<void> {
       user_id: userId,
       name: t.name,
       sport: t.sport,
-      data: t as unknown as Record<string, unknown>,
+      data: JSON.parse(JSON.stringify(t)),
       updated_at: new Date().toISOString(),
     },
     { onConflict: "id" },
