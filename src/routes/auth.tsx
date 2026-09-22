@@ -1,7 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable";
 import { useSession, signOut } from "@/lib/auth";
 import { syncFromCloud } from "@/lib/store";
 import { LOGO_URL } from "@/components/AppHeader";
@@ -65,15 +64,6 @@ function AuthPage() {
     nav({ to: "/" });
   };
 
-  const google = async () => {
-    setMsg("");
-    try {
-      await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
-    } catch (e) {
-      setMsg(e instanceof Error ? e.message : "Accesso Google non riuscito");
-    }
-  };
-
   return (
     <main className="mx-auto min-h-screen w-full max-w-sm px-4 pb-24 pt-10">
       <img
@@ -112,10 +102,6 @@ function AuthPage() {
         </div>
       ) : (
         <div className="card-night mt-6 space-y-3 p-5">
-          <button className="btn-ghost-gold w-full py-3" onClick={google}>
-            Continua con Google
-          </button>
-          <div className="text-center text-xs text-muted-foreground">oppure</div>
           <input
             className="field"
             type="email"
