@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
+import { Share2 } from "lucide-react";
 import { LogoPicker } from "@/components/LogoPicker";
+import { ShareDialog } from "@/components/ShareDialog";
 import { getCountries, countryName, flagFor } from "@/lib/countries";
 import { useI18n } from "@/lib/i18n";
 import { ageFrom, readCircleImage } from "@/lib/media";
@@ -92,6 +94,12 @@ function TournamentPage() {
   const { t: tr, sportName } = useI18n();
   const [tab, setTab] = useState<string>("squadre");
   const [openMatch, setOpenMatch] = useState<string | null>(null);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [shareUrl, setShareUrl] = useState("");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") setShareUrl(window.location.href);
+  }, [id]);
 
   if (!ready) return <div className="p-8 text-center text-muted-foreground">{tr("common.loading")}</div>;
   if (!tournament)
@@ -120,7 +128,7 @@ function TournamentPage() {
             {sport.icon}
           </div>
         )}
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <h1 className="truncate text-xl gold-text">{tournament.name}</h1>
           <p className="text-xs text-muted-foreground">
             {sport.icon} {sportName(sport.id, sport.name)}
@@ -131,7 +139,18 @@ function TournamentPage() {
             {tournament.startDate || tr("t.tbd")}
           </p>
         </div>
+        <button
+          type="button"
+          onClick={() => setShareOpen(true)}
+          className="btn-gold flex shrink-0 items-center gap-1 self-start px-3 py-2 text-xs font-semibold"
+        >
+          <Share2 className="h-4 w-4" aria-hidden="true" />
+          {tr("home.share")}
+        </button>
       </header>
+
+      <ShareDialog open={shareOpen} onOpenChange={setShareOpen} name={tournament.name} url={shareUrl} />
+
 
       <nav className="-mx-4 mt-4 flex gap-2 overflow-x-auto px-4 pb-1">
         {TABS.filter((x) => x.id !== "finale" || tournament.format === "groups" || tournament.format === "singleko" || isBasket(tournament.sport)).map((t) => (

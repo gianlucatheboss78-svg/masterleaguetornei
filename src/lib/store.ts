@@ -212,6 +212,18 @@ export function useTournament(id: string) {
         found = null;
       }
       if (!alive) return;
+      if (!found) {
+        // Torneo presente solo sul dispositivo: caricalo subito online.
+        const mine = read().find((t) => t.id === id);
+        if (mine) {
+          try {
+            const { pushTournament } = await import("./cloud");
+            await pushTournament(mine);
+          } catch {
+            /* offline: resta salvato sul dispositivo */
+          }
+        }
+      }
       if (found) {
         setRemote(found);
         // Copia il torneo sul dispositivo così può essere aperto e modificato.
