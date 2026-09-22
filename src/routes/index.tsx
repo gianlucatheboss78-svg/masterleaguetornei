@@ -73,7 +73,7 @@ function Home() {
       )}
 
       <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
-        <span>{pro ? t("home.proActive") : t("home.trial")}</span>
+        <span>{owner ? "👑 OWNER — tutto sbloccato" : pro ? t("home.proActive") : t("home.trial")}</span>
         <Link to="/pro" className="text-primary">
           {pro ? t("home.managePro") : t("home.discoverPro")} ›
         </Link>
