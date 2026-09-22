@@ -39,6 +39,7 @@ import {
   autoCalendarGroups,
   buildBasketPlayoffs,
   buildKnockout,
+  buildKnockoutSingle,
   groupPhaseDone,
   koRoundLabelKey,
   scorers,
@@ -133,7 +134,7 @@ function TournamentPage() {
       </header>
 
       <nav className="-mx-4 mt-4 flex gap-2 overflow-x-auto px-4 pb-1">
-        {TABS.filter((x) => x.id !== "finale" || tournament.format === "groups" || isBasket(tournament.sport)).map((t) => (
+        {TABS.filter((x) => x.id !== "finale" || tournament.format === "groups" || tournament.format === "singleko" || isBasket(tournament.sport)).map((t) => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
@@ -1473,6 +1474,7 @@ function FinalTab({ t, patch }: { t: Tournament; patch: Patch }) {
   const { t: tr } = useI18n();
   const sport = getSport(t.sport);
   const basket = isBasket(t.sport);
+  const singleKo = t.format === "singleko";
   const ko = t.matches.filter((m) => m.ko);
   const ready = basket
     ? t.teams.length >= 8 && t.matches.some((m) => !m.ko) && t.matches.filter((m) => !m.ko).every((m) => m.status === "finita")
@@ -1481,12 +1483,18 @@ function FinalTab({ t, patch }: { t: Tournament; patch: Patch }) {
     t.teams.filter((x) => x.group === "A").length,
     t.teams.filter((x) => x.group === "B").length,
   );
-  const options = [1, 2, 4, 8].filter((q) => q <= perGroup);
-  const [q, setQ] = useState<number>(t.qualifiers ?? 2);
+  const options = singleKo
+    ? [2, 4, 8, 16].filter((n) => n <= t.teams.length)
+    : [1, 2, 4, 8].filter((q) => q <= perGroup);
+  const [q, setQ] = useState<number>(singleKo ? 4 : (t.qualifiers ?? 2));
   const [err, setErr] = useState("");
 
   const generate = () => {
-    const built = basket ? buildBasketPlayoffs(t) : buildKnockout(t, q, sport.winPoints, sport.drawPoints);
+    const built = basket
+      ? buildBasketPlayoffs(t)
+      : singleKo
+        ? buildKnockoutSingle(t, q, sport.winPoints, sport.drawPoints)
+        : buildKnockout(t, q, sport.winPoints, sport.drawPoints);
     if (built.length === 0) {
       setErr(tr("final.needTeams"));
       return;
@@ -1534,7 +1542,7 @@ function FinalTab({ t, patch }: { t: Tournament; patch: Patch }) {
           >
             {(options.length ? options : [1]).map((n) => (
               <option key={n} value={n}>
-                {tr("final.topN", { n })}
+                {tr(singleKo ? "final.qualN" : "final.topN", { n })}
               </option>
             ))}
           </select>
