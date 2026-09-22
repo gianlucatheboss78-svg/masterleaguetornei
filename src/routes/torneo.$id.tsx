@@ -778,32 +778,36 @@ function LiveTab({
               <p className="text-sm font-semibold">{nameOf(t, m.teamB)}</p>
             </div>
 
-            <div className="mt-3 flex justify-center gap-2">
-              <button
-                onClick={() => setMatch(m.id, (x) => ({ ...x, scoreA: Math.max(0, x.scoreA - 1) }))}
-                className="btn-ghost-gold px-3"
-              >
-                −
-              </button>
-              <button
-                onClick={() => setMatch(m.id, (x) => ({ ...x, scoreA: x.scoreA + 1 }))}
-                className="btn-gold px-3"
-              >
-                {tr("live.home", { label: scoreName(sport.scoreLabel) })}
-              </button>
-              <button
-                onClick={() => setMatch(m.id, (x) => ({ ...x, scoreB: x.scoreB + 1 }))}
-                className="btn-gold px-3"
-              >
-                {tr("live.away")}
-              </button>
-              <button
-                onClick={() => setMatch(m.id, (x) => ({ ...x, scoreB: Math.max(0, x.scoreB - 1) }))}
-                className="btn-ghost-gold px-3"
-              >
-                −
-              </button>
-            </div>
+            {racket ? (
+              <TennisBoard m={m} setMatch={setMatch} />
+            ) : (
+              <div className="mt-3 flex justify-center gap-2">
+                <button
+                  onClick={() => setMatch(m.id, (x) => ({ ...x, scoreA: Math.max(0, x.scoreA - 1) }))}
+                  className="btn-ghost-gold px-3"
+                >
+                  −
+                </button>
+                <button
+                  onClick={() => setMatch(m.id, (x) => ({ ...x, scoreA: x.scoreA + 1 }))}
+                  className="btn-gold px-3"
+                >
+                  {tr("live.home", { label: scoreName(sport.scoreLabel) })}
+                </button>
+                <button
+                  onClick={() => setMatch(m.id, (x) => ({ ...x, scoreB: x.scoreB + 1 }))}
+                  className="btn-gold px-3"
+                >
+                  {tr("live.away")}
+                </button>
+                <button
+                  onClick={() => setMatch(m.id, (x) => ({ ...x, scoreB: Math.max(0, x.scoreB - 1) }))}
+                  className="btn-ghost-gold px-3"
+                >
+                  −
+                </button>
+              </div>
+            )}
 
             <div className="mt-3 flex gap-2 text-xs">
               {(["programmata", "live", "finita"] as const).map((s) => (
