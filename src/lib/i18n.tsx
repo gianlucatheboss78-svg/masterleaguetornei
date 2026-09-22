@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { LANGS, LANG_KEY, detectLang, type Lang } from "./i18n-core";
+import { GROUP_DICTS } from "./i18n-groups";
 import { ROLE_NAMES, SCORE_NAMES, SPORT_NAMES, VENUE_NAMES, term } from "./i18n-terms";
 
 export { LANGS, type Lang };
@@ -862,7 +863,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
       lang,
       setLang,
       t: (key, vars) => {
-        let s = dict[key] ?? it[key] ?? key;
+        let s = dict[key] ?? DICTS.it[key] ?? key;
         if (vars)
           for (const [k, v] of Object.entries(vars)) s = s.replaceAll(`{${k}}`, String(v));
         return s;
