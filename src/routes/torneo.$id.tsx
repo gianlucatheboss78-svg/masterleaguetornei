@@ -147,6 +147,13 @@ function TeamsTab({ t, patch }: { t: Tournament; patch: Patch }) {
   const [name, setName] = useState("");
   const [openTeam, setOpenTeam] = useState<string | null>(null);
 
+  // Tornei a 2 gironi: se nessuna squadra ha un girone, dividile automaticamente.
+  const needsSplit =
+    t.format === "groups" && t.teams.length >= 2 && t.teams.every((x) => !x.group);
+  useEffect(() => {
+    if (needsSplit) patch((cur) => ({ ...cur, teams: splitGroups(cur.teams) }));
+  }, [needsSplit, patch]);
+
   const addTeam = () => {
     if (!name.trim()) return;
     patch((cur) => {
