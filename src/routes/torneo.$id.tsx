@@ -92,6 +92,12 @@ function TournamentPage() {
   const { t: tr, sportName } = useI18n();
   const [tab, setTab] = useState<string>("squadre");
   const [openMatch, setOpenMatch] = useState<string | null>(null);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [shareUrl, setShareUrl] = useState("");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") setShareUrl(window.location.href);
+  }, [id]);
 
   if (!ready) return <div className="p-8 text-center text-muted-foreground">{tr("common.loading")}</div>;
   if (!tournament)
