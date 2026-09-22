@@ -45,9 +45,7 @@ function ProPage() {
   const checkout = useServerFn(createProCheckout);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>();
-  const [ownerOpen, setOwnerOpen] = useState(false);
   const [ownerInput, setOwnerInput] = useState("");
-  const [ownerError, setOwnerError] = useState(false);
   const ownerEmailLabel = owner ? (ownerEmail() ?? "") : "";
 
   useEffect(() => {
