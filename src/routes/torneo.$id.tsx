@@ -60,6 +60,7 @@ function TournamentPage() {
   const { tournament, ready, patch } = useTournament(id);
   const { t: tr, sportName } = useI18n();
   const [tab, setTab] = useState<string>("squadre");
+  const [openMatch, setOpenMatch] = useState<string | null>(null);
 
   if (!ready) return <div className="p-8 text-center text-muted-foreground">{tr("common.loading")}</div>;
   if (!tournament)
@@ -117,8 +118,17 @@ function TournamentPage() {
 
       <div className="mt-5">
         {tab === "squadre" && <TeamsTab t={tournament} patch={patch} />}
-        {tab === "calendario" && <CalendarTab t={tournament} patch={patch} />}
-        {tab === "live" && <LiveTab t={tournament} patch={patch} />}
+        {tab === "calendario" && (
+          <CalendarTab
+            t={tournament}
+            patch={patch}
+            onOpen={(mid) => {
+              setOpenMatch(mid);
+              setTab("live");
+            }}
+          />
+        )}
+        {tab === "live" && <LiveTab t={tournament} patch={patch} initialOpen={openMatch} />}
         {tab === "classifica" && <TableTab t={tournament} patch={patch} />}
         {tab === "finale" && <FinalTab t={tournament} patch={patch} />}
         {tab === "cassa" && <MoneyTab t={tournament} patch={patch} />}
