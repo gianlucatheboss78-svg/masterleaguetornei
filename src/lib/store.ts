@@ -130,8 +130,7 @@ export function saveAll(data: Tournament[]) {
 
 async function syncDiff(before: Tournament[], after: Tournament[]) {
   if (typeof window === "undefined") return;
-  const { currentUserId, pushTournament, deleteTournament } = await import("./cloud");
-  if (!(await currentUserId())) return;
+  const { pushTournament, deleteTournament } = await import("./cloud");
   const beforeMap = new Map(before.map((t) => [t.id, JSON.stringify(t)]));
   const afterIds = new Set(after.map((t) => t.id));
   for (const t of after) {
