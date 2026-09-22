@@ -161,6 +161,11 @@ export type Row = {
   gf: number;
   gs: number;
   pts: number;
+  /** Campi derivati usati dalla classifica Volley/Beach Volley. */
+  sf?: number;
+  sa?: number;
+  pf?: number;
+  pa?: number;
 };
 
 export function standings(

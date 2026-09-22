@@ -1388,7 +1388,7 @@ function StandingsTable({
                   <td className="p-2 text-center">{r.gf - r.gs}</td>
                   <td className={`p-2 text-center font-bold ${accent}`}>{r.g ? `${Math.round((r.v / r.g) * 100)}%` : "0%"}</td>
                 </>
-              ) : volley ? <><td className="p-2 text-center">{r.sf}</td><td className="p-2 text-center">{r.sa}</td><td className="p-2 text-center">{r.pa ? (r.pf / r.pa).toFixed(3) : r.pf ? "∞" : "0.000"}</td><td className={`p-2 text-center font-bold ${accent}`}>{r.pts}</td></> : <><td className="p-2 text-center">{r.gf - r.gs}</td><td className={`p-2 text-center font-bold ${accent}`}>{r.pts}</td></>}
+              ) : volley ? <><td className="p-2 text-center">{r.sf ?? 0}</td><td className="p-2 text-center">{r.sa ?? 0}</td><td className="p-2 text-center">{r.pa ? ((r.pf ?? 0) / r.pa).toFixed(3) : r.pf ? "∞" : "0.000"}</td><td className={`p-2 text-center font-bold ${accent}`}>{r.pts}</td></> : <><td className="p-2 text-center">{r.gf - r.gs}</td><td className={`p-2 text-center font-bold ${accent}`}>{r.pts}</td></>}
               <td className="p-2 text-right">
                 <button
                   onClick={() =>
