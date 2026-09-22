@@ -1,7 +1,15 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { PRO_PRICE, setPro, usePro, useOwner, signInOwner, signOutOwner } from "@/lib/pro";
+import {
+  PRO_PRICE,
+  setPro,
+  usePro,
+  useOwner,
+  signInOwner,
+  signOutOwner,
+  ownerEmail,
+} from "@/lib/pro";
 import { useI18n } from "@/lib/i18n";
 import { LOGO_URL } from "@/components/AppHeader";
 import { createProCheckout } from "@/lib/billing.functions";
