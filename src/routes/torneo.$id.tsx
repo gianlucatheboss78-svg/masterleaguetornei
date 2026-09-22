@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { LogoPicker } from "@/components/LogoPicker";
 import { getCountries, countryName, flagFor } from "@/lib/countries";
 import { useI18n } from "@/lib/i18n";
@@ -147,12 +147,30 @@ function TeamsTab({ t, patch }: { t: Tournament; patch: Patch }) {
   const [name, setName] = useState("");
   const [openTeam, setOpenTeam] = useState<string | null>(null);
 
+  // Tornei a 2 gironi: se nessuna squadra ha un girone, dividile automaticamente.
+  const needsSplit =
+    t.format === "groups" && t.teams.length >= 2 && t.teams.every((x) => !x.group);
+  useEffect(() => {
+    if (needsSplit) patch((cur) => ({ ...cur, teams: splitGroups(cur.teams) }));
+  }, [needsSplit, patch]);
+
   const addTeam = () => {
     if (!name.trim()) return;
-    patch((cur) => ({
-      ...cur,
-      teams: [...cur.teams, { id: uid(), name: name.trim(), players: [] }],
-    }));
+    patch((cur) => {
+      const auto =
+        cur.format === "groups"
+          ? {
+              group: (cur.teams.filter((x) => x.group === "A").length <=
+              cur.teams.filter((x) => x.group === "B").length
+                ? "A"
+                : "B") as GroupId,
+            }
+          : {};
+      return {
+        ...cur,
+        teams: [...cur.teams, { id: uid(), name: name.trim(), players: [], ...auto }],
+      };
+    });
     setName("");
   };
 
