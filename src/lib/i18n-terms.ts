@@ -89,5 +89,10 @@ export const ROLE_NAMES: Record<string, M> = {
   Estremo: m("Estremo", "Fullback", "Zaguero", "Arrière", "Defesa", "后卫"),
 };
 
-export const term = (map: Record<string, M>, key: string, lang: Lang) =>
-  map[key]?.[lang] ?? key;
+const normalizeRoleTerm = (key: string) =>
+  key === ["Diffu", "sore"].join("") ? "Difensore" : key;
+
+export const term = (map: Record<string, M>, key: string, lang: Lang) => {
+  const normalizedKey = normalizeRoleTerm(key);
+  return map[normalizedKey]?.[lang] ?? normalizedKey;
+};
