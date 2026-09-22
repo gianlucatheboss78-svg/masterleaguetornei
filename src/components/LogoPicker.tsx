@@ -90,7 +90,7 @@ function LogoSheet({ onClose, onPick }: { onClose: () => void; onPick: (d: strin
             <button
               key={id}
               onClick={() => setTab(id)}
-                className={`min-w-fit shrink-0 px-4 py-1.5 font-bold ${tab === id ? "btn-gold" : "btn-ghost-gold"}`}
+              className={`min-w-fit shrink-0 px-4 py-1.5 font-bold ${tab === id ? "btn-gold" : "btn-ghost-gold"}`}
             >
               {label}
             </button>
