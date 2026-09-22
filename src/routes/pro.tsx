@@ -1,7 +1,15 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { PRO_PRICE, setPro, usePro } from "@/lib/pro";
+import {
+  PRO_PRICE,
+  setPro,
+  usePro,
+  useOwner,
+  signInOwner,
+  signOutOwner,
+  ownerEmail,
+} from "@/lib/pro";
 import { useI18n } from "@/lib/i18n";
 import { LOGO_URL } from "@/components/AppHeader";
 import { createProCheckout } from "@/lib/billing.functions";
@@ -31,11 +39,16 @@ const BENEFIT_KEYS = ["pro.b1", "pro.b2", "pro.b3", "pro.b4", "pro.b5", "pro.b6"
 
 function ProPage() {
   const pro = usePro();
+  const owner = useOwner();
   const { t } = useI18n();
   const nav = useNavigate();
   const checkout = useServerFn(createProCheckout);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>();
+  const [ownerOpen, setOwnerOpen] = useState(false);
+  const [ownerInput, setOwnerInput] = useState("");
+  const [ownerError, setOwnerError] = useState(false);
+  const ownerEmailLabel = owner ? (ownerEmail() ?? "") : "";
 
   useEffect(() => {
     const p = new URLSearchParams(window.location.search);
@@ -84,7 +97,20 @@ function ProPage() {
           ))}
         </ul>
 
-        {pro ? (
+        {owner ? (
+          <>
+            <p className="mt-6 rounded-xl bg-primary/15 p-3 text-sm text-primary">
+              👑 OWNER — accesso completo gratuito
+            </p>
+            <p className="mt-2 text-xs text-muted-foreground">{ownerEmailLabel}</p>
+            <button
+              onClick={() => signOutOwner()}
+              className="btn-ghost-gold mt-3 w-full py-2 text-xs"
+            >
+              Esci da owner
+            </button>
+          </>
+        ) : pro ? (
           <>
             <p className="mt-6 rounded-xl bg-primary/15 p-3 text-sm text-primary">
               {t("pro.active")}
@@ -113,6 +139,43 @@ function ProPage() {
           </>
         )}
       </div>
+
+      {!owner && (
+        <div className="card-night mt-4 p-4">
+          <button
+            onClick={() => setOwnerOpen((v) => !v)}
+            className="w-full text-left text-xs text-muted-foreground"
+          >
+            👑 Accesso proprietario
+          </button>
+          {ownerOpen && (
+            <div className="mt-3 space-y-2">
+              <input
+                className="field"
+                type="email"
+                placeholder="La tua email owner"
+                value={ownerInput}
+                onChange={(e) => setOwnerInput(e.target.value)}
+              />
+              <button
+                onClick={() => {
+                  const ok = signInOwner(ownerInput);
+                  setOwnerError(!ok);
+                  if (ok) nav({ to: "/" });
+                }}
+                className="btn-gold w-full py-2 text-sm"
+              >
+                Entra come owner
+              </button>
+              {ownerError && (
+                <p className="rounded-xl bg-destructive/15 p-2 text-xs text-destructive">
+                  Email non autorizzata.
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </main>
   );
 }
