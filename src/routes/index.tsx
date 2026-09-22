@@ -1,5 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { Check, Copy, Link2, MessageCircle, Send, Share2, Trash2 } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { LogoPicker } from "@/components/LogoPicker";
@@ -43,7 +45,20 @@ function Home() {
   const [codeInput, setCodeInput] = useState("");
   const [openDialog, setOpenDialog] = useState(false);
   const [torneoDaEliminare, setTorneoDaEliminare] = useState<Tournament | null>(null);
+  const [torneoDaCondividere, setTorneoDaCondividere] = useState<Tournament | null>(null);
+  const [copied, setCopied] = useState(false);
   const locked = !pro;
+
+  const shareUrl = torneoDaCondividere
+    ? `${typeof window === "undefined" ? "https://masterleaguetornei.lovable.app" : window.location.origin}/torneo/${torneoDaCondividere.id}`
+    : "";
+
+  const copyShareLink = async () => {
+    if (!shareUrl) return;
+    await navigator.clipboard.writeText(shareUrl);
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1800);
+  };
 
   useEffect(() => {
     if (window.sessionStorage.getItem("mlt.boss.welcome") === "1") {
@@ -108,11 +123,11 @@ function Home() {
           </p>
         )}
         {data.map((x) => (
-          <div key={x.id} className="relative">
+          <article key={x.id} className="card-night overflow-hidden">
             <Link
               to="/torneo/$id"
               params={{ id: x.id }}
-              className="card-night flex items-center gap-3 py-3 pl-3 pr-14"
+              className="flex items-center gap-3 p-3"
             >
               {x.logo ? (
                 <img src={x.logo} alt={x.name} className="h-14 w-14 rounded-full object-cover" />
@@ -134,26 +149,99 @@ function Home() {
               </div>
               <span className="text-primary">›</span>
             </Link>
-            <button
-              type="button"
-              aria-label={t("home.delete")}
-              title={t("home.delete")}
-              onClick={() => {
-                const randomCode = (Math.floor(Math.random() * 900) + 100).toString();
-                setCode(randomCode);
-                setCodeInput("");
-                setTorneoDaEliminare(x);
-                setOpenDialog(true);
-              }}
-              className="absolute right-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-destructive/15 text-lg text-destructive"
-            >
-              🗑️
-            </button>
-          </div>
+            <div className="grid h-12 grid-cols-3 border-t border-border/70">
+              <Button
+                type="button"
+                variant="ghost"
+                aria-label={t("home.share")}
+                title={t("home.share")}
+                onClick={() => {
+                  setCopied(false);
+                  setTorneoDaCondividere(x);
+                }}
+                className="h-full rounded-none border-r border-border/70 text-primary hover:bg-primary/10 hover:text-primary"
+              >
+                <Share2 aria-hidden="true" />
+                <span className="sr-only">{t("home.share")}</span>
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                aria-label={t("home.chat")}
+                title={t("home.chat")}
+                className="h-full rounded-none border-r border-border/70 text-primary hover:bg-primary/10 hover:text-primary"
+              >
+                <MessageCircle aria-hidden="true" />
+                <span className="sr-only">{t("home.chat")}</span>
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                aria-label={t("home.delete")}
+                title={t("home.delete")}
+                onClick={() => {
+                  const randomCode = (Math.floor(Math.random() * 900) + 100).toString();
+                  setCode(randomCode);
+                  setCodeInput("");
+                  setTorneoDaEliminare(x);
+                  setOpenDialog(true);
+                }}
+                className="h-full rounded-none text-destructive hover:bg-destructive/10 hover:text-destructive"
+              >
+                <Trash2 aria-hidden="true" />
+                <span className="sr-only">{t("home.delete")}</span>
+              </Button>
+            </div>
+          </article>
         ))}
       </section>
 
       {open && <NewTournament onClose={() => setOpen(false)} update={update} />}
+
+      <Dialog
+        open={Boolean(torneoDaCondividere)}
+        onOpenChange={(value) => {
+          if (!value) {
+            setTorneoDaCondividere(null);
+            setCopied(false);
+          }
+        }}
+      >
+        <DialogContent className="card-night w-[calc(100%-2rem)] max-w-sm p-5">
+          <DialogHeader className="pr-7 text-left">
+            <DialogTitle className="gold-text text-xl">{t("share.title")}</DialogTitle>
+            <DialogDescription className="truncate text-sm text-muted-foreground">
+              {torneoDaCondividere?.name}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="mx-auto rounded-lg bg-qr p-3 text-qr-foreground">
+            {shareUrl && <QRCodeSVG value={shareUrl} size={176} level="H" fgColor="currentColor" bgColor="transparent" />}
+          </div>
+
+          <div className="flex min-w-0 items-center gap-2 rounded-md border border-border bg-secondary/60 p-2">
+            <Link2 className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+            <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">{shareUrl}</span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <Button asChild className="h-11 bg-success text-success-foreground hover:bg-success/90">
+              <a
+                href={`https://wa.me/?text=${encodeURIComponent(`${torneoDaCondividere?.name ?? "Master League"} ${shareUrl}`)}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <Send aria-hidden="true" />
+                WhatsApp
+              </a>
+            </Button>
+            <Button type="button" variant="outline" className="h-11" onClick={copyShareLink}>
+              {copied ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}
+              {copied ? t("share.copied") : t("share.copy")}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={openDialog} onOpenChange={(v) => { setOpenDialog(v); if (!v) setCodeInput(""); }}>
         <DialogContent className="card-night max-w-sm">
