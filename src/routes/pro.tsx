@@ -88,7 +88,20 @@ function ProPage() {
           ))}
         </ul>
 
-        {pro ? (
+        {owner ? (
+          <>
+            <p className="mt-6 rounded-xl bg-primary/15 p-3 text-sm text-primary">
+              👑 OWNER — accesso completo gratuito
+            </p>
+            <p className="mt-2 text-xs text-muted-foreground">{ownerEmailLabel}</p>
+            <button
+              onClick={() => signOutOwner()}
+              className="btn-ghost-gold mt-3 w-full py-2 text-xs"
+            >
+              Esci da owner
+            </button>
+          </>
+        ) : pro ? (
           <>
             <p className="mt-6 rounded-xl bg-primary/15 p-3 text-sm text-primary">
               {t("pro.active")}
