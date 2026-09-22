@@ -368,6 +368,7 @@ function Roster({ t, team, patch }: { t: Tournament; team: Team; patch: Patch })
 
 function CalendarTab({ t, patch }: { t: Tournament; patch: Patch }) {
   const sport = getSport(t.sport);
+  const { t: tr, venueName } = useI18n();
   const [m, setM] = useState({
     teamA: "",
     teamB: "",
@@ -395,14 +396,14 @@ function CalendarTab({ t, patch }: { t: Tournament; patch: Patch }) {
   return (
     <div className="space-y-4">
       <div className="card-night space-y-2 p-4">
-        <p className="text-sm text-primary">Inserimento manuale</p>
+        <p className="text-sm text-primary">{tr("cal.manual")}</p>
         <div className="flex gap-2">
           <select
             className="field"
             value={m.teamA}
             onChange={(e) => setM({ ...m, teamA: e.target.value })}
           >
-            <option value="">Squadra 1</option>
+            <option value="">{tr("cal.team1")}</option>
             {t.teams.map((x) => (
               <option key={x.id} value={x.id}>
                 {x.name}
@@ -414,7 +415,7 @@ function CalendarTab({ t, patch }: { t: Tournament; patch: Patch }) {
             value={m.teamB}
             onChange={(e) => setM({ ...m, teamB: e.target.value })}
           >
-            <option value="">Squadra 2</option>
+            <option value="">{tr("cal.team2")}</option>
             {t.teams.map((x) => (
               <option key={x.id} value={x.id}>
                 {x.name}
@@ -439,7 +440,7 @@ function CalendarTab({ t, patch }: { t: Tournament; patch: Patch }) {
         <div className="flex gap-2">
           <input
             className="field"
-            placeholder={sport.venue}
+            placeholder={venueName(sport.venue)}
             value={m.venue}
             onChange={(e) => setM({ ...m, venue: e.target.value })}
           />
@@ -452,7 +453,7 @@ function CalendarTab({ t, patch }: { t: Tournament; patch: Patch }) {
           />
         </div>
         <button onClick={add} className="btn-gold w-full py-2 text-sm">
-          + Aggiungi partita
+          {tr("cal.add")}
         </button>
       </div>
 
@@ -465,17 +466,17 @@ function CalendarTab({ t, patch }: { t: Tournament; patch: Patch }) {
         }
         className="btn-ghost-gold w-full py-3 text-sm"
       >
-        ⚡ Genera calendario automatico (all'italiana)
+        {tr("cal.auto")}
       </button>
 
       <div className="space-y-2">
         {sorted.map((match) => (
           <div key={match.id} className="card-night p-3">
             <p className="text-[11px] uppercase tracking-widest text-muted-foreground">
-              Giornata {match.round} · {match.date} {match.time} · {match.venue}
+              {tr("cal.round")} {match.round} · {match.date} {match.time} · {match.venue}
             </p>
             <p className="mt-1 text-sm font-semibold">
-              {nameOf(t, match.teamA)} <span className="text-primary">vs</span>{" "}
+              {nameOf(t, match.teamA)} <span className="text-primary">{tr("cal.vs")}</span>{" "}
               {nameOf(t, match.teamB)}
             </p>
           </div>
@@ -492,6 +493,9 @@ const nameOf = (t: Tournament, id: string) => t.teams.find((x) => x.id === id)?.
 function LiveTab({ t, patch }: { t: Tournament; patch: Patch }) {
   const [openId, setOpenId] = useState<string | null>(null);
   const sport = getSport(t.sport);
+  const { t: tr, scoreName } = useI18n();
+  const statusLabel = (s: string) =>
+    s === "live" ? tr("live.live") : s === "finita" ? tr("live.ended") : tr("live.scheduled");
 
   const setMatch = (id: string, fn: (m: Match) => Match) =>
     patch((cur) => ({ ...cur, matches: cur.matches.map((m) => (m.id === id ? fn(m) : m)) }));
@@ -499,7 +503,7 @@ function LiveTab({ t, patch }: { t: Tournament; patch: Patch }) {
   if (t.matches.length === 0)
     return (
       <p className="card-night p-6 text-center text-sm text-muted-foreground">
-        Nessuna partita in calendario.
+        {tr("live.none")}
       </p>
     );
 
@@ -522,7 +526,7 @@ function LiveTab({ t, patch }: { t: Tournament; patch: Patch }) {
                       : "text-primary"
                 }
               >
-                {m.status === "live" ? "● LIVE" : m.status}
+                {m.status === "live" ? `● ${tr("live.live").toUpperCase()}` : statusLabel(m.status)}
               </span>
             </div>
 
@@ -545,13 +549,13 @@ function LiveTab({ t, patch }: { t: Tournament; patch: Patch }) {
                 onClick={() => setMatch(m.id, (x) => ({ ...x, scoreA: x.scoreA + 1 }))}
                 className="btn-gold px-3"
               >
-                +1 {sport.scoreLabel} casa
+                {tr("live.home", { label: scoreName(sport.scoreLabel) })}
               </button>
               <button
                 onClick={() => setMatch(m.id, (x) => ({ ...x, scoreB: x.scoreB + 1 }))}
                 className="btn-gold px-3"
               >
-                +1 ospiti
+                {tr("live.away")}
               </button>
               <button
                 onClick={() => setMatch(m.id, (x) => ({ ...x, scoreB: Math.max(0, x.scoreB - 1) }))}
@@ -568,7 +572,7 @@ function LiveTab({ t, patch }: { t: Tournament; patch: Patch }) {
                   onClick={() => setMatch(m.id, (x) => ({ ...x, status: s }))}
                   className={`flex-1 py-1 ${m.status === s ? "btn-gold" : "btn-ghost-gold"}`}
                 >
-                  {s}
+                  {statusLabel(s)}
                 </button>
               ))}
             </div>
@@ -577,7 +581,7 @@ function LiveTab({ t, patch }: { t: Tournament; patch: Patch }) {
               onClick={() => setOpenId(open ? null : m.id)}
               className="mt-3 w-full text-xs text-muted-foreground"
             >
-              {open ? "Nascondi eventi" : `Eventi (${m.events.length})`}
+              {open ? tr("live.hide") : tr("live.events", { n: m.events.length })}
             </button>
 
             {open && <Events t={t} m={m} setMatch={setMatch} />}
