@@ -196,28 +196,42 @@ export function useTournaments() {
 export function useTournament(id: string) {
   const { data, ready, update } = useTournaments();
   const [remote, setRemote] = useState<Tournament | null>(null);
+  const [remoteDone, setRemoteDone] = useState(false);
   const local = data.find((t) => t.id === id) ?? null;
 
   // Legge prima dal database, poi ricade sui dati del dispositivo.
   useEffect(() => {
     let alive = true;
+    setRemoteDone(false);
     void (async () => {
-      const { fetchTournament } = await import("./cloud");
-      const found = await fetchTournament(id);
-      if (alive && found) setRemote(found);
+      let found: Tournament | null = null;
+      try {
+        const { fetchTournament } = await import("./cloud");
+        found = await fetchTournament(id);
+      } catch {
+        found = null;
+      }
+      if (!alive) return;
+      if (found) {
+        setRemote(found);
+        // Copia il torneo sul dispositivo così può essere aperto e modificato.
+        const list = read();
+        if (!list.some((t) => t.id === found!.id)) writeLocal([found, ...list]), emit();
+      }
+      setRemoteDone(true);
     })();
     return () => {
       alive = false;
     };
   }, [id]);
 
-  const tournament = remote && !local ? remote : local;
+  const tournament = local ?? remote;
   const patch = useCallback(
     (fn: (t: Tournament) => Tournament) =>
       update((list) => list.map((t) => (t.id === id ? fn(t) : t))),
     [id, update],
   );
-  return { tournament, ready, patch };
+  return { tournament, ready: ready && (Boolean(tournament) || remoteDone), patch };
 }
 
 export type Row = {
