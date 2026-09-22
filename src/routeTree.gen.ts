@@ -10,12 +10,18 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ProRouteImport } from './routes/pro'
 import { Route as TorneoIdRouteImport } from './routes/torneo.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProRoute = ProRouteImport.update({
@@ -31,30 +37,34 @@ const TorneoIdRoute = TorneoIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/pro': typeof ProRoute
   '/torneo/$id': typeof TorneoIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/pro': typeof ProRoute
   '/torneo/$id': typeof TorneoIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/pro': typeof ProRoute
   '/torneo/$id': typeof TorneoIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/pro' | '/torneo/$id'
+  fullPaths: '/' | '/auth' | '/pro' | '/torneo/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/pro' | '/torneo/$id'
-  id: '__root__' | '/' | '/pro' | '/torneo/$id'
+  to: '/' | '/auth' | '/pro' | '/torneo/$id'
+  id: '__root__' | '/' | '/auth' | '/pro' | '/torneo/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthRoute: typeof AuthRoute
   ProRoute: typeof ProRoute
   TorneoIdRoute: typeof TorneoIdRoute
 }
@@ -66,6 +76,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pro': {
@@ -87,6 +104,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthRoute: AuthRoute,
   ProRoute: ProRoute,
   TorneoIdRoute: TorneoIdRoute,
 }

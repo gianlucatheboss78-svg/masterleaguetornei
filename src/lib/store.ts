@@ -112,11 +112,50 @@ function read(): Tournament[] {
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach((l) => l());
 
-export function saveAll(data: Tournament[]) {
+function writeLocal(data: Tournament[]) {
   window.localStorage.setItem(
     KEY,
     JSON.stringify(data.filter((tournament) => !REMOVED_SPORT_IDS.has(tournament.sport))),
   );
+}
+
+/** Salva in locale e sincronizza le differenze con il database. */
+export function saveAll(data: Tournament[]) {
+  const before = read();
+  const next = data.filter((tournament) => !REMOVED_SPORT_IDS.has(tournament.sport));
+  writeLocal(next);
+  emit();
+  void syncDiff(before, next);
+}
+
+async function syncDiff(before: Tournament[], after: Tournament[]) {
+  if (typeof window === "undefined") return;
+  const { currentUserId, pushTournament, deleteTournament } = await import("./cloud");
+  if (!(await currentUserId())) return;
+  const beforeMap = new Map(before.map((t) => [t.id, JSON.stringify(t)]));
+  const afterIds = new Set(after.map((t) => t.id));
+  for (const t of after) {
+    if (beforeMap.get(t.id) !== JSON.stringify(t)) await pushTournament(t);
+  }
+  for (const t of before) {
+    if (!afterIds.has(t.id)) await deleteTournament(t.id);
+  }
+}
+
+/** Scarica i tornei dal database e li unisce a quelli presenti sul dispositivo. */
+export async function syncFromCloud(): Promise<void> {
+  if (typeof window === "undefined") return;
+  const { pullTournaments, pushTournament } = await import("./cloud");
+  const remote = await pullTournaments();
+  if (!remote) return;
+  const local = read();
+  const remoteIds = new Set(remote.map((t) => t.id));
+  const onlyLocal = local.filter((t) => !remoteIds.has(t.id));
+  for (const t of onlyLocal) await pushTournament(t);
+  const merged = [...onlyLocal, ...remote].filter(
+    (tournament) => !REMOVED_SPORT_IDS.has(tournament.sport),
+  );
+  writeLocal(merged);
   emit();
 }
 
@@ -129,8 +168,12 @@ export function useTournaments() {
     sync();
     setReady(true);
     listeners.add(sync);
+    void syncFromCloud();
+    const onFocus = () => void syncFromCloud();
+    window.addEventListener("focus", onFocus);
     return () => {
       listeners.delete(sync);
+      window.removeEventListener("focus", onFocus);
     };
   }, []);
 

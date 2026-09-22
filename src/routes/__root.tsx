@@ -120,6 +120,20 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
+  useEffect(() => {
+    let cancelled = false;
+    void import("@/integrations/supabase/client").then(({ supabase }) => {
+      if (cancelled) return;
+      supabase.auth.onAuthStateChange((event) => {
+        if (event !== "SIGNED_IN" && event !== "USER_UPDATED") return;
+        void import("@/lib/store").then(({ syncFromCloud }) => syncFromCloud());
+      });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <I18nProvider>
