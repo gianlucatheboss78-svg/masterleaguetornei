@@ -17,6 +17,7 @@ import {
   syncKnockout,
   uid,
   useTournament,
+  type EventType,
   type GroupId,
   type Match,
   type Player,
@@ -59,6 +60,7 @@ function TournamentPage() {
   const { tournament, ready, patch } = useTournament(id);
   const { t: tr, sportName } = useI18n();
   const [tab, setTab] = useState<string>("squadre");
+  const [openMatch, setOpenMatch] = useState<string | null>(null);
 
   if (!ready) return <div className="p-8 text-center text-muted-foreground">{tr("common.loading")}</div>;
   if (!tournament)
@@ -116,8 +118,17 @@ function TournamentPage() {
 
       <div className="mt-5">
         {tab === "squadre" && <TeamsTab t={tournament} patch={patch} />}
-        {tab === "calendario" && <CalendarTab t={tournament} patch={patch} />}
-        {tab === "live" && <LiveTab t={tournament} patch={patch} />}
+        {tab === "calendario" && (
+          <CalendarTab
+            t={tournament}
+            patch={patch}
+            onOpen={(mid) => {
+              setOpenMatch(mid);
+              setTab("live");
+            }}
+          />
+        )}
+        {tab === "live" && <LiveTab t={tournament} patch={patch} initialOpen={openMatch} />}
         {tab === "classifica" && <TableTab t={tournament} patch={patch} />}
         {tab === "finale" && <FinalTab t={tournament} patch={patch} />}
         {tab === "cassa" && <MoneyTab t={tournament} patch={patch} />}
@@ -525,7 +536,15 @@ function Roster({ t, team, patch }: { t: Tournament; team: Team; patch: Patch })
 
 /* ---------------- Calendario ---------------- */
 
-function CalendarTab({ t, patch }: { t: Tournament; patch: Patch }) {
+function CalendarTab({
+  t,
+  patch,
+  onOpen,
+}: {
+  t: Tournament;
+  patch: Patch;
+  onOpen: (id: string) => void;
+}) {
   const sport = getSport(t.sport);
   const { t: tr, venueName } = useI18n();
   const [m, setM] = useState({
@@ -647,7 +666,14 @@ function CalendarTab({ t, patch }: { t: Tournament; patch: Patch }) {
 
       <div className="space-y-2">
         {sorted.map((match) => (
-          <div key={match.id} className="card-night relative p-3 pr-14">
+          <div
+            key={match.id}
+            role="button"
+            tabIndex={0}
+            onClick={() => onOpen(match.id)}
+            onKeyDown={(e) => e.key === "Enter" && onOpen(match.id)}
+            className="card-night relative cursor-pointer p-3 pr-14"
+          >
             <p className="text-[11px] uppercase tracking-widest text-muted-foreground">
               {match.group ? `${tr(match.group === "A" ? "groups.a" : "groups.b")} · ` : ""}
               {tr("cal.round")} {match.round} · {match.date} {match.time} · {match.venue}
@@ -657,9 +683,10 @@ function CalendarTab({ t, patch }: { t: Tournament; patch: Patch }) {
               {nameOf(t, match.teamB)}
             </p>
             <button
-              onClick={() =>
-                patch((cur) => ({ ...cur, matches: cur.matches.filter((x) => x.id !== match.id) }))
-              }
+              onClick={(e) => {
+                e.stopPropagation();
+                patch((cur) => ({ ...cur, matches: cur.matches.filter((x) => x.id !== match.id) }));
+              }}
               aria-label={tr("cal.delMatch")}
               title={tr("cal.delMatch")}
               className="absolute right-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-red-500/15 text-destructive"
@@ -677,8 +704,16 @@ const nameOf = (t: Tournament, id: string) => t.teams.find((x) => x.id === id)?.
 
 /* ---------------- Live ---------------- */
 
-function LiveTab({ t, patch }: { t: Tournament; patch: Patch }) {
-  const [openId, setOpenId] = useState<string | null>(null);
+function LiveTab({
+  t,
+  patch,
+  initialOpen,
+}: {
+  t: Tournament;
+  patch: Patch;
+  initialOpen?: string | null;
+}) {
+  const [openId, setOpenId] = useState<string | null>(initialOpen ?? null);
   const sport = getSport(t.sport);
   const { t: tr, scoreName } = useI18n();
   const statusLabel = (s: string) =>
@@ -779,6 +814,45 @@ function LiveTab({ t, patch }: { t: Tournament; patch: Patch }) {
   );
 }
 
+const EV_ICON: Record<EventType, string> = {
+  goal: "⚽",
+  owngoal: "🥅",
+  pengoal: "🎯",
+  pensaved: "🧤",
+  penmissed: "❌",
+  yellow: "🟨",
+  red: "🟥",
+  dblyellow: "🟨🟥",
+  sub: "🔄",
+  mvp: "⭐",
+};
+
+const FOOTBALL_EVENTS: EventType[] = [
+  "goal",
+  "owngoal",
+  "pengoal",
+  "pensaved",
+  "penmissed",
+  "yellow",
+  "red",
+  "dblyellow",
+  "sub",
+  "mvp",
+];
+
+const BASIC_EVENTS: EventType[] = ["goal", "yellow", "red", "mvp"];
+
+/** Un evento che segna: +1 alla squadra del giocatore, l'autogol all'avversaria. */
+const scoreDelta = (type: EventType, teamId: string, m: Match, sign: 1 | -1) => {
+  if (type === "goal" || type === "pengoal") {
+    return teamId === m.teamA ? { scoreA: m.scoreA + sign } : { scoreB: m.scoreB + sign };
+  }
+  if (type === "owngoal") {
+    return teamId === m.teamA ? { scoreB: m.scoreB + sign } : { scoreA: m.scoreA + sign };
+  }
+  return {};
+};
+
 function Events({
   t,
   m,
@@ -789,14 +863,31 @@ function Events({
   setMatch: (id: string, fn: (m: Match) => Match) => void;
 }) {
   const { t: tr } = useI18n();
+  const football = isFootball(t.sport);
   const roster = t.teams
     .filter((x) => x.id === m.teamA || x.id === m.teamB)
     .flatMap((x) => x.players.map((p) => ({ p, team: x })));
   const [playerId, setPlayerId] = useState(roster[0]?.p.id ?? "");
-  const [type, setType] = useState<"goal" | "yellow" | "red" | "mvp">("goal");
+  const [type, setType] = useState<EventType>("goal");
   const [minute, setMinute] = useState("");
 
-  const icons = { goal: "⚽", yellow: "🟨", red: "🟥", mvp: "⭐" } as const;
+  const types = football ? FOOTBALL_EVENTS : BASIC_EVENTS;
+  const count = (k: EventType) => m.events.filter((e) => e.type === k).length;
+
+  const addEvent = (kind: EventType) => {
+    const found = roster.find((r) => r.p.id === playerId);
+    if (!found) return;
+    setMatch(m.id, (x) => ({
+      ...x,
+      ...scoreDelta(kind, found.team.id, x, 1),
+      events: [...x.events, { id: uid(), playerId, teamId: found.team.id, type: kind, minute }],
+    }));
+    setMinute("");
+  };
+
+  const ordered = [...m.events].sort(
+    (a, b) => (Number(a.minute) || 999) - (Number(b.minute) || 999),
+  );
 
   return (
     <div className="mt-3 border-t border-primary/15 pt-3">
@@ -808,54 +899,84 @@ function Events({
             </option>
           ))}
         </select>
-        <select
-          className="field w-28"
-          value={type}
-          onChange={(e) => setType(e.target.value as typeof type)}
-        >
-          <option value="goal">{tr("ev.goal")}</option>
-          <option value="yellow">{tr("ev.yellow")}</option>
-          <option value="red">{tr("ev.red")}</option>
-          <option value="mvp">{tr("ev.mvp")}</option>
-        </select>
         <input
-          className="field w-16"
-          placeholder="'"
+          className="field w-20"
+          placeholder={tr("ev.minute")}
+          inputMode="numeric"
           value={minute}
           onChange={(e) => setMinute(e.target.value)}
         />
       </div>
-      <button
-        onClick={() => {
-          const found = roster.find((r) => r.p.id === playerId);
-          if (!found) return;
-          setMatch(m.id, (x) => ({
-            ...x,
-            events: [...x.events, { id: uid(), playerId, teamId: found.team.id, type, minute }],
-          }));
-          setMinute("");
-        }}
-        className="btn-gold mt-2 w-full py-2 text-sm"
-      >
-        {tr("ev.add")}
-      </button>
+
+      {roster.length === 0 && (
+        <p className="mt-2 text-xs text-muted-foreground">{tr("ev.noPlayers")}</p>
+      )}
+
+      {football ? (
+        <div className="mt-2 grid grid-cols-2 gap-2">
+          {types.map((k) => (
+            <button
+              key={k}
+              onClick={() => addEvent(k)}
+              disabled={roster.length === 0}
+              className="btn-ghost-gold flex items-center gap-2 px-2 py-2 text-left text-xs disabled:opacity-40"
+            >
+              <span>{EV_ICON[k]}</span>
+              <span className="truncate">{tr(`ev.${k}`)}</span>
+            </button>
+          ))}
+        </div>
+      ) : (
+        <>
+          <select
+            className="field mt-2"
+            value={type}
+            onChange={(e) => setType(e.target.value as EventType)}
+          >
+            {types.map((k) => (
+              <option key={k} value={k}>
+                {EV_ICON[k]} {tr(`ev.${k}`)}
+              </option>
+            ))}
+          </select>
+          <button onClick={() => addEvent(type)} className="btn-gold mt-2 w-full py-2 text-sm">
+            {tr("ev.add")}
+          </button>
+        </>
+      )}
+
+      {football && (
+        <div className="mt-3 flex justify-center gap-3 text-xs text-muted-foreground">
+          <span>🟨 {count("yellow") + count("dblyellow")}</span>
+          <span>🟥 {count("red") + count("dblyellow")}</span>
+          <span>🎯 {count("pengoal") + count("pensaved") + count("penmissed")}</span>
+          <span>🥅 {count("owngoal")}</span>
+        </div>
+      )}
 
       <ul className="mt-3 space-y-1 text-xs">
-        {m.events.map((e) => {
+        {ordered.map((e) => {
           const found = roster.find((r) => r.p.id === e.playerId);
           return (
             <li key={e.id} className="flex items-center gap-2">
-              <span>{icons[e.type]}</span>
+              <span className="w-8 text-right text-primary">{e.minute ? `${e.minute}'` : "—"}</span>
+              <span>{EV_ICON[e.type]}</span>
               <span className="flex-1 truncate">
-                {found?.p.name ?? "—"} {e.minute && `· ${e.minute}'`}
+                {tr(`ev.${e.type}`)} · {found?.p.name ?? "—"}
               </span>
               <button
                 onClick={() =>
-                  setMatch(m.id, (x) => ({ ...x, events: x.events.filter((ev) => ev.id !== e.id) }))
+                  setMatch(m.id, (x) => ({
+                    ...x,
+                    ...scoreDelta(e.type, e.teamId, x, -1),
+                    events: x.events.filter((ev) => ev.id !== e.id),
+                  }))
                 }
-                className="text-destructive"
+                aria-label={tr("ev.del")}
+                title={tr("ev.del")}
+                className="flex h-7 w-7 items-center justify-center rounded-full bg-red-500/15 text-destructive"
               >
-                ✕
+                🗑️
               </button>
             </li>
           );
