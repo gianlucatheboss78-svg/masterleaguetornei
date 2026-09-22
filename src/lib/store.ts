@@ -130,8 +130,7 @@ export function saveAll(data: Tournament[]) {
 
 async function syncDiff(before: Tournament[], after: Tournament[]) {
   if (typeof window === "undefined") return;
-  const { currentUserId, pushTournament, deleteTournament } = await import("./cloud");
-  if (!(await currentUserId())) return;
+  const { pushTournament, deleteTournament } = await import("./cloud");
   const beforeMap = new Map(before.map((t) => [t.id, JSON.stringify(t)]));
   const afterIds = new Set(after.map((t) => t.id));
   for (const t of after) {
@@ -142,12 +141,22 @@ async function syncDiff(before: Tournament[], after: Tournament[]) {
   }
 }
 
+const uploaded = new Set<string>();
+
 /** Scarica i tornei dal database e li unisce a quelli presenti sul dispositivo. */
 export async function syncFromCloud(): Promise<void> {
   if (typeof window === "undefined") return;
   const { pullTournaments, pushTournament } = await import("./cloud");
   const remote = await pullTournaments();
-  if (!remote) return;
+  if (!remote) {
+    // Nessun account collegato: carica comunque online i tornei del dispositivo.
+    for (const t of read()) {
+      if (uploaded.has(t.id)) continue;
+      uploaded.add(t.id);
+      await pushTournament(t);
+    }
+    return;
+  }
   const local = read();
   const remoteIds = new Set(remote.map((t) => t.id));
   const onlyLocal = local.filter((t) => !remoteIds.has(t.id));

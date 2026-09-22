@@ -316,7 +316,8 @@ function NewTournament({
 
   const create = () => {
     if (!name.trim()) return;
-    const id = uid();
+    const id =
+      typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : uid();
     const item: Tournament = {
       id,
       name: name.trim(),
