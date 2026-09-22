@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { LANGS, LANG_KEY, detectLang, type Lang } from "./i18n-core";
+import { GROUP_DICTS } from "./i18n-groups";
 import { ROLE_NAMES, SCORE_NAMES, SPORT_NAMES, VENUE_NAMES, term } from "./i18n-terms";
 
 export { LANGS, type Lang };
@@ -816,7 +817,14 @@ const zh: Dict = {
   "lang.title": "语言",
 };
 
-const DICTS: Record<Lang, Dict> = { it, en, es, fr, pt, zh };
+const DICTS: Record<Lang, Dict> = {
+  it: { ...it, ...GROUP_DICTS.it },
+  en: { ...en, ...GROUP_DICTS.en },
+  es: { ...es, ...GROUP_DICTS.es },
+  fr: { ...fr, ...GROUP_DICTS.fr },
+  pt: { ...pt, ...GROUP_DICTS.pt },
+  zh: { ...zh, ...GROUP_DICTS.zh },
+};
 
 type Ctx = {
   lang: Lang;
@@ -855,7 +863,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
       lang,
       setLang,
       t: (key, vars) => {
-        let s = dict[key] ?? it[key] ?? key;
+        let s = dict[key] ?? DICTS.it[key] ?? key;
         if (vars)
           for (const [k, v] of Object.entries(vars)) s = s.replaceAll(`{${k}}`, String(v));
         return s;

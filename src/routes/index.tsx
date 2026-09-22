@@ -217,6 +217,7 @@ function NewTournament({
   const [city, setCity] = useState("");
   const [startDate, setStartDate] = useState("");
   const [fee, setFee] = useState(0);
+  const [format, setFormat] = useState<"single" | "groups">("single");
 
   const create = () => {
     if (!name.trim()) return;
@@ -229,6 +230,7 @@ function NewTournament({
       city,
       startDate,
       fee,
+      format,
       teams: [],
       matches: [],
     };
@@ -260,6 +262,15 @@ function NewTournament({
                 {s.icon} {sportName(s.id, s.name)}
               </option>
             ))}
+          </select>
+          <label className="block text-xs text-muted-foreground">{t("nt.format")}</label>
+          <select
+            className="field"
+            value={format}
+            onChange={(e) => setFormat(e.target.value as "single" | "groups")}
+          >
+            <option value="single">{t("nt.fmtSingle")}</option>
+            <option value="groups">{t("nt.fmtGroups")}</option>
           </select>
           <input
             className="field"

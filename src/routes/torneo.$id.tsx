@@ -7,10 +7,17 @@ import { ageFrom, readCircleImage } from "@/lib/media";
 import { getSport } from "@/lib/sports";
 import {
   autoCalendar,
+  autoCalendarGroups,
+  buildKnockout,
+  groupPhaseDone,
+  koRoundLabelKey,
   scorers,
+  splitGroups,
   standings,
+  syncKnockout,
   uid,
   useTournament,
+  type GroupId,
   type Match,
   type Player,
   type Team,
@@ -42,6 +49,7 @@ const TABS = [
   { id: "calendario", key: "tab.calendar", icon: "📅" },
   { id: "live", key: "tab.live", icon: "🔴" },
   { id: "classifica", key: "tab.table", icon: "🏅" },
+  { id: "finale", key: "tab.final", icon: "🏆" },
   { id: "cassa", key: "tab.money", icon: "💶" },
   { id: "locandina", key: "tab.poster", icon: "🖼️" },
 ] as const;
@@ -89,7 +97,7 @@ function TournamentPage() {
       </header>
 
       <nav className="-mx-4 mt-4 flex gap-2 overflow-x-auto px-4 pb-1">
-        {TABS.map((t) => (
+        {TABS.filter((x) => x.id !== "finale" || tournament.format === "groups").map((t) => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
@@ -107,6 +115,7 @@ function TournamentPage() {
         {tab === "calendario" && <CalendarTab t={tournament} patch={patch} />}
         {tab === "live" && <LiveTab t={tournament} patch={patch} />}
         {tab === "classifica" && <TableTab t={tournament} />}
+        {tab === "finale" && <FinalTab t={tournament} patch={patch} />}
         {tab === "cassa" && <MoneyTab t={tournament} patch={patch} />}
         {tab === "locandina" && <PosterTab t={tournament} />}
       </div>
@@ -145,6 +154,48 @@ function TeamsTab({ t, patch }: { t: Tournament; patch: Patch }) {
           +
         </button>
       </div>
+
+      {t.format === "groups" && (
+        <div className="card-night space-y-3 p-4">
+          <p className="text-sm text-primary">{tr("groups.title")}</p>
+          <button
+            onClick={() => patch((cur) => ({ ...cur, teams: splitGroups(cur.teams) }))}
+            className="btn-gold w-full py-2 text-sm"
+            disabled={t.teams.length < 2}
+          >
+            {tr("groups.split")}
+          </button>
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            {(["A", "B"] as GroupId[]).map((g) => (
+              <div
+                key={g}
+                className={`rounded-xl border p-2 ${
+                  g === "A"
+                    ? "border-primary/40 bg-primary/10"
+                    : "border-emerald-400/40 bg-emerald-400/10"
+                }`}
+              >
+                <p
+                  className={`text-[11px] font-bold tracking-widest ${
+                    g === "A" ? "text-primary" : "text-emerald-300"
+                  }`}
+                >
+                  {tr(g === "A" ? "groups.a" : "groups.b")} ({t.teams.filter((x) => x.group === g).length})
+                </p>
+                <ul className="mt-1 space-y-0.5">
+                  {t.teams
+                    .filter((x) => x.group === g)
+                    .map((x) => (
+                      <li key={x.id} className="truncate" translate="no">
+                        {x.name}
+                      </li>
+                    ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {t.teams.map((team) => (
         <div key={team.id} className="card-night p-4">
@@ -186,6 +237,29 @@ function TeamsTab({ t, patch }: { t: Tournament; patch: Patch }) {
               <p className="text-xs text-muted-foreground">
                 {team.players.length} {tr("teams.players")}
               </p>
+              {t.format === "groups" && (
+                <select
+                  className="mt-1 rounded-lg border border-primary/30 bg-secondary/60 px-2 py-1 text-[11px]"
+                  aria-label={tr("groups.move")}
+                  value={team.group ?? ""}
+                  onChange={(e) =>
+                    patch((cur) => ({
+                      ...cur,
+                      teams: cur.teams.map((x) =>
+                        x.id === team.id
+                          ? e.target.value
+                            ? { ...x, group: e.target.value as GroupId }
+                            : (({ group: _g, ...rest }) => rest)(x)
+                          : x,
+                      ),
+                    }))
+                  }
+                >
+                  <option value="">{tr("groups.none")}</option>
+                  <option value="A">{tr("groups.a")}</option>
+                  <option value="B">{tr("groups.b")}</option>
+                </select>
+              )}
             </div>
             <button
               onClick={() => setOpenTeam(openTeam === team.id ? null : team.id)}
@@ -470,7 +544,7 @@ function CalendarTab({ t, patch }: { t: Tournament; patch: Patch }) {
     }));
   };
 
-  const sorted = [...t.matches].sort((a, b) =>
+  const sorted = [...t.matches.filter((x) => !x.ko)].sort((a, b) =>
     `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`),
   );
 
@@ -542,18 +616,25 @@ function CalendarTab({ t, patch }: { t: Tournament; patch: Patch }) {
         onClick={() =>
           patch((cur) => ({
             ...cur,
-            matches: autoCalendar(cur.teams, cur.startDate, getSport(cur.sport).venue),
+            matches:
+              cur.format === "groups"
+                ? [
+                    ...autoCalendarGroups(cur, getSport(cur.sport).venue),
+                    ...cur.matches.filter((m) => m.ko),
+                  ]
+                : autoCalendar(cur.teams, cur.startDate, getSport(cur.sport).venue),
           }))
         }
         className="btn-ghost-gold w-full py-3 text-sm"
       >
-        {tr("cal.auto")}
+        {tr(t.format === "groups" ? "cal.autoGroups" : "cal.auto")}
       </button>
 
       <div className="space-y-2">
         {sorted.map((match) => (
           <div key={match.id} className="card-night p-3">
             <p className="text-[11px] uppercase tracking-widest text-muted-foreground">
+              {match.group ? `${tr(match.group === "A" ? "groups.a" : "groups.b")} · ` : ""}
               {tr("cal.round")} {match.round} · {match.date} {match.time} · {match.venue}
             </p>
             <p className="mt-1 text-sm font-semibold">
@@ -761,52 +842,83 @@ function Events({
 
 /* ---------------- Classifica ---------------- */
 
-function TableTab({ t }: { t: Tournament }) {
+function StandingsTable({
+  t,
+  group,
+}: {
+  t: Tournament;
+  group?: GroupId;
+}) {
   const { t: tr } = useI18n();
   const sport = getSport(t.sport);
-  const rows = standings(t, sport.winPoints, sport.drawPoints);
+  const rows = standings(t, sport.winPoints, sport.drawPoints, group);
+  const accent = group === "B" ? "text-emerald-300" : "text-primary";
+
+  return (
+    <div
+      className={`card-night overflow-hidden ${
+        group === "B" ? "border border-emerald-400/30" : group === "A" ? "border border-primary/30" : ""
+      }`}
+    >
+      {group && (
+        <p className={`px-3 pt-3 text-[11px] font-bold tracking-widest ${accent}`}>
+          {tr(group === "A" ? "groups.a" : "groups.b")}
+        </p>
+      )}
+      <table className="w-full text-xs">
+        <thead className="bg-secondary/70 text-muted-foreground">
+          <tr>
+            <th className="p-2 text-left">#</th>
+            <th className="p-2 text-left">{tr("tbl.team")}</th>
+            <th className="p-2">{tr("tbl.g")}</th>
+            <th className="p-2">{tr("tbl.v")}</th>
+            {sport.hasDraw && <th className="p-2">{tr("tbl.n")}</th>}
+            <th className="p-2">{tr("tbl.p")}</th>
+            <th className="p-2">+/−</th>
+            <th className={`p-2 ${accent}`}>{tr("tbl.pts")}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r, i) => (
+            <tr key={r.team.id} className="border-t border-primary/10">
+              <td className={`p-2 ${accent}`}>{i + 1}</td>
+              <td className="flex items-center gap-2 p-2">
+                {r.team.logo && (
+                  <img src={r.team.logo} alt="" className="h-5 w-5 rounded-full object-cover" />
+                )}
+                <span className="truncate" translate="no">{r.team.name}</span>
+              </td>
+              <td className="p-2 text-center">{r.g}</td>
+              <td className="p-2 text-center">{r.v}</td>
+              {sport.hasDraw && <td className="p-2 text-center">{r.n}</td>}
+              <td className="p-2 text-center">{r.p}</td>
+              <td className="p-2 text-center">{r.gf - r.gs}</td>
+              <td className={`p-2 text-center font-bold ${accent}`}>{r.pts}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {rows.length === 0 && (
+        <p className="p-4 text-center text-sm text-muted-foreground">{tr("tbl.noTeams")}</p>
+      )}
+    </div>
+  );
+}
+
+function TableTab({ t }: { t: Tournament }) {
+  const { t: tr } = useI18n();
   const top = scorers(t);
 
   return (
     <div className="space-y-5">
-      <div className="card-night overflow-hidden">
-        <table className="w-full text-xs">
-          <thead className="bg-secondary/70 text-muted-foreground">
-            <tr>
-              <th className="p-2 text-left">#</th>
-              <th className="p-2 text-left">{tr("tbl.team")}</th>
-              <th className="p-2">{tr("tbl.g")}</th>
-              <th className="p-2">{tr("tbl.v")}</th>
-              {sport.hasDraw && <th className="p-2">{tr("tbl.n")}</th>}
-              <th className="p-2">{tr("tbl.p")}</th>
-              <th className="p-2">+/−</th>
-              <th className="p-2 text-primary">{tr("tbl.pts")}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r, i) => (
-              <tr key={r.team.id} className="border-t border-primary/10">
-                <td className="p-2 text-primary">{i + 1}</td>
-                <td className="flex items-center gap-2 p-2">
-                  {r.team.logo && (
-                    <img src={r.team.logo} alt="" className="h-5 w-5 rounded-full object-cover" />
-                  )}
-                  <span className="truncate">{r.team.name}</span>
-                </td>
-                <td className="p-2 text-center">{r.g}</td>
-                <td className="p-2 text-center">{r.v}</td>
-                {sport.hasDraw && <td className="p-2 text-center">{r.n}</td>}
-                <td className="p-2 text-center">{r.p}</td>
-                <td className="p-2 text-center">{r.gf - r.gs}</td>
-                <td className="p-2 text-center font-bold text-primary">{r.pts}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {rows.length === 0 && (
-          <p className="p-4 text-center text-sm text-muted-foreground">{tr("tbl.noTeams")}</p>
-        )}
-      </div>
+      {t.format === "groups" ? (
+        <div className="-mx-1 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <StandingsTable t={t} group="A" />
+          <StandingsTable t={t} group="B" />
+        </div>
+      ) : (
+        <StandingsTable t={t} />
+      )}
 
       <div className="card-night p-4">
         <h2 className="text-sm text-primary">{tr("tbl.scorers")}</h2>
@@ -832,6 +944,188 @@ function TableTab({ t }: { t: Tournament }) {
             <p className="text-xs text-muted-foreground">{tr("tbl.noEvents")}</p>
           )}
         </ul>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------- Fase finale ---------------- */
+
+function FinalTab({ t, patch }: { t: Tournament; patch: Patch }) {
+  const { t: tr } = useI18n();
+  const sport = getSport(t.sport);
+  const ko = t.matches.filter((m) => m.ko);
+  const ready = groupPhaseDone(t);
+  const perGroup = Math.min(
+    t.teams.filter((x) => x.group === "A").length,
+    t.teams.filter((x) => x.group === "B").length,
+  );
+  const options = [1, 2, 4, 8].filter((q) => q <= perGroup);
+  const [q, setQ] = useState<number>(t.qualifiers ?? 2);
+  const [err, setErr] = useState("");
+
+  const generate = () => {
+    const built = buildKnockout(t, q, sport.winPoints, sport.drawPoints);
+    if (built.length === 0) {
+      setErr(tr("final.needTeams"));
+      return;
+    }
+    setErr("");
+    patch((cur) => ({
+      ...cur,
+      qualifiers: q,
+      matches: [...cur.matches.filter((m) => !m.ko), ...built],
+    }));
+  };
+
+  const setMatch = (id: string, fn: (m: Match) => Match) =>
+    patch((cur) => ({
+      ...cur,
+      matches: syncKnockout(cur.matches.map((m) => (m.id === id ? fn(m) : m))),
+    }));
+
+  if (!ready && ko.length === 0)
+    return (
+      <p className="card-night p-6 text-center text-sm text-muted-foreground">
+        {tr("final.notReady")}
+      </p>
+    );
+
+  const total = ko.length ? Math.max(...ko.map((m) => m.ko!.round)) : 0;
+  const rounds = Array.from({ length: total }, (_, i) => i + 1);
+  const finalMatch = ko.find((m) => m.ko!.round === total && m.ko!.kind !== "third");
+  const champion =
+    finalMatch && finalMatch.status === "finita" && finalMatch.scoreA !== finalMatch.scoreB
+      ? nameOf(t, finalMatch.scoreA > finalMatch.scoreB ? finalMatch.teamA : finalMatch.teamB)
+      : "";
+
+  return (
+    <div className="space-y-4">
+      <div className="card-night space-y-3 border border-emerald-400/30 p-4">
+        <p className="text-sm font-bold tracking-widest text-primary">🏆 {tr("final.title")}</p>
+        <label className="block text-xs text-muted-foreground">
+          {tr("final.qualifiers")}
+          <select
+            className="field mt-1"
+            value={q}
+            onChange={(e) => setQ(Number(e.target.value))}
+          >
+            {(options.length ? options : [1]).map((n) => (
+              <option key={n} value={n}>
+                {tr("final.topN", { n })}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button onClick={generate} className="btn-gold w-full py-2 text-sm">
+          {ko.length ? tr("final.reset") : tr("final.generate")}
+        </button>
+        {err && <p className="text-xs text-destructive">{err}</p>}
+      </div>
+
+      {champion && (
+        <p className="rounded-xl border border-primary/50 bg-gradient-to-r from-primary/20 to-emerald-400/15 p-4 text-center text-lg font-bold text-primary">
+          🏆 {tr("final.champion")}: <span translate="no">{champion}</span>
+        </p>
+      )}
+
+      <div className="-mx-4 overflow-x-auto px-4 pb-2">
+        <div className="flex min-w-max items-stretch gap-3">
+          {rounds.map((r) => {
+            const list = ko
+              .filter((m) => m.ko!.round === r)
+              .sort((a, b) => a.ko!.index - b.ko!.index);
+            return (
+              <div key={r} className="flex w-56 shrink-0 flex-col justify-around gap-3">
+                <p className="text-center text-[11px] font-bold uppercase tracking-widest text-emerald-300">
+                  {tr(koRoundLabelKey(r, total))}
+                </p>
+                {list.map((m) => (
+                  <KoCard
+                    key={m.id}
+                    t={t}
+                    m={m}
+                    total={total}
+                    hasPrev={r > 1 && m.ko!.kind !== "third"}
+                    hasNext={r < total && m.ko!.kind !== "third"}
+                    setMatch={setMatch}
+                  />
+                ))}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function KoCard({
+  t,
+  m,
+  total,
+  hasPrev,
+  hasNext,
+  setMatch,
+}: {
+  t: Tournament;
+  m: Match;
+  total: number;
+  hasPrev?: boolean;
+  hasNext?: boolean;
+  setMatch: (id: string, fn: (m: Match) => Match) => void;
+}) {
+  const { t: tr } = useI18n();
+  const isThird = m.ko?.kind === "third";
+  const label = (id: string) => (id ? nameOf(t, id) : tr("final.tbd"));
+
+  return (
+    <div
+      className={`relative rounded-xl border p-3 ${
+        isThird
+          ? "border-primary/30 bg-secondary/40"
+          : "border-emerald-400/40 bg-gradient-to-br from-emerald-400/10 to-primary/10"
+      }`}
+    >
+      {hasPrev && (
+        <span className="absolute -left-3 top-1/2 h-px w-3 bg-emerald-400/50" aria-hidden />
+      )}
+      {hasNext && (
+        <span className="absolute -right-3 top-1/2 h-px w-3 bg-emerald-400/50" aria-hidden />
+      )}
+      <p className="mb-2 text-[10px] uppercase tracking-widest text-muted-foreground">
+        {tr(koRoundLabelKey(m.ko!.round, total, m.ko!.kind))}
+      </p>
+      {([
+        ["teamA", "scoreA"],
+        ["teamB", "scoreB"],
+      ] as const).map(([tk, sk]) => (
+        <div key={tk} className="flex items-center gap-2 py-0.5">
+          <span className="min-w-0 flex-1 truncate text-sm" translate="no">
+            {label(m[tk])}
+          </span>
+          <input
+            className="w-12 rounded-lg border border-primary/30 bg-secondary/70 px-2 py-1 text-center text-sm"
+            type="number"
+            min={0}
+            inputMode="numeric"
+            value={m[sk]}
+            onChange={(e) => setMatch(m.id, (x) => ({ ...x, [sk]: Number(e.target.value) }))}
+          />
+        </div>
+      ))}
+      <div className="mt-2 flex gap-1">
+        {(["programmata", "live", "finita"] as const).map((st) => (
+          <button
+            key={st}
+            onClick={() => setMatch(m.id, (x) => ({ ...x, status: st }))}
+            className={`flex-1 rounded-full px-2 py-1 text-[10px] font-bold ${
+              m.status === st ? "btn-gold" : "btn-ghost-gold"
+            }`}
+          >
+            {st === "live" ? tr("live.live") : st === "finita" ? tr("live.ended") : tr("live.scheduled")}
+          </button>
+        ))}
       </div>
     </div>
   );
