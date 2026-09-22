@@ -4,7 +4,7 @@ import { LogoPicker } from "@/components/LogoPicker";
 import { LOGO_URL } from "@/components/AppHeader";
 import { SPORTS, getSport } from "@/lib/sports";
 import { useI18n } from "@/lib/i18n";
-import { usePro } from "@/lib/pro";
+import { usePro, useOwner } from "@/lib/pro";
 import { uid, useTournaments, type Tournament } from "@/lib/store";
 
 
@@ -33,6 +33,7 @@ function Home() {
   const { data, ready, update } = useTournaments();
   const { t, sportName } = useI18n();
   const pro = usePro();
+  const owner = useOwner();
   const [open, setOpen] = useState(false);
   const locked = !pro;
 
