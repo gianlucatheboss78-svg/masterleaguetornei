@@ -837,7 +837,18 @@ function LiveTab({
               {(["programmata", "live", "finita"] as const).map((s) => (
                 <button
                   key={s}
-                  onClick={() => setMatch(m.id, (x) => ({ ...x, status: s }))}
+                  onClick={() => setMatch(m.id, (x) => {
+                    if (basket && s === "finita" && x.scoreA === x.scoreB) {
+                      const state = x.basket ?? emptyBasket();
+                      const period = Math.max(5, state.period + 1);
+                      return {
+                        ...x,
+                        status: "live",
+                        basket: { ...state, period, clockSeconds: periodSeconds(period), running: false },
+                      };
+                    }
+                    return { ...x, status: s };
+                  })}
                   className={`flex-1 py-1 ${m.status === s ? "btn-gold" : "btn-ghost-gold"}`}
                 >
                   {statusLabel(s)}
@@ -1264,7 +1275,7 @@ function StandingsTable({
 
   return (
     <div
-      className={`card-night overflow-hidden ${
+      className={`card-night ${basket ? "overflow-x-auto" : "overflow-hidden"} ${
         group === "B" ? "border border-emerald-400/30" : group === "A" ? "border border-primary/30" : ""
       }`}
     >
@@ -1273,7 +1284,7 @@ function StandingsTable({
           {tr(group === "A" ? "groups.a" : "groups.b")}
         </p>
       )}
-      <table className="w-full text-xs">
+      <table className={`${basket ? "min-w-[34rem]" : "w-full"} text-xs`}>
         <thead className="bg-secondary/70 text-muted-foreground">
           <tr>
             <th className="p-2 text-left">#</th>
