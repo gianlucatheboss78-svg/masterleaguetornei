@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { LogoPicker } from "@/components/LogoPicker";
 import { LOGO_URL } from "@/components/AppHeader";
 import { SPORTS, getSport } from "@/lib/sports";
@@ -35,10 +35,23 @@ function Home() {
   const pro = usePro();
   const owner = useOwner();
   const [open, setOpen] = useState(false);
+  const [boss, setBoss] = useState(false);
   const locked = !pro;
+
+  useEffect(() => {
+    if (window.sessionStorage.getItem("mlt.boss.welcome") === "1") {
+      window.sessionStorage.removeItem("mlt.boss.welcome");
+      setBoss(true);
+    }
+  }, []);
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-lg px-4 pb-28 pt-8">
+      {boss && (
+        <p className="mb-4 rounded-xl border border-primary/40 bg-primary/15 p-3 text-center text-sm font-semibold text-primary">
+          👑 BENVENUTO BOSS, accesso gratis attivato
+        </p>
+      )}
       <header className="text-center">
         <img
           src={LOGO_URL}

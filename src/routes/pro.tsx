@@ -7,6 +7,7 @@ import {
   usePro,
   useOwner,
   signInOwner,
+  isOwnerEmail,
   signOutOwner,
   ownerEmail,
 } from "@/lib/pro";
@@ -45,9 +46,7 @@ function ProPage() {
   const checkout = useServerFn(createProCheckout);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>();
-  const [ownerOpen, setOwnerOpen] = useState(false);
   const [ownerInput, setOwnerInput] = useState("");
-  const [ownerError, setOwnerError] = useState(false);
   const ownerEmailLabel = owner ? (ownerEmail() ?? "") : "";
 
   useEffect(() => {
@@ -59,8 +58,15 @@ function ProPage() {
   }, [nav]);
 
   const start = async () => {
-    setLoading(true);
     setError(undefined);
+    // OWNER BYPASS: nessun redirect a Stripe per l'email del proprietario
+    if (isOwnerEmail(ownerInput)) {
+      signInOwner(ownerInput);
+      window.sessionStorage.setItem("mlt.boss.welcome", "1");
+      nav({ to: "/" });
+      return;
+    }
+    setLoading(true);
     try {
       const res = await checkout({ data: { origin: window.location.origin } });
       if (res.ok) window.location.href = res.url;
@@ -121,10 +127,18 @@ function ProPage() {
           </>
         ) : (
           <>
+            <input
+              className="field mt-6"
+              type="email"
+              autoComplete="email"
+              placeholder="La tua email"
+              value={ownerInput}
+              onChange={(e) => setOwnerInput(e.target.value)}
+            />
             <button
               onClick={start}
               disabled={loading}
-              className="btn-gold mt-6 w-full py-3 text-base disabled:opacity-60"
+              className="btn-gold mt-3 w-full py-3 text-base disabled:opacity-60"
             >
               {loading ? t("pro.wait") : t("pro.cta")}
             </button>
@@ -141,40 +155,10 @@ function ProPage() {
       </div>
 
       {!owner && (
-        <div className="card-night mt-4 p-4">
-          <button
-            onClick={() => setOwnerOpen((v) => !v)}
-            className="w-full text-left text-xs text-muted-foreground"
-          >
-            👑 Accesso proprietario
-          </button>
-          {ownerOpen && (
-            <div className="mt-3 space-y-2">
-              <input
-                className="field"
-                type="email"
-                placeholder="La tua email owner"
-                value={ownerInput}
-                onChange={(e) => setOwnerInput(e.target.value)}
-              />
-              <button
-                onClick={() => {
-                  const ok = signInOwner(ownerInput);
-                  setOwnerError(!ok);
-                  if (ok) nav({ to: "/" });
-                }}
-                className="btn-gold w-full py-2 text-sm"
-              >
-                Entra come owner
-              </button>
-              {ownerError && (
-                <p className="rounded-xl bg-destructive/15 p-2 text-xs text-destructive">
-                  Email non autorizzata.
-                </p>
-              )}
-            </div>
-          )}
-        </div>
+        <p className="mt-4 text-center text-xs text-muted-foreground">
+          👑 Sei il proprietario? Inserisci la tua email owner: l'accesso è gratuito, senza
+          pagamento.
+        </p>
       )}
     </main>
   );
