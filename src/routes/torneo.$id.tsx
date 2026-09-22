@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { LogoPicker } from "@/components/LogoPicker";
 import { getCountries, countryName, flagFor } from "@/lib/countries";
 import { useI18n } from "@/lib/i18n";
