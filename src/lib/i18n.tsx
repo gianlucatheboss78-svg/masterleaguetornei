@@ -1,0 +1,684 @@
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { LANGS, LANG_KEY, detectLang, type Lang } from "./i18n-core";
+import { ROLE_NAMES, SCORE_NAMES, SPORT_NAMES, VENUE_NAMES, term } from "./i18n-terms";
+
+export { LANGS, type Lang };
+
+type Dict = Record<string, string>;
+
+const it: Dict = {
+  "common.cancel": "Annulla",
+  "common.close": "Chiudi",
+  "common.home": "Home",
+  "common.loading": "Caricamento…",
+  "common.years": "anni",
+  "common.age": "età",
+  "common.back": "‹ Tornei",
+
+  "home.tornei": "Tornei",
+  "home.tagline": "15 sport · squadre illimitate · live · classifiche",
+  "home.new": "+ Nuovo torneo",
+  "home.trial": "Prova 7 giorni gratis, poi 9,99 €/mese",
+  "home.proActive": "👑 PRO attivo · tornei illimitati",
+  "home.managePro": "Gestisci PRO",
+  "home.discoverPro": "Scopri PRO",
+  "home.yours": "I tuoi tornei",
+  "home.empty": "Nessun torneo. Creane uno per iniziare.",
+  "home.teams": "squadre",
+
+  "nt.title": "Nuovo torneo",
+  "nt.logoHint": "Galleria telefono · 1000 loghi · 195 bandiere",
+  "nt.name": "Nome torneo",
+  "nt.city": "Città",
+  "nt.start": "Data inizio",
+  "nt.fee": "Quota iscrizione (€)",
+  "nt.create": "Crea",
+
+  "pro.title": "Prova Master League PRO",
+  "pro.subtitle": "7 giorni gratis, poi {price} al mese — Disdici quando vuoi",
+  "pro.b1": "Tornei illimitati",
+  "pro.b2": "15 sport disponibili",
+  "pro.b3": "Libreria 1000 loghi",
+  "pro.b4": "195 bandiere nazionali",
+  "pro.b5": "Upload foto e logo da galleria",
+  "pro.b6": "Classifica live automatica",
+  "pro.b7": "Esporta PDF",
+  "pro.b8": "Link condivisibile",
+  "pro.cta": "Inizia 7 giorni gratis",
+  "pro.wait": "Attendi…",
+  "pro.active": "PRO attivo — tornei illimitati sbloccati.",
+  "pro.off": "Disattiva PRO",
+  "pro.noCharge": "Nessun addebito oggi. Dopo 7 giorni {price} al mese, rinnovo automatico.",
+  "pro.err": "Collega Stripe nelle Environment Variables",
+
+  "lp.title": "Scegli logo",
+  "lp.gallery": "📷 Galleria",
+  "lp.logos": "🛡️ 1000 loghi",
+  "lp.flags": "🏳️ 195 bandiere",
+  "lp.open": "📱 Apri galleria telefono",
+  "lp.crop": "La foto viene ritagliata tonda in automatico.",
+  "lp.searchLogos": "Cerca: leone, scudo, fuoco…",
+  "lp.searchFlags": "Cerca paese: Italia…",
+  "lp.all": "Tutti",
+  "lp.logo": "Logo",
+
+  "tab.teams": "Squadre",
+  "tab.calendar": "Calendario",
+  "tab.live": "Live",
+  "tab.table": "Classifica",
+  "tab.money": "Cassa",
+  "tab.poster": "Locandina",
+
+  "t.notFound": "Torneo non trovato.",
+  "t.tbd": "data da definire",
+
+  "teams.name": "Nome squadra",
+  "teams.players": "giocatori",
+  "teams.roster": "Rosa",
+  "teams.del": "Elimina squadra",
+  "roster.name": "Nome giocatore",
+  "roster.add": "+ Aggiungi giocatore",
+  "roster.del": "Elimina giocatore",
+  "roster.paid": "PAGATO",
+  "roster.topay": "DA PAGARE",
+
+  "cal.manual": "Inserimento manuale",
+  "cal.team1": "Squadra 1",
+  "cal.team2": "Squadra 2",
+  "cal.add": "+ Aggiungi partita",
+  "cal.auto": "⚡ Genera calendario automatico (all'italiana)",
+  "cal.round": "Giornata",
+  "cal.vs": "vs",
+
+  "live.none": "Nessuna partita in calendario.",
+  "live.home": "+1 {label} casa",
+  "live.away": "+1 ospiti",
+  "live.scheduled": "programmata",
+  "live.live": "live",
+  "live.ended": "finita",
+  "live.hide": "Nascondi eventi",
+  "live.events": "Eventi ({n})",
+  "ev.goal": "⚽ Gol",
+  "ev.yellow": "🟨 Giallo",
+  "ev.red": "🟥 Rosso",
+  "ev.mvp": "⭐ MVP",
+  "ev.add": "+ Registra evento",
+
+  "tbl.team": "Squadra",
+  "tbl.g": "G",
+  "tbl.v": "V",
+  "tbl.n": "N",
+  "tbl.p": "P",
+  "tbl.pts": "Pt",
+  "tbl.noTeams": "Nessuna squadra.",
+  "tbl.scorers": "Marcatori & MVP",
+  "tbl.noEvents": "Nessun evento.",
+
+  "money.fee": "Quota iscrizione per giocatore (€)",
+  "money.in": "Incassato",
+  "money.exp": "Atteso",
+  "money.paid": "Pagati",
+  "money.signups": "Iscrizioni",
+  "money.hint":
+    "Pagamenti online con carta: chiedimi “attiva i pagamenti” e collego Stripe al torneo, così i giocatori pagano dall’app e la spunta “pagato” si aggiorna da sola.",
+
+  "poster.gen": "✨ Genera locandina (1 click)",
+  "poster.alt": "Locandina torneo",
+  "poster.dl": "⬇ Scarica / condividi",
+  "poster.start": "Inizio",
+  "poster.summary": "{teams} squadre · {matches} partite",
+  "lang.title": "Lingua",
+};
+
+const en: Dict = {
+  "common.cancel": "Cancel",
+  "common.close": "Close",
+  "common.home": "Home",
+  "common.loading": "Loading…",
+  "common.years": "years",
+  "common.age": "age",
+  "common.back": "‹ Tournaments",
+
+  "home.tornei": "Tournaments",
+  "home.tagline": "15 sports · unlimited teams · live · standings",
+  "home.new": "+ New tournament",
+  "home.trial": "7-day free trial, then €9.99/month",
+  "home.proActive": "👑 PRO active · unlimited tournaments",
+  "home.managePro": "Manage PRO",
+  "home.discoverPro": "Discover PRO",
+  "home.yours": "Your tournaments",
+  "home.empty": "No tournaments yet. Create one to get started.",
+  "home.teams": "teams",
+
+  "nt.title": "New tournament",
+  "nt.logoHint": "Phone gallery · 1000 logos · 195 flags",
+  "nt.name": "Tournament name",
+  "nt.city": "City",
+  "nt.start": "Start date",
+  "nt.fee": "Entry fee (€)",
+  "nt.create": "Create",
+
+  "pro.title": "Try Master League PRO",
+  "pro.subtitle": "7 days free, then {price} per month — Cancel anytime",
+  "pro.b1": "Unlimited tournaments",
+  "pro.b2": "15 sports available",
+  "pro.b3": "1000-logo library",
+  "pro.b4": "195 national flags",
+  "pro.b5": "Upload photos and logos from gallery",
+  "pro.b6": "Automatic live standings",
+  "pro.b7": "PDF export",
+  "pro.b8": "Shareable link",
+  "pro.cta": "Start 7 days free",
+  "pro.wait": "Please wait…",
+  "pro.active": "PRO active — unlimited tournaments unlocked.",
+  "pro.off": "Turn off PRO",
+  "pro.noCharge": "No charge today. After 7 days {price} per month, renews automatically.",
+  "pro.err": "Connect Stripe in the Environment Variables",
+
+  "lp.title": "Choose a logo",
+  "lp.gallery": "📷 Gallery",
+  "lp.logos": "🛡️ 1000 logos",
+  "lp.flags": "🏳️ 195 flags",
+  "lp.open": "📱 Open phone gallery",
+  "lp.crop": "The photo is cropped into a circle automatically.",
+  "lp.searchLogos": "Search: lion, shield, fire…",
+  "lp.searchFlags": "Search country: Italy…",
+  "lp.all": "All",
+  "lp.logo": "Logo",
+
+  "tab.teams": "Teams",
+  "tab.calendar": "Schedule",
+  "tab.live": "Live",
+  "tab.table": "Standings",
+  "tab.money": "Cash",
+  "tab.poster": "Poster",
+
+  "t.notFound": "Tournament not found.",
+  "t.tbd": "date to be defined",
+
+  "teams.name": "Team name",
+  "teams.players": "players",
+  "teams.roster": "Squad",
+  "teams.del": "Delete team",
+  "roster.name": "Player name",
+  "roster.add": "+ Add player",
+  "roster.del": "Delete player",
+  "roster.paid": "PAID",
+  "roster.topay": "UNPAID",
+
+  "cal.manual": "Manual entry",
+  "cal.team1": "Team 1",
+  "cal.team2": "Team 2",
+  "cal.add": "+ Add match",
+  "cal.auto": "⚡ Generate round-robin schedule",
+  "cal.round": "Round",
+  "cal.vs": "vs",
+
+  "live.none": "No matches scheduled.",
+  "live.home": "+1 {label} home",
+  "live.away": "+1 away",
+  "live.scheduled": "scheduled",
+  "live.live": "live",
+  "live.ended": "finished",
+  "live.hide": "Hide events",
+  "live.events": "Events ({n})",
+  "ev.goal": "⚽ Goal",
+  "ev.yellow": "🟨 Yellow",
+  "ev.red": "🟥 Red",
+  "ev.mvp": "⭐ MVP",
+  "ev.add": "+ Record event",
+
+  "tbl.team": "Team",
+  "tbl.g": "P",
+  "tbl.v": "W",
+  "tbl.n": "D",
+  "tbl.p": "L",
+  "tbl.pts": "Pts",
+  "tbl.noTeams": "No teams.",
+  "tbl.scorers": "Scorers & MVP",
+  "tbl.noEvents": "No events.",
+
+  "money.fee": "Entry fee per player (€)",
+  "money.in": "Collected",
+  "money.exp": "Expected",
+  "money.paid": "Paid",
+  "money.signups": "Registrations",
+  "money.hint":
+    "Online card payments: ask me to “enable payments” and I'll connect Stripe to the tournament, so players pay in the app and the “paid” mark updates by itself.",
+
+  "poster.gen": "✨ Generate poster (1 click)",
+  "poster.alt": "Tournament poster",
+  "poster.dl": "⬇ Download / share",
+  "poster.start": "Start",
+  "poster.summary": "{teams} teams · {matches} matches",
+  "lang.title": "Language",
+};
+
+const es: Dict = {
+  "common.cancel": "Cancelar",
+  "common.close": "Cerrar",
+  "common.home": "Inicio",
+  "common.loading": "Cargando…",
+  "common.years": "años",
+  "common.age": "edad",
+  "common.back": "‹ Torneos",
+
+  "home.tornei": "Torneos",
+  "home.tagline": "15 deportes · equipos ilimitados · en vivo · clasificaciones",
+  "home.new": "+ Nuevo torneo",
+  "home.trial": "Prueba 7 días gratis, luego 9,99 €/mes",
+  "home.proActive": "👑 PRO activo · torneos ilimitados",
+  "home.managePro": "Gestionar PRO",
+  "home.discoverPro": "Descubre PRO",
+  "home.yours": "Tus torneos",
+  "home.empty": "Ningún torneo. Crea uno para empezar.",
+  "home.teams": "equipos",
+
+  "nt.title": "Nuevo torneo",
+  "nt.logoHint": "Galería del móvil · 1000 logos · 195 banderas",
+  "nt.name": "Nombre del torneo",
+  "nt.city": "Ciudad",
+  "nt.start": "Fecha de inicio",
+  "nt.fee": "Cuota de inscripción (€)",
+  "nt.create": "Crear",
+
+  "pro.title": "Prueba Master League PRO",
+  "pro.subtitle": "7 días gratis, luego {price} al mes — Cancela cuando quieras",
+  "pro.b1": "Torneos ilimitados",
+  "pro.b2": "15 deportes disponibles",
+  "pro.b3": "Biblioteca de 1000 logos",
+  "pro.b4": "195 banderas nacionales",
+  "pro.b5": "Sube fotos y logos desde la galería",
+  "pro.b6": "Clasificación en vivo automática",
+  "pro.b7": "Exportar PDF",
+  "pro.b8": "Enlace para compartir",
+  "pro.cta": "Empieza 7 días gratis",
+  "pro.wait": "Espera…",
+  "pro.active": "PRO activo — torneos ilimitados desbloqueados.",
+  "pro.off": "Desactivar PRO",
+  "pro.noCharge": "Hoy no se cobra nada. Tras 7 días {price} al mes, renovación automática.",
+  "pro.err": "Conecta Stripe en las Environment Variables",
+
+  "lp.title": "Elige el logo",
+  "lp.gallery": "📷 Galería",
+  "lp.logos": "🛡️ 1000 logos",
+  "lp.flags": "🏳️ 195 banderas",
+  "lp.open": "📱 Abrir galería del móvil",
+  "lp.crop": "La foto se recorta en círculo automáticamente.",
+  "lp.searchLogos": "Busca: león, escudo, fuego…",
+  "lp.searchFlags": "Busca país: Italia…",
+  "lp.all": "Todos",
+  "lp.logo": "Logo",
+
+  "tab.teams": "Equipos",
+  "tab.calendar": "Calendario",
+  "tab.live": "En vivo",
+  "tab.table": "Clasificación",
+  "tab.money": "Caja",
+  "tab.poster": "Cartel",
+
+  "t.notFound": "Torneo no encontrado.",
+  "t.tbd": "fecha por definir",
+
+  "teams.name": "Nombre del equipo",
+  "teams.players": "jugadores",
+  "teams.roster": "Plantilla",
+  "teams.del": "Eliminar equipo",
+  "roster.name": "Nombre del jugador",
+  "roster.add": "+ Añadir jugador",
+  "roster.del": "Eliminar jugador",
+  "roster.paid": "PAGADO",
+  "roster.topay": "POR PAGAR",
+
+  "cal.manual": "Introducción manual",
+  "cal.team1": "Equipo 1",
+  "cal.team2": "Equipo 2",
+  "cal.add": "+ Añadir partido",
+  "cal.auto": "⚡ Generar calendario automático (liga)",
+  "cal.round": "Jornada",
+  "cal.vs": "vs",
+
+  "live.none": "Ningún partido en el calendario.",
+  "live.home": "+1 {label} local",
+  "live.away": "+1 visitante",
+  "live.scheduled": "programado",
+  "live.live": "en vivo",
+  "live.ended": "finalizado",
+  "live.hide": "Ocultar eventos",
+  "live.events": "Eventos ({n})",
+  "ev.goal": "⚽ Gol",
+  "ev.yellow": "🟨 Amarilla",
+  "ev.red": "🟥 Roja",
+  "ev.mvp": "⭐ MVP",
+  "ev.add": "+ Registrar evento",
+
+  "tbl.team": "Equipo",
+  "tbl.g": "PJ",
+  "tbl.v": "G",
+  "tbl.n": "E",
+  "tbl.p": "P",
+  "tbl.pts": "Pts",
+  "tbl.noTeams": "Ningún equipo.",
+  "tbl.scorers": "Goleadores y MVP",
+  "tbl.noEvents": "Ningún evento.",
+
+  "money.fee": "Cuota de inscripción por jugador (€)",
+  "money.in": "Recaudado",
+  "money.exp": "Previsto",
+  "money.paid": "Pagados",
+  "money.signups": "Inscripciones",
+  "money.hint":
+    "Pagos online con tarjeta: pídeme “activa los pagos” y conecto Stripe al torneo, así los jugadores pagan desde la app y la marca “pagado” se actualiza sola.",
+
+  "poster.gen": "✨ Generar cartel (1 clic)",
+  "poster.alt": "Cartel del torneo",
+  "poster.dl": "⬇ Descargar / compartir",
+  "poster.start": "Inicio",
+  "poster.summary": "{teams} equipos · {matches} partidos",
+  "lang.title": "Idioma",
+};
+
+const fr: Dict = {
+  "common.cancel": "Annuler",
+  "common.close": "Fermer",
+  "common.home": "Accueil",
+  "common.loading": "Chargement…",
+  "common.years": "ans",
+  "common.age": "âge",
+  "common.back": "‹ Tournois",
+
+  "home.tornei": "Tournois",
+  "home.tagline": "15 sports · équipes illimitées · live · classements",
+  "home.new": "+ Nouveau tournoi",
+  "home.trial": "Essai gratuit 7 jours, puis 9,99 €/mois",
+  "home.proActive": "👑 PRO actif · tournois illimités",
+  "home.managePro": "Gérer PRO",
+  "home.discoverPro": "Découvrir PRO",
+  "home.yours": "Vos tournois",
+  "home.empty": "Aucun tournoi. Créez-en un pour commencer.",
+  "home.teams": "équipes",
+
+  "nt.title": "Nouveau tournoi",
+  "nt.logoHint": "Galerie du téléphone · 1000 logos · 195 drapeaux",
+  "nt.name": "Nom du tournoi",
+  "nt.city": "Ville",
+  "nt.start": "Date de début",
+  "nt.fee": "Frais d'inscription (€)",
+  "nt.create": "Créer",
+
+  "pro.title": "Essayez Master League PRO",
+  "pro.subtitle": "7 jours gratuits, puis {price} par mois — Annulez quand vous voulez",
+  "pro.b1": "Tournois illimités",
+  "pro.b2": "15 sports disponibles",
+  "pro.b3": "Bibliothèque de 1000 logos",
+  "pro.b4": "195 drapeaux nationaux",
+  "pro.b5": "Photos et logos depuis la galerie",
+  "pro.b6": "Classement live automatique",
+  "pro.b7": "Export PDF",
+  "pro.b8": "Lien partageable",
+  "pro.cta": "Commencer 7 jours gratuits",
+  "pro.wait": "Patientez…",
+  "pro.active": "PRO actif — tournois illimités débloqués.",
+  "pro.off": "Désactiver PRO",
+  "pro.noCharge": "Aucun débit aujourd'hui. Après 7 jours {price} par mois, renouvellement automatique.",
+  "pro.err": "Connectez Stripe dans les Environment Variables",
+
+  "lp.title": "Choisir un logo",
+  "lp.gallery": "📷 Galerie",
+  "lp.logos": "🛡️ 1000 logos",
+  "lp.flags": "🏳️ 195 drapeaux",
+  "lp.open": "📱 Ouvrir la galerie du téléphone",
+  "lp.crop": "La photo est recadrée en rond automatiquement.",
+  "lp.searchLogos": "Rechercher : lion, bouclier, feu…",
+  "lp.searchFlags": "Rechercher un pays : Italie…",
+  "lp.all": "Tous",
+  "lp.logo": "Logo",
+
+  "tab.teams": "Équipes",
+  "tab.calendar": "Calendrier",
+  "tab.live": "Live",
+  "tab.table": "Classement",
+  "tab.money": "Caisse",
+  "tab.poster": "Affiche",
+
+  "t.notFound": "Tournoi introuvable.",
+  "t.tbd": "date à définir",
+
+  "teams.name": "Nom de l'équipe",
+  "teams.players": "joueurs",
+  "teams.roster": "Effectif",
+  "teams.del": "Supprimer l'équipe",
+  "roster.name": "Nom du joueur",
+  "roster.add": "+ Ajouter un joueur",
+  "roster.del": "Supprimer le joueur",
+  "roster.paid": "PAYÉ",
+  "roster.topay": "À PAYER",
+
+  "cal.manual": "Saisie manuelle",
+  "cal.team1": "Équipe 1",
+  "cal.team2": "Équipe 2",
+  "cal.add": "+ Ajouter un match",
+  "cal.auto": "⚡ Générer le calendrier automatique (championnat)",
+  "cal.round": "Journée",
+  "cal.vs": "vs",
+
+  "live.none": "Aucun match au calendrier.",
+  "live.home": "+1 {label} domicile",
+  "live.away": "+1 extérieur",
+  "live.scheduled": "programmé",
+  "live.live": "live",
+  "live.ended": "terminé",
+  "live.hide": "Masquer les événements",
+  "live.events": "Événements ({n})",
+  "ev.goal": "⚽ But",
+  "ev.yellow": "🟨 Jaune",
+  "ev.red": "🟥 Rouge",
+  "ev.mvp": "⭐ MVP",
+  "ev.add": "+ Enregistrer l'événement",
+
+  "tbl.team": "Équipe",
+  "tbl.g": "J",
+  "tbl.v": "G",
+  "tbl.n": "N",
+  "tbl.p": "P",
+  "tbl.pts": "Pts",
+  "tbl.noTeams": "Aucune équipe.",
+  "tbl.scorers": "Buteurs & MVP",
+  "tbl.noEvents": "Aucun événement.",
+
+  "money.fee": "Frais d'inscription par joueur (€)",
+  "money.in": "Encaissé",
+  "money.exp": "Attendu",
+  "money.paid": "Payés",
+  "money.signups": "Inscriptions",
+  "money.hint":
+    "Paiements en ligne par carte : demandez-moi « activer les paiements » et je connecte Stripe au tournoi, les joueurs paient dans l'app et la mention « payé » se met à jour toute seule.",
+
+  "poster.gen": "✨ Générer l'affiche (1 clic)",
+  "poster.alt": "Affiche du tournoi",
+  "poster.dl": "⬇ Télécharger / partager",
+  "poster.start": "Début",
+  "poster.summary": "{teams} équipes · {matches} matchs",
+  "lang.title": "Langue",
+};
+
+const pt: Dict = {
+  "common.cancel": "Cancelar",
+  "common.close": "Fechar",
+  "common.home": "Início",
+  "common.loading": "A carregar…",
+  "common.years": "anos",
+  "common.age": "idade",
+  "common.back": "‹ Torneios",
+
+  "home.tornei": "Torneios",
+  "home.tagline": "15 desportos · equipas ilimitadas · live · classificações",
+  "home.new": "+ Novo torneio",
+  "home.trial": "Experimenta 7 dias grátis, depois 9,99 €/mês",
+  "home.proActive": "👑 PRO ativo · torneios ilimitados",
+  "home.managePro": "Gerir PRO",
+  "home.discoverPro": "Descobrir PRO",
+  "home.yours": "Os teus torneios",
+  "home.empty": "Nenhum torneio. Cria um para começar.",
+  "home.teams": "equipas",
+
+  "nt.title": "Novo torneio",
+  "nt.logoHint": "Galeria do telemóvel · 1000 logos · 195 bandeiras",
+  "nt.name": "Nome do torneio",
+  "nt.city": "Cidade",
+  "nt.start": "Data de início",
+  "nt.fee": "Taxa de inscrição (€)",
+  "nt.create": "Criar",
+
+  "pro.title": "Experimenta o Master League PRO",
+  "pro.subtitle": "7 dias grátis, depois {price} por mês — Cancela quando quiseres",
+  "pro.b1": "Torneios ilimitados",
+  "pro.b2": "15 desportos disponíveis",
+  "pro.b3": "Biblioteca de 1000 logos",
+  "pro.b4": "195 bandeiras nacionais",
+  "pro.b5": "Carrega fotos e logos da galeria",
+  "pro.b6": "Classificação live automática",
+  "pro.b7": "Exportar PDF",
+  "pro.b8": "Link partilhável",
+  "pro.cta": "Começar 7 dias grátis",
+  "pro.wait": "Aguarda…",
+  "pro.active": "PRO ativo — torneios ilimitados desbloqueados.",
+  "pro.off": "Desativar PRO",
+  "pro.noCharge": "Sem cobrança hoje. Após 7 dias {price} por mês, renovação automática.",
+  "pro.err": "Liga o Stripe nas Environment Variables",
+
+  "lp.title": "Escolher logo",
+  "lp.gallery": "📷 Galeria",
+  "lp.logos": "🛡️ 1000 logos",
+  "lp.flags": "🏳️ 195 bandeiras",
+  "lp.open": "📱 Abrir galeria do telemóvel",
+  "lp.crop": "A foto é recortada em círculo automaticamente.",
+  "lp.searchLogos": "Procura: leão, escudo, fogo…",
+  "lp.searchFlags": "Procura país: Itália…",
+  "lp.all": "Todos",
+  "lp.logo": "Logo",
+
+  "tab.teams": "Equipas",
+  "tab.calendar": "Calendário",
+  "tab.live": "Live",
+  "tab.table": "Classificação",
+  "tab.money": "Caixa",
+  "tab.poster": "Cartaz",
+
+  "t.notFound": "Torneio não encontrado.",
+  "t.tbd": "data a definir",
+
+  "teams.name": "Nome da equipa",
+  "teams.players": "jogadores",
+  "teams.roster": "Plantel",
+  "teams.del": "Eliminar equipa",
+  "roster.name": "Nome do jogador",
+  "roster.add": "+ Adicionar jogador",
+  "roster.del": "Eliminar jogador",
+  "roster.paid": "PAGO",
+  "roster.topay": "POR PAGAR",
+
+  "cal.manual": "Inserção manual",
+  "cal.team1": "Equipa 1",
+  "cal.team2": "Equipa 2",
+  "cal.add": "+ Adicionar jogo",
+  "cal.auto": "⚡ Gerar calendário automático (todos contra todos)",
+  "cal.round": "Jornada",
+  "cal.vs": "vs",
+
+  "live.none": "Nenhum jogo no calendário.",
+  "live.home": "+1 {label} casa",
+  "live.away": "+1 fora",
+  "live.scheduled": "agendado",
+  "live.live": "live",
+  "live.ended": "terminado",
+  "live.hide": "Ocultar eventos",
+  "live.events": "Eventos ({n})",
+  "ev.goal": "⚽ Golo",
+  "ev.yellow": "🟨 Amarelo",
+  "ev.red": "🟥 Vermelho",
+  "ev.mvp": "⭐ MVP",
+  "ev.add": "+ Registar evento",
+
+  "tbl.team": "Equipa",
+  "tbl.g": "J",
+  "tbl.v": "V",
+  "tbl.n": "E",
+  "tbl.p": "D",
+  "tbl.pts": "Pts",
+  "tbl.noTeams": "Nenhuma equipa.",
+  "tbl.scorers": "Marcadores e MVP",
+  "tbl.noEvents": "Nenhum evento.",
+
+  "money.fee": "Taxa de inscrição por jogador (€)",
+  "money.in": "Recebido",
+  "money.exp": "Previsto",
+  "money.paid": "Pagos",
+  "money.signups": "Inscrições",
+  "money.hint":
+    "Pagamentos online com cartão: pede-me “ativar os pagamentos” e ligo o Stripe ao torneio, para os jogadores pagarem na app e a marca “pago” atualizar sozinha.",
+
+  "poster.gen": "✨ Gerar cartaz (1 clique)",
+  "poster.alt": "Cartaz do torneio",
+  "poster.dl": "⬇ Descarregar / partilhar",
+  "poster.start": "Início",
+  "poster.summary": "{teams} equipas · {matches} jogos",
+  "lang.title": "Idioma",
+};
+
+const DICTS: Record<Lang, Dict> = { it, en, es, fr, pt };
+
+type Ctx = {
+  lang: Lang;
+  setLang: (l: Lang) => void;
+  t: (key: string, vars?: Record<string, string | number>) => string;
+  sportName: (id: string, fallback: string) => string;
+  roleName: (name: string) => string;
+  venueName: (name: string) => string;
+  scoreName: (name: string) => string;
+};
+
+const I18nContext = createContext<Ctx | null>(null);
+
+export function I18nProvider({ children }: { children: ReactNode }) {
+  const [lang, setLangState] = useState<Lang>("it");
+
+  useEffect(() => {
+    setLangState(detectLang());
+  }, []);
+
+  const setLang = useCallback((l: Lang) => {
+    setLangState(l);
+    try {
+      window.localStorage.setItem(LANG_KEY, l);
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  const value = useMemo<Ctx>(() => {
+    const dict = DICTS[lang];
+    return {
+      lang,
+      setLang,
+      t: (key, vars) => {
+        let s = dict[key] ?? it[key] ?? key;
+        if (vars)
+          for (const [k, v] of Object.entries(vars)) s = s.replaceAll(`{${k}}`, String(v));
+        return s;
+      },
+      sportName: (id, fallback) => SPORT_NAMES[id]?.[lang] ?? fallback,
+      roleName: (name) => term(ROLE_NAMES, name, lang),
+      venueName: (name) => term(VENUE_NAMES, name, lang),
+      scoreName: (name) => term(SCORE_NAMES, name, lang),
+    };
+  }, [lang, setLang]);
+
+  return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
+}
+
+export function useI18n(): Ctx {
+  const ctx = useContext(I18nContext);
+  if (!ctx) throw new Error("useI18n must be used inside I18nProvider");
+  return ctx;
+}
