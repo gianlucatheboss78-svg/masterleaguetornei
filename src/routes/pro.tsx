@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { PRO_PRICE, setPro, usePro } from "@/lib/pro";
+import { useI18n } from "@/lib/i18n";
 import { createProCheckout } from "@/lib/billing.functions";
 
 export const Route = createFileRoute("/pro")({
@@ -25,19 +26,11 @@ export const Route = createFileRoute("/pro")({
   component: ProPage,
 });
 
-const BENEFITS = [
-  "Tornei illimitati",
-  "15 sport disponibili",
-  "Libreria 1000 loghi",
-  "195 bandiere nazionali",
-  "Upload foto e logo da galleria",
-  "Classifica live automatica",
-  "Esporta PDF",
-  "Link condivisibile",
-];
+const BENEFIT_KEYS = ["pro.b1", "pro.b2", "pro.b3", "pro.b4", "pro.b5", "pro.b6", "pro.b7", "pro.b8"];
 
 function ProPage() {
   const pro = usePro();
+  const { t } = useI18n();
   const nav = useNavigate();
   const checkout = useServerFn(createProCheckout);
   const [loading, setLoading] = useState(false);
