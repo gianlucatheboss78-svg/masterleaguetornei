@@ -129,6 +129,14 @@ function ProPage() {
           </>
         ) : (
           <>
+            <input
+              className="field mt-6"
+              type="email"
+              autoComplete="email"
+              placeholder="La tua email"
+              value={ownerInput}
+              onChange={(e) => setOwnerInput(e.target.value)}
+            />
             <button
               onClick={start}
               disabled={loading}
