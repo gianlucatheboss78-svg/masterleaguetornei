@@ -159,7 +159,7 @@ function TeamsTab({ t, patch }: { t: Tournament; patch: Patch }) {
               }
             />
             <div className="min-w-0 flex-1">
-              <p className="display truncate text-primary">{team.name}</p>
+              <p className="display truncate text-primary" translate="no">{team.name}</p>
               <p className="text-xs text-muted-foreground">
                 {team.players.length} {tr("teams.players")}
               </p>
@@ -209,6 +209,7 @@ function Roster({ t, team, patch }: { t: Tournament; team: Team; patch: Patch })
     birth: "",
     role: sport.roles[0]!.id,
     paid: false,
+    season: "",
   });
 
   const addPlayer = () => {
@@ -221,7 +222,7 @@ function Roster({ t, team, patch }: { t: Tournament; team: Team; patch: Patch })
           : x,
       ),
     }));
-    setDraft({ name: "", country: "IT", birth: "", role: sport.roles[0]!.id, paid: false });
+    setDraft({ name: "", country: "IT", birth: "", season: "", role: sport.roles[0]!.id, paid: false });
   };
 
   return (
@@ -259,7 +260,7 @@ function Roster({ t, team, patch }: { t: Tournament; team: Team; patch: Patch })
           </label>
         </div>
         <label className="block text-xs text-muted-foreground">
-          {tr("roster.season")}
+          {tr("roster.country")}
           <select
             className="field mt-1"
             value={draft.country}
@@ -271,6 +272,15 @@ function Roster({ t, team, patch }: { t: Tournament; team: Team; patch: Patch })
               </option>
             ))}
           </select>
+        </label>
+        <label className="block text-xs text-muted-foreground">
+          {tr("roster.season")}
+          <input
+            className="field mt-1"
+            placeholder={tr("roster.season")}
+            value={draft.season ?? ""}
+            onChange={(e) => setDraft({ ...draft, season: e.target.value })}
+          />
         </label>
         <div className="flex gap-2">
           <input
