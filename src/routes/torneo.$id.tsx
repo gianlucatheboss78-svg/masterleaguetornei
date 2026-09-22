@@ -114,7 +114,7 @@ function TournamentPage() {
         {tab === "squadre" && <TeamsTab t={tournament} patch={patch} />}
         {tab === "calendario" && <CalendarTab t={tournament} patch={patch} />}
         {tab === "live" && <LiveTab t={tournament} patch={patch} />}
-        {tab === "classifica" && <TableTab t={tournament} />}
+        {tab === "classifica" && <TableTab t={tournament} patch={patch} />}
         {tab === "finale" && <FinalTab t={tournament} patch={patch} />}
         {tab === "cassa" && <MoneyTab t={tournament} patch={patch} />}
         {tab === "locandina" && <PosterTab t={tournament} />}
@@ -630,9 +630,20 @@ function CalendarTab({ t, patch }: { t: Tournament; patch: Patch }) {
         {tr(t.format === "groups" ? "cal.autoGroups" : "cal.auto")}
       </button>
 
+      {sorted.length > 0 && (
+        <button
+          onClick={() =>
+            patch((cur) => ({ ...cur, matches: cur.matches.filter((x) => x.ko) }))
+          }
+          className="w-full rounded-xl border border-destructive/40 bg-destructive/15 py-3 text-sm font-semibold text-destructive"
+        >
+          🗑️ {tr("cal.clearAll")}
+        </button>
+      )}
+
       <div className="space-y-2">
         {sorted.map((match) => (
-          <div key={match.id} className="card-night p-3">
+          <div key={match.id} className="card-night relative p-3 pr-14">
             <p className="text-[11px] uppercase tracking-widest text-muted-foreground">
               {match.group ? `${tr(match.group === "A" ? "groups.a" : "groups.b")} · ` : ""}
               {tr("cal.round")} {match.round} · {match.date} {match.time} · {match.venue}
@@ -641,6 +652,16 @@ function CalendarTab({ t, patch }: { t: Tournament; patch: Patch }) {
               {nameOf(t, match.teamA)} <span className="text-primary">{tr("cal.vs")}</span>{" "}
               {nameOf(t, match.teamB)}
             </p>
+            <button
+              onClick={() =>
+                patch((cur) => ({ ...cur, matches: cur.matches.filter((x) => x.id !== match.id) }))
+              }
+              aria-label={tr("cal.delMatch")}
+              title={tr("cal.delMatch")}
+              className="absolute right-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-red-500/15 text-destructive"
+            >
+              🗑️
+            </button>
           </div>
         ))}
       </div>
@@ -845,9 +866,11 @@ function Events({
 function StandingsTable({
   t,
   group,
+  patch,
 }: {
   t: Tournament;
   group?: GroupId;
+  patch: Patch;
 }) {
   const { t: tr } = useI18n();
   const sport = getSport(t.sport);
@@ -876,6 +899,8 @@ function StandingsTable({
             <th className="p-2">{tr("tbl.p")}</th>
             <th className="p-2">+/−</th>
             <th className={`p-2 ${accent}`}>{tr("tbl.pts")}</th>
+            <th className="p-2" />
+
           </tr>
         </thead>
         <tbody>
@@ -894,6 +919,24 @@ function StandingsTable({
               <td className="p-2 text-center">{r.p}</td>
               <td className="p-2 text-center">{r.gf - r.gs}</td>
               <td className={`p-2 text-center font-bold ${accent}`}>{r.pts}</td>
+              <td className="p-2 text-right">
+                <button
+                  onClick={() =>
+                    patch((cur) => ({
+                      ...cur,
+                      teams: cur.teams.filter((x) => x.id !== r.team.id),
+                      matches: cur.matches.filter(
+                        (m) => m.teamA !== r.team.id && m.teamB !== r.team.id,
+                      ),
+                    }))
+                  }
+                  aria-label={tr("teams.del")}
+                  title={tr("teams.del")}
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-red-500/15 text-destructive"
+                >
+                  🗑️
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>
@@ -905,7 +948,7 @@ function StandingsTable({
   );
 }
 
-function TableTab({ t }: { t: Tournament }) {
+function TableTab({ t, patch }: { t: Tournament; patch: Patch }) {
   const { t: tr } = useI18n();
   const top = scorers(t);
 
@@ -913,11 +956,11 @@ function TableTab({ t }: { t: Tournament }) {
     <div className="space-y-5">
       {t.format === "groups" ? (
         <div className="-mx-1 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <StandingsTable t={t} group="A" />
-          <StandingsTable t={t} group="B" />
+          <StandingsTable t={t} group="A" patch={patch} />
+          <StandingsTable t={t} group="B" patch={patch} />
         </div>
       ) : (
-        <StandingsTable t={t} />
+        <StandingsTable t={t} patch={patch} />
       )}
 
       <div className="card-night p-4">
@@ -1020,6 +1063,14 @@ function FinalTab({ t, patch }: { t: Tournament; patch: Patch }) {
         <button onClick={generate} className="btn-gold w-full py-2 text-sm">
           {ko.length ? tr("final.reset") : tr("final.generate")}
         </button>
+        {ko.length > 0 && (
+          <button
+            onClick={() => patch((cur) => ({ ...cur, matches: cur.matches.filter((m) => !m.ko) }))}
+            className="w-full rounded-xl border border-destructive/40 bg-destructive/15 py-2 text-sm font-semibold text-destructive"
+          >
+            🗑️ {tr("final.clearAll")}
+          </button>
+        )}
         {err && <p className="text-xs text-destructive">{err}</p>}
       </div>
 
@@ -1049,6 +1100,12 @@ function FinalTab({ t, patch }: { t: Tournament; patch: Patch }) {
                     hasPrev={r > 1 && m.ko!.kind !== "third"}
                     hasNext={r < total && m.ko!.kind !== "third"}
                     setMatch={setMatch}
+                    onDelete={() =>
+                      patch((cur) => ({
+                        ...cur,
+                        matches: cur.matches.filter((x) => x.id !== m.id),
+                      }))
+                    }
                   />
                 ))}
               </div>
@@ -1067,6 +1124,7 @@ function KoCard({
   hasPrev,
   hasNext,
   setMatch,
+  onDelete,
 }: {
   t: Tournament;
   m: Match;
@@ -1074,6 +1132,7 @@ function KoCard({
   hasPrev?: boolean;
   hasNext?: boolean;
   setMatch: (id: string, fn: (m: Match) => Match) => void;
+  onDelete: () => void;
 }) {
   const { t: tr } = useI18n();
   const isThird = m.ko?.kind === "third";
@@ -1093,9 +1152,19 @@ function KoCard({
       {hasNext && (
         <span className="absolute -right-3 top-1/2 h-px w-3 bg-emerald-400/50" aria-hidden />
       )}
-      <p className="mb-2 text-[10px] uppercase tracking-widest text-muted-foreground">
-        {tr(koRoundLabelKey(m.ko!.round, total, m.ko!.kind))}
-      </p>
+      <div className="mb-2 flex items-center gap-2">
+        <p className="flex-1 text-[10px] uppercase tracking-widest text-muted-foreground">
+          {tr(koRoundLabelKey(m.ko!.round, total, m.ko!.kind))}
+        </p>
+        <button
+          onClick={onDelete}
+          aria-label={tr("cal.delMatch")}
+          title={tr("cal.delMatch")}
+          className="flex h-8 w-8 items-center justify-center rounded-full bg-red-500/15 text-destructive"
+        >
+          🗑️
+        </button>
+      </div>
       {([
         ["teamA", "scoreA"],
         ["teamB", "scoreB"],
