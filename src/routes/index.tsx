@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { LogoPicker } from "@/components/LogoPicker";
 import { LOGO_URL } from "@/components/AppHeader";
 import { SPORTS, getSport } from "@/lib/sports";
