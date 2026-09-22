@@ -15,6 +15,7 @@ export type Team = {
   id: string;
   name: string;
   logo?: string;
+  color1?: string;
   players: Player[];
 };
 
