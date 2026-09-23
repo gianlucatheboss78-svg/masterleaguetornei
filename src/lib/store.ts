@@ -202,6 +202,7 @@ export function useTournament(id: string) {
   // Legge prima dal database, poi ricade sui dati del dispositivo.
   useEffect(() => {
     let alive = true;
+    setRemote(null);
     setRemoteDone(false);
     void (async () => {
       let found: Tournament | null = null;
@@ -219,6 +220,7 @@ export function useTournament(id: string) {
           try {
             const { pushTournament } = await import("./cloud");
             await pushTournament(mine);
+            console.info("[torneo] caricato online", id);
           } catch {
             /* offline: resta salvato sul dispositivo */
           }
@@ -226,9 +228,14 @@ export function useTournament(id: string) {
       }
       if (found) {
         setRemote(found);
-        // Copia il torneo sul dispositivo così può essere aperto e modificato.
+        // Allinea la copia sul dispositivo alla versione online appena letta.
         const list = read();
-        if (!list.some((t) => t.id === found!.id)) writeLocal([found, ...list]), emit();
+        const next = list.some((t) => t.id === found!.id)
+          ? list.map((t) => (t.id === found!.id ? found! : t))
+          : [found, ...list];
+        writeLocal(next);
+        emit();
+        console.info("[torneo] letto dal database", id, "squadre:", found.teams.length);
       }
       setRemoteDone(true);
     })();
@@ -237,8 +244,9 @@ export function useTournament(id: string) {
     };
   }, [id]);
 
-  // Il dato online è autorevole; il salvataggio locale resta il fallback offline.
-  const tournament = remote ?? local;
+  // Dopo la prima lettura online, il dato sul dispositivo (aggiornato a ogni
+  // modifica e salvato subito nel database) è quello mostrato a schermo.
+  const tournament = local ?? remote;
   const patch = useCallback(
     (fn: (t: Tournament) => Tournament) =>
       update((list) => list.map((t) => (t.id === id ? fn(t) : t))),
@@ -246,6 +254,7 @@ export function useTournament(id: string) {
   );
   return { tournament, ready: ready && (Boolean(tournament) || remoteDone), patch };
 }
+
 
 export type Row = {
   team: Team;
