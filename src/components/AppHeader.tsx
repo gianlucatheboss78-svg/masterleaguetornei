@@ -9,7 +9,7 @@ export const LOGO_URL = "/favicon.png";
 export function AppHeader() {
   const { user } = useSession();
   return (
-    <header className="sticky top-0 z-50 border-b border-primary/20 bg-background/85 backdrop-blur">
+    <header className="sticky top-0 z-50 border-b border-primary/20 bg-background/85 pt-[env(safe-area-inset-top)] backdrop-blur">
       <div className="mx-auto flex w-full max-w-lg items-center justify-between gap-3 px-4 py-2">
         <Link to="/" className="flex items-center gap-2">
           <img
