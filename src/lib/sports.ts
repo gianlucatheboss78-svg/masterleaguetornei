@@ -16,7 +16,14 @@ export const SPORTS: Sport[] = [
   { id: "pallamano", name: "Pallamano", icon: "🤾", venue: "Palazzetto", scoreLabel: "Gol", winPoints: 2, drawPoints: 1, hasDraw: true, roles: [{ id: "por", name: "Portiere", icon: "🧤" }, { id: "ala", name: "Ala", icon: "🦅" }, { id: "centr", name: "Centrale", icon: "🧠" }] },
   { id: "hockey", name: "Hockey", icon: "🏑", venue: "Pista", scoreLabel: "Gol", winPoints: 3, drawPoints: 1, hasDraw: true, roles: [{ id: "por", name: "Portiere", icon: "🧤" }, { id: "dif", name: "Difensore", icon: "🛡️" }, { id: "att", name: "Attaccante", icon: "🎯" }] },
 ];
-export const FOOTBALL_VARIANTS = ["calcio", "calcetto", "futsal"];
-export const isFootball = (id: string) => FOOTBALL_VARIANTS.includes(id);
-export const variantLabel = (id: string) => SPORTS.find(s => s.id === id)?.name || id;
-export const getSport = (id: string) => SPORTS.find(s => s.id === id) || SPORTS[0];
+export const FOOTBALL_VARIANTS = [
+  { id: "a5", label: "A5", players: 5 },
+  { id: "a6", label: "A6", players: 6 },
+  { id: "a7", label: "A7", players: 7 },
+  { id: "a8", label: "A8", players: 8 },
+  { id: "a11", label: "A11", players: 11 },
+] as const;
+export const isFootball = (id: string) => id === "calcio" || id === "calcetto" || id === "futsal";
+export const variantLabel = (id?: string) => FOOTBALL_VARIANTS.find((variant) => variant.id === id)?.label ?? "";
+const DEFAULT_SPORT: Sport = { id: "calcio", name: "Calcio", icon: "⚽", venue: "Campo", scoreLabel: "Gol", winPoints: 3, drawPoints: 1, hasDraw: true, roles: [{ id: "por", name: "Portiere", icon: "🧤" }, { id: "dif", name: "Difensore", icon: "🛡️" }, { id: "cen", name: "Centrocampista", icon: "⚙️" }, { id: "att", name: "Attaccante", icon: "🎯" }] };
+export const getSport = (id?: string): Sport => SPORTS.find((sport) => sport.id === id) ?? DEFAULT_SPORT;
