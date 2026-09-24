@@ -3,28 +3,28 @@ import { teamLogos } from "@/data/teamLogos";
 
 export default function LogoPicker({ onSelect }: { onSelect: (url: string) => void }) {
   const [filter, setFilter] = useState("calcio");
-  const categories = ["calcio", "volti", "animali", "oggetti"];
-  const filtered = teamLogos.filter((logo: any) => logo.category === filter);
+  const cats = ["calcio", "volti", "animali", "oggetti"];
+  const filtered = teamLogos.filter((l: any) => l.category === filter);
   return (
     <div>
-      <div className="flex gap-2 mb-4">
-        {categories.map((cat) => (
+      <div className="flex gap-2 p-2">
+        {cats.map((c) => (
           <button
-            key={cat}
-            onClick={() => setFilter(cat)}
-            className={filter === cat ? "bg-black text-white p-2 rounded" : "bg-gray-200 p-2 rounded"}
+            key={c}
+            onClick={() => setFilter(c)}
+            className={filter === c ? "bg-black text-white px-2 py-1 rounded" : "bg-gray-200 px-2 py-1 rounded"}
           >
-            {cat}
+            {c}
           </button>
         ))}
       </div>
-      <div className="grid grid-cols-4 gap-2">
+      <div className="grid grid-cols-6 gap-2 p-2">
         {filtered.map((logo: any) => (
           <img
             key={logo.id}
             src={logo.url}
             onClick={() => onSelect(logo.url)}
-            className="cursor-pointer border rounded p-1"
+            className="w-16 h-16 bg-white rounded-full p-1 border cursor-pointer"
           />
         ))}
       </div>
