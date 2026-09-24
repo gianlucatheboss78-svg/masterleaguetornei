@@ -1,5 +1,4 @@
 import { teamLogos } from "@/data/teamLogos";
-
 export default function LogoPicker({ onSelect }: any) {
   return (
     <div className="grid grid-cols-6 gap-4 p-4">
