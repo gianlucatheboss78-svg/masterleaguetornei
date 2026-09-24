@@ -16,4 +16,4 @@ export default function LogoPicker({ onSelect, logos }: any) {
       ))}
     </div>
   );
-}
+
