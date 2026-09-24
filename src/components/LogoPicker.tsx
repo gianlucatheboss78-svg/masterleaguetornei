@@ -3,7 +3,7 @@ import { ImagePlus, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TEAM_LOGOS, renderTeamLogo, type TeamLogoCategory } from "@/data/teamLogos";
 
-type Props = { value?: string; onChange: (value: string) => void; size?: "lg" | "md" | "sm"; placeholder?: string };
+type Props = { value?: string | undefined; onChange: (value: string) => void; size?: "lg" | "md" | "sm"; placeholder?: string };
 type Filter = "tutti" | TeamLogoCategory | "calcio";
 const FILTERS: Array<{ label: string; value: Filter }> = [
   {label:"Tutti",value:"tutti"},{label:"Animali",value:"animali"},{label:"Volti",value:"volti"},{label:"Calcio",value:"calcio"},{label:"Nazionali",value:"calcio-nazionali"},{label:"Basket",value:"basket"},{label:"Volley/Padel",value:"volley-padel"},
