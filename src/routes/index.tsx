@@ -70,7 +70,7 @@ function Home() {
   }, []);
 
   return (
-    <main className="mx-auto min-h-screen w-full max-w-lg px-4 pb-28 pt-8">
+    <main className="mx-auto min-h-screen w-full max-w-lg px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-8">
       {boss && (
         <p className="mb-4 rounded-xl border border-primary/40 bg-primary/15 p-3 text-center text-sm font-semibold text-primary">
           👑 BENVENUTO BOSS, accesso gratis attivato

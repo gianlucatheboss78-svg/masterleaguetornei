@@ -78,7 +78,7 @@ function ProPage() {
   };
 
   return (
-    <main className="mx-auto min-h-screen w-full max-w-lg px-4 pb-24 pt-6">
+    <main className="mx-auto min-h-screen w-full max-w-lg px-4 pb-[calc(6rem+env(safe-area-inset-bottom))] pt-6">
       <Link to="/" className="text-sm text-muted-foreground">
         {t("common.back")}
       </Link>

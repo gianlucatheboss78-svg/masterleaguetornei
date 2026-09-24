@@ -70,7 +70,7 @@ function AuthPage() {
   };
 
   return (
-    <main className="mx-auto min-h-screen w-full max-w-sm px-4 pb-24 pt-10">
+    <main className="mx-auto min-h-screen w-full max-w-sm px-4 pb-[calc(6rem+env(safe-area-inset-bottom))] pt-10">
       <img
         src={LOGO_URL}
         alt="Master League Tornei"
