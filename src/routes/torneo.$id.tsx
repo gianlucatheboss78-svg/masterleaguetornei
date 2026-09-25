@@ -3,6 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { Share2 } from "lucide-react";
 import { LogoPicker } from "@/components/LogoPicker";
 import { ShareDialog } from "@/components/ShareDialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { TEAM_LOGOS, renderTeamLogo } from "@/data/teamLogos";
 import { getCountries, countryName, flagFor } from "@/lib/countries";
 import { useI18n } from "@/lib/i18n";
 import { pushTournament } from "@/lib/cloud";
@@ -195,14 +197,30 @@ function TournamentPage() {
 
 type Patch = (fn: (t: Tournament) => Tournament) => void;
 
+const logoSource = (value?: string) => {
+  if (!value) return undefined;
+  const logo = TEAM_LOGOS.find((item) => item.id === value);
+  return logo ? renderTeamLogo(logo) : value;
+};
+
+const sportKitIcon = (sportId: string) =>
+  isBasket(sportId)
+    ? "🎽"
+    : isBeachVolley(sportId)
+      ? "🏖️"
+      : isVolley(sportId)
+        ? "🏐"
+        : isFootball(sportId)
+          ? "👕"
+          : getSport(sportId).icon;
+
 /* ---------------- Squadre ---------------- */
 
 function TeamsTab({ t, patch }: { t: Tournament; patch: Patch }) {
   const { t: tr } = useI18n();
   const [name, setName] = useState("");
-  const [newLogo, setNewLogo] = useState<string | undefined>();
-  const [showLogo, setShowLogo] = useState(false);
   const [openTeam, setOpenTeam] = useState<string | null>(null);
+  const [logoTeamId, setLogoTeamId] = useState<string | null>(null);
 
   // Tornei a 2 gironi: se nessuna squadra ha un girone, dividile automaticamente.
   const needsSplit =
@@ -227,30 +245,18 @@ function TeamsTab({ t, patch }: { t: Tournament; patch: Patch }) {
         ...cur,
         teams: [
           ...cur.teams,
-          { id: uid(), name: name.trim(), players: [], ...(newLogo ? { logo: newLogo } : {}), ...auto },
+          { id: uid(), name: name.trim(), players: [], ...auto },
         ],
       };
     });
     setName("");
-    setNewLogo(undefined);
-    setShowLogo(false);
   };
+
+  const selectedTeam = t.teams.find((team) => team.id === logoTeamId);
 
   return (
     <div className="space-y-4">
       <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={() => setShowLogo((v) => !v)}
-          aria-label="Logo"
-          className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-primary/40 bg-secondary text-xl"
-        >
-          {newLogo ? (
-            <img src={newLogo} alt="" className="h-full w-full object-cover" />
-          ) : (
-            "🖼️"
-          )}
-        </button>
         <input
           className="field"
           placeholder={tr("teams.name")}
@@ -261,7 +267,6 @@ function TeamsTab({ t, patch }: { t: Tournament; patch: Patch }) {
           +
         </button>
       </div>
-      {showLogo && <LogoPicker value={newLogo} onChange={setNewLogo} />}
 
       {t.format === "groups" && (
         <div className="card-night space-y-3 p-4">
@@ -308,42 +313,24 @@ function TeamsTab({ t, patch }: { t: Tournament; patch: Patch }) {
       {t.teams.map((team) => (
         <div key={team.id} className="card-night p-4">
           <div className="flex items-center gap-3">
-            {team.logo ? (
-              <img
-                src={team.logo}
-                alt={team.name}
-                className="h-12 w-12 shrink-0 rounded-full border border-primary/30 object-cover"
-              />
-            ) : (
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-primary/30 bg-secondary text-xl">
-                {getSport(t.sport).icon}
-              </div>
-            )}
+            <button
+              type="button"
+              onClick={() => setLogoTeamId(team.id)}
+              aria-label={`${tr("lp.logo")} ${team.name}`}
+              className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border border-primary/40 bg-secondary text-xl"
+            >
+              {team.logo ? (
+                <img
+                  src={logoSource(team.logo)}
+                  alt=""
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                sportKitIcon(t.sport)
+              )}
+            </button>
             <div className="min-w-0 flex-1">
               <p className="display truncate text-primary" translate="no">{team.name}</p>
-              <label
-                className="mt-0.5 inline-flex items-center gap-1 text-xs text-muted-foreground"
-                title={tr("teams.color")}
-              >
-                <span
-                  className="inline-block h-3.5 w-3.5 rounded-full border border-primary/40"
-                  style={{ backgroundColor: team.color1 ?? "#334155" }}
-                />
-                <input
-                  type="color"
-                  aria-label={tr("teams.color")}
-                  value={team.color1 ?? "#334155"}
-                  onChange={(e) =>
-                    patch((cur) => ({
-                      ...cur,
-                      teams: cur.teams.map((x) =>
-                        x.id === team.id ? { ...x, color1: e.target.value } : x,
-                      ),
-                    }))
-                  }
-                  className="h-4 w-4 cursor-pointer border-0 bg-transparent p-0"
-                />
-              </label>
               <p className="text-xs text-muted-foreground">
                 {team.players.length} {tr("teams.players")}
               </p>
@@ -397,6 +384,30 @@ function TeamsTab({ t, patch }: { t: Tournament; patch: Patch }) {
           )}
         </div>
       ))}
+
+      <Dialog open={Boolean(logoTeamId)} onOpenChange={(open) => !open && setLogoTeamId(null)}>
+        <DialogContent className="card-night max-h-[85vh] w-[calc(100%-2rem)] max-w-md overflow-y-auto p-3 sm:p-5">
+          <DialogHeader>
+            <DialogTitle className="gold-text pr-8">
+              {tr("lp.logo")}{selectedTeam ? ` · ${selectedTeam.name}` : ""}
+            </DialogTitle>
+          </DialogHeader>
+          {selectedTeam && (
+            <LogoPicker
+              value={selectedTeam.logo}
+              onChange={(logo) => {
+                patch((cur) => ({
+                  ...cur,
+                  teams: cur.teams.map((team) =>
+                    team.id === selectedTeam.id ? { ...team, logo } : team,
+                  ),
+                }));
+                setLogoTeamId(null);
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -462,8 +473,14 @@ function Roster({ t, team, patch }: { t: Tournament; team: Team; patch: Patch })
                     style={tm.color1 ? { backgroundColor: tm.color1 } : undefined}
                   >
                     {tm.logo ? (
-                      <img src={tm.logo} alt="" className="h-full w-full rounded-full object-cover" />
-                    ) : null}
+                      <img
+                        src={logoSource(tm.logo)}
+                        alt=""
+                        className="h-full w-full rounded-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-2xl">{sportKitIcon(t.sport)}</span>
+                    )}
                   </div>
                   <span
                     className="w-full truncate text-center text-[10px] text-muted-foreground"
