@@ -200,6 +200,8 @@ type Patch = (fn: (t: Tournament) => Tournament) => void;
 function TeamsTab({ t, patch }: { t: Tournament; patch: Patch }) {
   const { t: tr } = useI18n();
   const [name, setName] = useState("");
+  const [newLogo, setNewLogo] = useState<string | undefined>();
+  const [showLogo, setShowLogo] = useState(false);
   const [openTeam, setOpenTeam] = useState<string | null>(null);
 
   // Tornei a 2 gironi: se nessuna squadra ha un girone, dividile automaticamente.
@@ -223,10 +225,15 @@ function TeamsTab({ t, patch }: { t: Tournament; patch: Patch }) {
           : {};
       return {
         ...cur,
-        teams: [...cur.teams, { id: uid(), name: name.trim(), players: [], ...auto }],
+        teams: [
+          ...cur.teams,
+          { id: uid(), name: name.trim(), players: [], ...(newLogo ? { logo: newLogo } : {}), ...auto },
+        ],
       };
     });
     setName("");
+    setNewLogo(undefined);
+    setShowLogo(false);
   };
 
   return (
