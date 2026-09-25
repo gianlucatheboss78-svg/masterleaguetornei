@@ -401,9 +401,6 @@ function TeamsTab({ t, patch }: { t: Tournament; patch: Patch }) {
   );
 }
 
-function TeamLogo({ team, onPick }: { team: Team; onPick: (d: string) => void }) {
-  return <LogoPicker size="sm" value={team.logo} onChange={onPick} />;
-}
 
 
 function Roster({ t, team, patch }: { t: Tournament; team: Team; patch: Patch }) {
