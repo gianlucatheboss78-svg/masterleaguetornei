@@ -239,6 +239,18 @@ function TeamsTab({ t, patch }: { t: Tournament; patch: Patch }) {
   return (
     <div className="space-y-4">
       <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={() => setShowLogo((v) => !v)}
+          aria-label="Logo"
+          className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-primary/40 bg-secondary text-xl"
+        >
+          {newLogo ? (
+            <img src={newLogo} alt="" className="h-full w-full object-cover" />
+          ) : (
+            "🖼️"
+          )}
+        </button>
         <input
           className="field"
           placeholder={tr("teams.name")}
@@ -249,6 +261,7 @@ function TeamsTab({ t, patch }: { t: Tournament; patch: Patch }) {
           +
         </button>
       </div>
+      {showLogo && <LogoPicker value={newLogo} onChange={setNewLogo} />}
 
       {t.format === "groups" && (
         <div className="card-night space-y-3 p-4">
@@ -295,15 +308,17 @@ function TeamsTab({ t, patch }: { t: Tournament; patch: Patch }) {
       {t.teams.map((team) => (
         <div key={team.id} className="card-night p-4">
           <div className="flex items-center gap-3">
-            <TeamLogo
-              team={team}
-              onPick={(logo) =>
-                patch((cur) => ({
-                  ...cur,
-                  teams: cur.teams.map((x) => (x.id === team.id ? { ...x, logo } : x)),
-                }))
-              }
-            />
+            {team.logo ? (
+              <img
+                src={team.logo}
+                alt={team.name}
+                className="h-12 w-12 shrink-0 rounded-full border border-primary/30 object-cover"
+              />
+            ) : (
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-primary/30 bg-secondary text-xl">
+                {getSport(t.sport).icon}
+              </div>
+            )}
             <div className="min-w-0 flex-1">
               <p className="display truncate text-primary" translate="no">{team.name}</p>
               <label
