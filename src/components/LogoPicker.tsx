@@ -1,180 +1,47 @@
-import { useMemo, useRef, useState } from "react";
-import { getCountries } from "@/lib/countries";
-import { LOGO_LIBRARY, PALETTES, renderLogo } from "@/lib/logos";
-import { useI18n } from "@/lib/i18n";
-import { readCircleImage } from "@/lib/media";
+import { useState } from "react";
+import { TEAM_LOGOS as teamLogos } from "@/data/teamLogos";
 
 type Props = {
   value?: string | undefined;
-  onChange: (dataUrl: string) => void;
-  size?: "sm" | "lg";
+  onChange?: (id: string) => void;
+  onSelect?: (id: string) => void;
+  size?: "lg" | "md" | "sm";
   placeholder?: string;
 };
 
-export function LogoPicker({ value, onChange, size = "lg", placeholder }: Props) {
-  const { t } = useI18n();
-  const [open, setOpen] = useState(false);
-  const box = size === "lg" ? "h-24 w-24 text-xs" : "h-12 w-12 text-lg";
-  const label = placeholder ?? t("lp.logo");
-
-  return (
-    <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className={`${box} shrink-0 overflow-hidden rounded-full border-2 border-primary/50 bg-secondary`}
-      >
-        {value ? (
-          <img src={value} alt="" className="h-full w-full object-cover" />
-        ) : (
-          <span className="text-muted-foreground">{size === "lg" ? `${label} 📷` : "📷"}</span>
-        )}
-      </button>
-      {open && (
-        <LogoSheet
-          onClose={() => setOpen(false)}
-          onPick={(d) => {
-            onChange(d);
-            setOpen(false);
-          }}
-        />
-      )}
-    </>
-  );
-}
-
-function LogoSheet({ onClose, onPick }: { onClose: () => void; onPick: (d: string) => void }) {
-  const { t, lang } = useI18n();
-  const [tab, setTab] = useState<"galleria" | "loghi" | "bandiere">("loghi");
+export function LogoPicker({ value, onChange, onSelect, placeholder }: Props) {
   const [q, setQ] = useState("");
-  const [paletteId, setPaletteId] = useState<string>("all");
-  const fileRef = useRef<HTMLInputElement>(null);
-
-  const logos = useMemo(() => {
-    const term = q.trim().toLowerCase();
-    return LOGO_LIBRARY.filter(
-      (l) =>
-        (paletteId === "all" || l.palette.id === paletteId) &&
-        (!term ||
-          l.name.toLowerCase().includes(term) ||
-          l.palette.name.toLowerCase().includes(term) ||
-          l.icon === term),
-    ).slice(0, 180);
-  }, [q, paletteId]);
-
-  const flags = useMemo(() => {
-    const term = q.trim().toLowerCase();
-    return getCountries(lang).filter(
-      (c) => !term || c.name.toLowerCase().includes(term) || c.code.toLowerCase() === term,
-    );
-  }, [q, lang]);
-
+  const list = teamLogos.filter(
+    (l) =>
+      l.name.toLowerCase().includes(q.toLowerCase()) ||
+      l.searchTags.join(" ").toLowerCase().includes(q.toLowerCase()),
+  );
+  const pick = (id: string) => {
+    onSelect?.(id);
+    onChange?.(id);
+  };
   return (
-    <div className="fixed inset-0 z-50 flex items-end bg-black/75 sm:items-center sm:p-4">
-      <div className="card-night flex max-h-[88vh] w-full flex-col p-4 sm:mx-auto sm:max-w-lg">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg gold-text">{t("lp.title")}</h2>
-          <button onClick={onClose} className="text-muted-foreground">
-            ✕
+    <div className="p-4">
+      <input
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+        placeholder={placeholder ?? "Cerca: leone, scudo, fuoco..."}
+        className="w-full p-2 rounded border border-yellow-500/30 bg-[#0A1931] text-white"
+      />
+      <div className="grid grid-cols-4 gap-2 mt-4 max-h-[300px] overflow-auto">
+        {list.map((logo) => (
+          <button
+            key={logo.id}
+            onClick={() => pick(logo.id)}
+            className="aspect-square rounded-full flex items-center justify-center text-2xl border border-yellow-500/20"
+            style={{ background: logo.bgColor }}
+          >
+            {logo.icon}
           </button>
-        </div>
-
-        <div className="mt-3 flex gap-2 overflow-x-auto whitespace-nowrap px-2 pb-3 text-xs">
-          {(
-            [
-              ["galleria", t("lp.gallery")],
-              ["loghi", t("lp.logos")],
-              ["bandiere", t("lp.flags")],
-            ] as const
-          ).map(([id, label]) => (
-            <button
-              key={id}
-              onClick={() => setTab(id)}
-              className={`min-w-fit shrink-0 px-4 py-1.5 font-bold ${tab === id ? "btn-gold" : "btn-ghost-gold"}`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-
-        {tab === "galleria" ? (
-          <div className="mt-6 pb-4 text-center">
-            <button onClick={() => fileRef.current?.click()} className="btn-gold w-full py-3">
-              {t("lp.open")}
-            </button>
-            <p className="mt-2 text-xs text-muted-foreground">{t("lp.crop")}</p>
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={async (e) => {
-                const f = e.target.files?.[0];
-                if (f) onPick(await readCircleImage(f));
-              }}
-            />
-          </div>
-        ) : (
-          <>
-            <input
-              className="field mt-3"
-              placeholder={tab === "loghi" ? t("lp.searchLogos") : t("lp.searchFlags")}
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-            />
-            {tab === "loghi" && (
-              <div className="mt-2 flex gap-2 overflow-x-auto whitespace-nowrap px-2 pb-3 text-[10px]">
-                <button
-                  onClick={() => setPaletteId("all")}
-                  className={`min-w-fit shrink-0 px-4 py-1.5 ${paletteId === "all" ? "btn-gold" : "btn-ghost-gold"}`}
-                >
-                  {t("lp.all")}
-                </button>
-                {PALETTES.map((p) => (
-                  <button
-                    key={p.id}
-                    onClick={() => setPaletteId(p.id)}
-                    className={`min-w-fit shrink-0 px-4 py-1.5 ${paletteId === p.id ? "btn-gold" : "btn-ghost-gold"}`}
-                  >
-                    {p.name}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            <div className="mt-3 grid grid-cols-5 gap-2 overflow-y-auto pb-4">
-              {tab === "loghi"
-                ? logos.map((l) => (
-                    <button
-                      key={l.id}
-                      title={`${l.name} · ${l.palette.name}`}
-                      onClick={() => onPick(renderLogo(l.icon, l.palette))}
-                      className="flex aspect-square items-center justify-center rounded-full text-xl"
-                      style={{
-                        background: `linear-gradient(135deg, ${l.palette.from}, ${l.palette.to})`,
-                        border: `2px solid ${l.palette.ring}`,
-                      }}
-                    >
-                      {l.icon}
-                    </button>
-                  ))
-                : flags.map((c) => (
-                    <button
-                      key={c.code}
-                      title={c.name}
-                      onClick={() => onPick(renderLogo(c.flag, PALETTES[1]!))}
-                      className="flex aspect-square flex-col items-center justify-center rounded-full border border-primary/30 bg-secondary/70 text-xl"
-                    >
-                      {c.flag}
-                      <span className="w-full truncate px-1 text-[7px] text-muted-foreground">
-                        {c.name}
-                      </span>
-                    </button>
-                  ))}
-            </div>
-          </>
-        )}
+        ))}
       </div>
     </div>
   );
 }
+
+export default LogoPicker;
