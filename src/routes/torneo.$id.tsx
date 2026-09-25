@@ -197,6 +197,23 @@ function TournamentPage() {
 
 type Patch = (fn: (t: Tournament) => Tournament) => void;
 
+const logoSource = (value?: string) => {
+  if (!value) return undefined;
+  const logo = TEAM_LOGOS.find((item) => item.id === value);
+  return logo ? renderTeamLogo(logo) : value;
+};
+
+const sportKitIcon = (sportId: string) =>
+  isBasket(sportId)
+    ? "🎽"
+    : isBeachVolley(sportId)
+      ? "🏖️"
+      : isVolley(sportId)
+        ? "🏐"
+        : isFootball(sportId)
+          ? "👕"
+          : getSport(sportId).icon;
+
 /* ---------------- Squadre ---------------- */
 
 function TeamsTab({ t, patch }: { t: Tournament; patch: Patch }) {
@@ -236,21 +253,6 @@ function TeamsTab({ t, patch }: { t: Tournament; patch: Patch }) {
   };
 
   const selectedTeam = t.teams.find((team) => team.id === logoTeamId);
-  const logoSource = (value?: string) => {
-    if (!value) return undefined;
-    const logo = TEAM_LOGOS.find((item) => item.id === value);
-    return logo ? renderTeamLogo(logo) : value;
-  };
-
-  const kitIcon = isBasket(t.sport)
-    ? "🎽"
-    : isBeachVolley(t.sport)
-      ? "🏖️"
-      : isVolley(t.sport)
-        ? "🏐"
-        : isFootball(t.sport)
-          ? "👕"
-          : getSport(t.sport).icon;
 
   return (
     <div className="space-y-4">
@@ -324,7 +326,7 @@ function TeamsTab({ t, patch }: { t: Tournament; patch: Patch }) {
                   className="h-full w-full object-cover"
                 />
               ) : (
-                kitIcon
+                sportKitIcon(t.sport)
               )}
             </button>
             <div className="min-w-0 flex-1">
@@ -472,24 +474,12 @@ function Roster({ t, team, patch }: { t: Tournament; team: Team; patch: Patch })
                   >
                     {tm.logo ? (
                       <img
-                        src={TEAM_LOGOS.find((item) => item.id === tm.logo)
-                          ? renderTeamLogo(TEAM_LOGOS.find((item) => item.id === tm.logo)!)
-                          : tm.logo}
+                        src={logoSource(tm.logo)}
                         alt=""
                         className="h-full w-full rounded-full object-cover"
                       />
                     ) : (
-                      <span className="text-2xl">
-                        {isBasket(t.sport)
-                          ? "🎽"
-                          : isBeachVolley(t.sport)
-                            ? "🏖️"
-                            : isVolley(t.sport)
-                              ? "🏐"
-                              : isFootball(t.sport)
-                                ? "👕"
-                                : sport.icon}
-                      </span>
+                      <span className="text-2xl">{sportKitIcon(t.sport)}</span>
                     )}
                   </div>
                   <span
