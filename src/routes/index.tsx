@@ -330,8 +330,8 @@ function NewTournament({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end bg-black/70 p-0 sm:items-center sm:p-4">
-      <div className="card-night max-h-[92vh] w-full overflow-y-auto p-5 sm:mx-auto sm:max-w-lg">
+    <div className="fixed inset-0 z-[70] flex items-end bg-background/90 p-0 sm:items-center sm:p-4">
+      <div className="card-night max-h-[92vh] w-full overflow-y-auto p-5 pb-[calc(2rem+env(safe-area-inset-bottom))] sm:mx-auto sm:max-w-lg">
         <h2 className="text-xl gold-text">{t("nt.title")}</h2>
 
         <div className="mt-5 space-y-3">
