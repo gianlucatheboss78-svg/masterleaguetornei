@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 const KEY = "mlt.pro.v1";
 const OWNER_KEY = "mlt.owner.v1";
 export const PRO_PRICE = "9,99 €";
-export const PRO_TRIAL_DAYS = 7;
+export const PRO_TRIAL_DAYS = 6;
 
 export const OWNER_EMAILS = ["gianlucatheboss78@gmail.com"];
 

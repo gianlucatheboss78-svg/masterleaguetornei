@@ -1,6 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { useServerFn } from "@tanstack/react-start";
 import {
   PRO_PRICE,
   setPro,
@@ -13,21 +12,20 @@ import {
 } from "@/lib/pro";
 import { useI18n } from "@/lib/i18n";
 import { LOGO_URL } from "@/components/AppHeader";
-import { createProCheckout } from "@/lib/billing.functions";
 
 export const Route = createFileRoute("/pro")({
   head: () => ({
     meta: [
-      { title: "Prova Master League PRO — 7 giorni gratis, poi 9,99 €/mese" },
+      { title: "Prova Master League PRO — 6 giorni gratis, poi 9,99 €/mese" },
       {
         name: "description",
         content:
-          "7 giorni gratis, poi 9,99 € al mese: tornei illimitati, 12 sport, 1000 loghi, 195 bandiere, classifica live e locandina.",
+          "6 giorni gratis, poi 9,99 € al mese: tornei illimitati, sport, loghi, bandiere, classifica live e locandina.",
       },
       { property: "og:title", content: "Prova Master League PRO" },
       {
         property: "og:description",
-        content: "7 giorni gratis, poi 9,99 € al mese. Disdici quando vuoi.",
+        content: "6 giorni gratis, poi 9,99 € al mese. Disdici quando vuoi.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -43,7 +41,6 @@ function ProPage() {
   const owner = useOwner();
   const { t } = useI18n();
   const nav = useNavigate();
-  const checkout = useServerFn(createProCheckout);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>();
   const [ownerInput, setOwnerInput] = useState("");
@@ -68,9 +65,7 @@ function ProPage() {
     }
     setLoading(true);
     try {
-      const res = await checkout({ data: { origin: window.location.origin } });
-      if (res.ok) window.location.href = res.url;
-      else setError(res.error);
+      window.location.href = "https://buy.stripe.com/8x28wQ2WU0aY6wSgQL9AQ00";
     } catch {
       setError(t("pro.err"));
     }
@@ -140,7 +135,7 @@ function ProPage() {
               disabled={loading}
               className="btn-gold mt-3 w-full py-3 text-base disabled:opacity-60"
             >
-              {loading ? t("pro.wait") : t("pro.cta")}
+              {loading ? t("pro.wait") : "Abbonati"}
             </button>
             {error && (
               <p className="mt-3 rounded-xl bg-destructive/15 p-3 text-xs text-destructive">
@@ -148,7 +143,7 @@ function ProPage() {
               </p>
             )}
             <p className="mt-3 text-xs text-muted-foreground">
-              {t("pro.noCharge", { price: PRO_PRICE })}
+              Nessun addebito oggi. Dopo 6 giorni {PRO_PRICE} al mese.
             </p>
           </>
         )}

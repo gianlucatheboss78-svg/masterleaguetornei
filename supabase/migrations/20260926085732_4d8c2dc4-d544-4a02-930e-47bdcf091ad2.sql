@@ -1,0 +1,1 @@
+ALTER TABLE public.tournaments ENABLE ROW LEVEL SECURITY;

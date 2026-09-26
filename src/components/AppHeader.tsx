@@ -1,13 +1,18 @@
 import { Link } from "@tanstack/react-router";
-import { CloudOff, UserRound } from "lucide-react";
+import { CloudOff, Crown, UserRound } from "lucide-react";
+import { useRouterState } from "@tanstack/react-router";
 
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useSession } from "@/lib/auth";
 
-export const LOGO_URL = "/favicon.png";
+import brandAsset from "@/assets/master-league-icon.jpg.asset.json";
+
+export const LOGO_URL = brandAsset.url;
 
 export function AppHeader() {
   const { user } = useSession();
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  if (pathname === "/") return null;
   return (
     <header className="sticky top-0 z-50 border-b border-primary/20 bg-background/85 pt-[env(safe-area-inset-top)] backdrop-blur">
       <div className="mx-auto flex w-full max-w-lg items-center justify-between gap-3 px-4 py-2">
@@ -20,6 +25,13 @@ export function AppHeader() {
           <span className="display text-sm leading-tight text-primary">Master League</span>
         </Link>
         <div className="flex items-center gap-2">
+          <a
+            href="https://buy.stripe.com/8x28wQ2WU0aY6wSgQL9AQ00"
+            className="flex h-9 items-center gap-1 rounded-md bg-primary px-2 text-[10px] font-extrabold text-primary-foreground sm:px-3 sm:text-xs"
+          >
+            <Crown className="h-4 w-4" aria-hidden="true" />
+            Abbonati
+          </a>
           <LanguageSwitcher />
           <Link
             to="/auth"

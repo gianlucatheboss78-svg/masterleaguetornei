@@ -1,10 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Check, Copy, Link2, MessageCircle, Send, Share2, Trash2 } from "lucide-react";
+import { Check, ChevronRight, Copy, Crown, Languages, Link2, MessageCircle, Send, Share2, Sparkles, Trash2, Trophy, Users } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { LogoPicker } from "@/components/LogoPicker";
 import { LOGO_URL } from "@/components/AppHeader";
 import { SPORTS, getSport, FOOTBALL_VARIANTS, isFootball, variantLabel } from "@/lib/sports";
 import { useI18n } from "@/lib/i18n";
@@ -49,7 +48,6 @@ function Home() {
   const [torneoDaEliminare, setTorneoDaEliminare] = useState<Tournament | null>(null);
   const [torneoDaCondividere, setTorneoDaCondividere] = useState<Tournament | null>(null);
   const [copied, setCopied] = useState(false);
-  const locked = !pro;
 
   const shareUrl = torneoDaCondividere
     ? `https://masterleaguetornei.lovable.app/torneo/${torneoDaCondividere.id}`
@@ -70,7 +68,7 @@ function Home() {
   }, []);
 
   return (
-    <main className="mx-auto min-h-screen w-full max-w-lg px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-8">
+    <main className="mx-auto min-h-screen w-full max-w-lg px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-9">
       {boss && (
         <p className="mb-4 rounded-xl border border-primary/40 bg-primary/15 p-3 text-center text-sm font-semibold text-primary">
           👑 BENVENUTO BOSS, accesso gratis attivato
@@ -80,45 +78,40 @@ function Home() {
         <img
           src={LOGO_URL}
           alt="Master League Tornei"
-          className="mx-auto h-28 w-28 rounded-3xl border border-primary/40 object-cover shadow-lg"
+          className="mx-auto h-24 w-24 rounded-2xl border border-primary/60 object-cover shadow-lg"
         />
-        <h1 className="mt-4 text-3xl leading-none gold-text">Master League</h1>
-        <p className="display text-lg tracking-[0.35em] text-muted-foreground">
-          {t("home.tornei")}
-        </p>
-        <p className="mt-3 text-sm text-muted-foreground">{t("home.tagline")}</p>
+        <h1 className="mt-4 text-2xl leading-none gold-text">Master League</h1>
+        <p className="mt-2 text-[10px] font-bold uppercase text-muted-foreground">Tournament Engine</p>
+        <p className="mt-3 text-xs text-muted-foreground">Organizza, gestisci e condividi i tuoi tornei</p>
       </header>
 
-      <div className="mt-7 flex flex-wrap justify-center gap-2">
-        {SPORTS.map((s) => (
-          <span
-            key={s.id}
-            className="rounded-full border border-primary/25 bg-secondary/60 px-3 py-1 text-xs text-muted-foreground"
-          >
-            {s.icon} {sportName(s.id, s.name)}
-          </span>
-        ))}
-      </div>
+      <Button onClick={() => setOpen(true)} className="mt-7 h-16 w-full justify-between rounded-lg px-5 text-left shadow-[var(--shadow-gold)]">
+        <span className="flex items-center gap-3"><Trophy className="h-5 w-5" /><span><span className="display block text-sm">Crea torneo</span><span className="block text-[10px] font-normal">Squadre e giocatori illimitati</span></span></span>
+        <ChevronRight className="h-5 w-5" />
+      </Button>
 
-      {locked ? (
-        <Link to="/pro" className="btn-gold mt-7 block w-full py-3 text-center text-base">
-          {t("home.new")}
-        </Link>
-      ) : (
-        <button onClick={() => setOpen(true)} className="btn-gold mt-7 w-full py-3 text-base">
-          {t("home.new")}
-        </button>
-      )}
+      <section className="mt-3 grid grid-cols-2 gap-2">
+        {[
+          [Users, `${SPORTS.length} Sport`, "Calcio, Basket, Padel +"],
+          [Share2, "Condivisione live", "QR + Link + WhatsApp"],
+          [Sparkles, "Formato automatico", "Calendario e tabellone"],
+          [Languages, "6 Lingue", "IT · EN · ES · FR · PT · ZH"],
+        ].map(([Icon, title, copy]) => {
+          const FeatureIcon = Icon as typeof Users;
+          return <div key={String(title)} className="league-panel min-h-24 p-3"><span className="flex h-8 w-8 items-center justify-center rounded-full border border-primary/60 text-primary"><FeatureIcon className="h-4 w-4" /></span><p className="mt-2 text-xs font-bold">{String(title)}</p><p className="mt-1 text-[10px] text-muted-foreground">{String(copy)}</p></div>;
+        })}
+      </section>
 
-      <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
-        <span>{owner ? "👑 OWNER — tutto sbloccato" : pro ? t("home.proActive") : t("home.trial")}</span>
-        <Link to="/pro" className="text-primary">
-          {pro ? t("home.managePro") : t("home.discoverPro")} ›
-        </Link>
-      </div>
+      <a href="https://buy.stripe.com/8x28wQ2WU0aY6wSgQL9AQ00" className="league-panel mt-3 flex items-center gap-3 border-primary/70 p-4">
+        <Crown className="h-5 w-5 text-primary" aria-hidden="true" />
+        <span className="min-w-0 flex-1"><span className="block text-xs font-bold text-primary">Abbonati</span><span className="block text-[10px] text-muted-foreground">6 GIORNI GRATIS · poi 9,99 €/mese</span></span>
+        <ChevronRight className="h-4 w-4 text-primary" aria-hidden="true" />
+      </a>
+
+      {(owner || pro) && <p className="mt-3 text-center text-xs text-primary">{owner ? "👑 OWNER — tutto sbloccato" : t("home.proActive")}</p>}
 
       <section className="mt-8 space-y-3">
-        <h2 className="text-sm tracking-widest text-muted-foreground">{t("home.yours")}</h2>
+        <div className="flex items-center justify-between"><h2 className="text-sm text-muted-foreground">{t("home.yours")}</h2><Link to="/tournaments" className="text-xs text-primary">Vedi tutti ›</Link></div>
         {ready && data.length === 0 && (
           <p className="card-night p-6 text-center text-sm text-muted-foreground">
             {t("home.empty")}
@@ -306,8 +299,6 @@ function NewTournament({
 }) {
   const nav = useNavigate();
   const { t, sportName } = useI18n();
-  const [logo, setLogo] = useState<string>();
-
   const [name, setName] = useState("");
   const [sport, setSport] = useState(SPORTS[0]!.id);
   const [city, setCity] = useState("");
@@ -325,7 +316,6 @@ function NewTournament({
       name: name.trim(),
       sport,
       ...(isFootball(sport) ? { variant } : {}),
-      ...(logo ? { logo } : {}),
       city,
       startDate,
       fee,
@@ -340,14 +330,9 @@ function NewTournament({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end bg-black/70 p-0 sm:items-center sm:p-4">
-      <div className="card-night max-h-[92vh] w-full overflow-y-auto p-5 sm:mx-auto sm:max-w-lg">
+    <div className="fixed inset-0 z-[70] flex items-end bg-background/90 p-0 sm:items-center sm:p-4">
+      <div className="card-night max-h-[92vh] w-full overflow-y-auto p-5 pb-[calc(2rem+env(safe-area-inset-bottom))] sm:mx-auto sm:max-w-lg">
         <h2 className="text-xl gold-text">{t("nt.title")}</h2>
-
-        <div className="mt-4 flex flex-col items-center">
-          <LogoPicker value={logo} onChange={setLogo} />
-          <p className="mt-2 text-center text-xs text-muted-foreground">{t("nt.logoHint")}</p>
-        </div>
 
         <div className="mt-5 space-y-3">
           <input
