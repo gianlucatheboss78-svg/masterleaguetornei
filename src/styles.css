@@ -65,8 +65,8 @@
   --color-qr-foreground: var(--qr-foreground);
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
-  --font-display: "Anton", system-ui, sans-serif;
-  --font-sans: "Manrope", system-ui, sans-serif;
+  --font-display: "Cinzel", Georgia, serif;
+  --font-sans: "Inter", system-ui, sans-serif;
 }
 
 :root {
@@ -133,9 +133,15 @@
   h2,
   .display {
     font-family: var(--font-display);
-    letter-spacing: 0.02em;
+    letter-spacing: 0;
     text-transform: uppercase;
   }
+}
+
+@utility league-panel {
+  background: color-mix(in oklab, var(--secondary) 82%, transparent);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
 }
 
 @utility card-night {
