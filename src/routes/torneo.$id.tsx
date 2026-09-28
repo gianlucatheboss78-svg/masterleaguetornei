@@ -170,7 +170,7 @@ function TournamentPage() {
 
 
       <nav className="-mx-4 mt-4 flex gap-2 overflow-x-auto px-4 pb-1">
-        {TABS.filter((x) => x.id !== "finale" || tournament.format === "groups" || tournament.format === "singleko" || isBasket(tournament.sport)).map((t) => (
+        {TABS.filter((x) => x.id !== "finale" || tournament.format === "groups" || tournament.format === "singleko" || tournament.format === "knockout" || isBasket(tournament.sport)).map((t) => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
@@ -738,7 +738,7 @@ function CalendarTab({
     });
   };
 
-  const sorted = [...t.matches.filter((x) => !x.ko)].sort((a, b) =>
+  const sorted = [...t.matches.filter((x) => t.format === "knockout" || !x.ko)].sort((a, b) =>
     `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`),
   );
 
