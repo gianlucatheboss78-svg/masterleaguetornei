@@ -72,7 +72,7 @@ export type Match = {
   volley?: VolleyState;
 };
 
-export type TournamentFormat = "single" | "singleko" | "groups";
+export type TournamentFormat = "single" | "return" | "singleko" | "groups" | "knockout";
 
 export type Tournament = {
   id: string;
@@ -91,7 +91,16 @@ export type Tournament = {
 };
 
 const KEY = "mlt.tournaments.v1";
-const REMOVED_SPORT_IDS = new Set(["biliardino", "hockey", "pallanuoto"]);
+const REMOVED_SPORT_IDS = new Set([
+  "biliardino",
+  "hockey",
+  "pallanuoto",
+  "rugby",
+  "pallamano",
+  "calcetto",
+  "pingpong",
+  "freccette",
+]);
 
 export const uid = () => Math.random().toString(36).slice(2, 10);
 
@@ -356,6 +365,50 @@ export function autoCalendar(teams: Team[], startDate: string, venue: string): M
     list.splice(1, 0, list.pop()!);
   }
   return matches;
+}
+
+/** Calendario all'italiana con andata e ritorno, invertendo casa/trasferta. */
+export function autoCalendarReturn(teams: Team[], startDate: string, venue: string): Match[] {
+  const firstLeg = autoCalendar(teams, startDate, venue);
+  const rounds = Math.max(0, ...firstLeg.map((match) => match.round));
+  const secondLeg = firstLeg.map((match) => {
+    const day = new Date(match.date);
+    day.setDate(day.getDate() + rounds * 7);
+    return {
+      ...match,
+      id: uid(),
+      round: match.round + rounds,
+      teamA: match.teamB,
+      teamB: match.teamA,
+      date: day.toISOString().slice(0, 10),
+    };
+  });
+  return [...firstLeg, ...secondLeg];
+}
+
+/** Tabellone diretto dalla lista squadre, completato al successivo multiplo di due. */
+export function autoKnockout(teams: Team[], startDate: string, venue: string): Match[] {
+  if (teams.length < 2) return [];
+  const bracketSize = 2 ** Math.ceil(Math.log2(teams.length));
+  const rounds = Math.log2(bracketSize);
+  const base = startDate ? new Date(startDate) : new Date();
+  const matches: Match[] = [];
+  for (let round = 1; round <= rounds; round++) {
+    const count = bracketSize / 2 ** round;
+    for (let index = 0; index < count; index++) {
+      const day = new Date(base);
+      day.setDate(base.getDate() + (round - 1) * 7);
+      matches.push({
+        id: uid(), round: 100 + round,
+        teamA: round === 1 ? teams[index * 2]?.id ?? "" : "",
+        teamB: round === 1 ? teams[index * 2 + 1]?.id ?? "" : "",
+        date: day.toISOString().slice(0, 10), time: "18:00", venue,
+        scoreA: 0, scoreB: 0, status: "programmata", events: [],
+        ko: { round, index },
+      });
+    }
+  }
+  return syncKnockout(matches);
 }
 
 /* ---------------- 2 Gironi + Fase finale ---------------- */

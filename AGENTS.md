@@ -11,3 +11,4 @@
 
 - Keep the installable app manifest-only; offline caching is intentionally excluded to protect live tournament freshness.
 - Preserve the existing tournament data model while matching the supplied public site's presentation and navigation.
+- Generate team marks, player avatars, and sport kits deterministically from stored names/IDs so shared tournaments render identically without storing extra media.
