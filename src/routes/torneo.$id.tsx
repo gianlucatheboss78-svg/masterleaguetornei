@@ -216,7 +216,7 @@ const logoSource = (value?: string) => {
 const teamLogoSource = (team?: Team) =>
   team ? logoSource(team.logo) ?? renderTeamLogo(createTeamLogo(team.name)) : "";
 
-function TeamIdentity({ team, sportId, compact = false }: { team?: Team; sportId: string; compact?: boolean }) {
+function TeamIdentity({ team, sportId, compact = false }: { team: Team | undefined; sportId: string; compact?: boolean }) {
   if (!team) return <span>—</span>;
   const size = compact ? "h-9 w-9" : "h-12 w-12";
   const color = team.color1 ?? teamColor(team.name);
@@ -1569,13 +1569,11 @@ function TableTab({ t, patch }: { t: Tournament; patch: Patch }) {
         <ul className="mt-3 space-y-2 text-sm">
           {top.map((s) => (
             <li key={s.player.id} className="flex items-center gap-2">
-              {s.player.photo ? (
-                <img src={s.player.photo} alt="" className="h-8 w-8 rounded-full object-cover" />
-              ) : (
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-accent">
-                  👤
-                </span>
-              )}
+              <img
+                src={s.player.photo ?? renderPlayerAvatar(s.player.id, s.player.name, s.player.country)}
+                alt=""
+                className="h-8 w-8 rounded-full object-cover"
+              />
               <span className="flex-1 truncate">
                 {flagFor(s.player.country)} {s.player.name}{" "}
                 <span className="text-xs text-muted-foreground">· {s.team.name}</span>
