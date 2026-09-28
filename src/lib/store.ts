@@ -91,7 +91,16 @@ export type Tournament = {
 };
 
 const KEY = "mlt.tournaments.v1";
-const REMOVED_SPORT_IDS = new Set(["biliardino", "hockey", "pallanuoto"]);
+const REMOVED_SPORT_IDS = new Set([
+  "biliardino",
+  "hockey",
+  "pallanuoto",
+  "rugby",
+  "pallamano",
+  "calcetto",
+  "pingpong",
+  "freccette",
+]);
 
 export const uid = () => Math.random().toString(36).slice(2, 10);
 
