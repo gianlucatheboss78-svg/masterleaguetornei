@@ -304,7 +304,7 @@ function NewTournament({
   const [city, setCity] = useState("");
   const [startDate, setStartDate] = useState("");
   const [fee, setFee] = useState(0);
-  const [format, setFormat] = useState<"single" | "singleko" | "groups">("single");
+  const [format, setFormat] = useState<Tournament["format"]>("single");
   const [variant, setVariant] = useState<string>("a11");
 
   const create = async () => {
@@ -392,11 +392,13 @@ function NewTournament({
           <select
             className="field"
             value={format}
-            onChange={(e) => setFormat(e.target.value as "single" | "singleko" | "groups")}
+            onChange={(e) => setFormat(e.target.value as Tournament["format"])}
           >
             <option value="single">{t("nt.fmtSingle")}</option>
+            <option value="return">Girone unico A/R</option>
             <option value="singleko">{t("nt.fmtSingleKo")}</option>
             <option value="groups">{t("nt.fmtGroups")}</option>
+            <option value="knockout">Eliminazione diretta</option>
           </select>
           <input
             className="field"
