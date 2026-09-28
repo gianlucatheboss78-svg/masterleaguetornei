@@ -1,10 +1,18 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Share2 } from "lucide-react";
+import { CalendarPlus, Pencil, Save, Share2, Trash2 } from "lucide-react";
 import { LogoPicker } from "@/components/LogoPicker";
 import { ShareDialog } from "@/components/ShareDialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { TEAM_LOGOS, renderTeamLogo } from "@/data/teamLogos";
+import {
+  TEAM_LOGOS,
+  createTeamLogo,
+  renderPlayerAvatar,
+  renderTeamKit,
+  renderTeamLogo,
+  resolveTeamLogo,
+  teamColor,
+} from "@/data/teamLogos";
 import { getCountries, countryName, flagFor } from "@/lib/countries";
 import { useI18n } from "@/lib/i18n";
 import { pushTournament } from "@/lib/cloud";
@@ -42,6 +50,8 @@ import {
 import {
   autoCalendar,
   autoCalendarGroups,
+  autoCalendarReturn,
+  autoKnockout,
   buildBasketPlayoffs,
   buildKnockout,
   buildKnockoutSingle,
@@ -200,8 +210,24 @@ type Patch = (fn: (t: Tournament) => Tournament) => void;
 const logoSource = (value?: string) => {
   if (!value) return undefined;
   const logo = TEAM_LOGOS.find((item) => item.id === value);
-  return logo ? renderTeamLogo(logo) : value;
+  return logo ? renderTeamLogo(logo) : value.startsWith("initials:") ? renderTeamLogo(resolveTeamLogo(value)) : value;
 };
+
+const teamLogoSource = (team?: Team) =>
+  team ? logoSource(team.logo) ?? renderTeamLogo(createTeamLogo(team.name)) : "";
+
+function TeamIdentity({ team, sportId, compact = false }: { team?: Team; sportId: string; compact?: boolean }) {
+  if (!team) return <span>—</span>;
+  const size = compact ? "h-9 w-9" : "h-12 w-12";
+  const color = team.color1 ?? teamColor(team.name);
+  return (
+    <div className="flex min-w-0 items-center gap-2">
+      <img src={teamLogoSource(team)} alt="" className={`${size} shrink-0 rounded-full object-cover`} />
+      <img src={renderTeamKit(sportId, color)} alt="" className={`${size} shrink-0 object-contain`} />
+      <span className="truncate text-sm font-bold" translate="no">{team.name}</span>
+    </div>
+  );
+}
 
 const sportKitIcon = (sportId: string) =>
   isBasket(sportId)
@@ -245,7 +271,14 @@ function TeamsTab({ t, patch }: { t: Tournament; patch: Patch }) {
         ...cur,
         teams: [
           ...cur.teams,
-          { id: uid(), name: name.trim(), players: [], ...auto },
+          {
+            id: uid(),
+            name: name.trim(),
+            logo: createTeamLogo(name.trim()).id,
+            color1: teamColor(name.trim()),
+            players: [],
+            ...auto,
+          },
         ],
       };
     });
@@ -319,15 +352,7 @@ function TeamsTab({ t, patch }: { t: Tournament; patch: Patch }) {
               aria-label={`${tr("lp.logo")} ${team.name}`}
               className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border border-primary/40 bg-secondary text-xl"
             >
-              {team.logo ? (
-                <img
-                  src={logoSource(team.logo)}
-                  alt=""
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                sportKitIcon(t.sport)
-              )}
+              <img src={teamLogoSource(team)} alt="" className="h-full w-full object-cover" />
             </button>
             <div className="min-w-0 flex-1">
               <p className="display truncate text-primary" translate="no">{team.name}</p>
@@ -472,15 +497,7 @@ function Roster({ t, team, patch }: { t: Tournament; team: Team; patch: Patch })
                     }`}
                     style={tm.color1 ? { backgroundColor: tm.color1 } : undefined}
                   >
-                    {tm.logo ? (
-                      <img
-                        src={logoSource(tm.logo)}
-                        alt=""
-                        className="h-full w-full rounded-full object-cover"
-                      />
-                    ) : (
-                      <span className="text-2xl">{sportKitIcon(t.sport)}</span>
-                    )}
+                    <img src={teamLogoSource(tm)} alt="" className="h-full w-full rounded-full object-cover" />
                   </div>
                   <span
                     className="w-full truncate text-center text-[10px] text-muted-foreground"
@@ -591,9 +608,11 @@ function Roster({ t, team, patch }: { t: Tournament; team: Team; patch: Patch })
               {p.photo ? (
                 <img src={p.photo} alt="" className="h-10 w-10 rounded-full object-cover" />
               ) : (
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent">
-                  {role?.icon ?? "👤"}
-                </div>
+                <img
+                  src={renderPlayerAvatar(p.id, p.name, p.country)}
+                  alt=""
+                  className="h-10 w-10 rounded-full object-cover"
+                />
               )}
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold">
@@ -664,6 +683,8 @@ function CalendarTab({
 }) {
   const sport = getSport(t.sport);
   const { t: tr, venueName } = useI18n();
+  const [manualOpen, setManualOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [m, setM] = useState({
     teamA: "",
     teamB: "",
@@ -675,13 +696,46 @@ function CalendarTab({
 
   const add = () => {
     if (!m.teamA || !m.teamB || m.teamA === m.teamB) return;
-    patch((cur) => ({
-      ...cur,
-      matches: [
-        ...cur.matches,
-        { ...m, id: uid(), scoreA: 0, scoreB: 0, status: "programmata", events: [] } as Match,
-      ],
-    }));
+    patch((cur) => {
+      const teamGroup = cur.format === "groups"
+        ? cur.teams.find((team) => team.id === m.teamA)?.group
+        : undefined;
+      const nextMatch = { ...m, ...(teamGroup ? { group: teamGroup } : {}) };
+      return {
+        ...cur,
+        matches: editingId
+          ? cur.matches.map((match) => match.id === editingId ? { ...match, ...nextMatch } : match)
+          : [...cur.matches, { ...nextMatch, id: uid(), scoreA: 0, scoreB: 0, status: "programmata", events: [] } as Match],
+      };
+    });
+    setEditingId(null);
+    setManualOpen(false);
+  };
+
+  const edit = (match: Match) => {
+    setM({
+      teamA: match.teamA,
+      teamB: match.teamB,
+      date: match.date,
+      time: match.time,
+      venue: match.venue,
+      round: match.round,
+    });
+    setEditingId(match.id);
+    setManualOpen(true);
+  };
+
+  const generate = () => {
+    if (t.matches.length > 0 && !window.confirm("Rigenerare il calendario? Le partite esistenti saranno sostituite.")) return;
+    patch((cur) => {
+      const venue = getSport(cur.sport).venue;
+      if (cur.format === "groups") {
+        return { ...cur, matches: [...autoCalendarGroups(cur, venue), ...cur.matches.filter((match) => match.ko)] };
+      }
+      if (cur.format === "return") return { ...cur, matches: autoCalendarReturn(cur.teams, cur.startDate, venue) };
+      if (cur.format === "knockout") return { ...cur, matches: autoKnockout(cur.teams, cur.startDate, venue) };
+      return { ...cur, matches: autoCalendar(cur.teams, cur.startDate, venue) };
+    });
   };
 
   const sorted = [...t.matches.filter((x) => !x.ko)].sort((a, b) =>
@@ -690,7 +744,7 @@ function CalendarTab({
 
   return (
     <div className="space-y-4">
-      <div className="card-night space-y-2 p-4">
+      {manualOpen && <div className="card-night space-y-2 p-4">
         <p className="text-sm text-primary">{tr("cal.manual")}</p>
         <div className="flex gap-2">
           <select
@@ -748,31 +802,14 @@ function CalendarTab({
           />
         </div>
         <button onClick={add} className="btn-gold w-full py-2 text-sm">
-          {tr("cal.add")}
+          {editingId ? "Salva modifiche" : tr("cal.add")}
         </button>
-      </div>
-
-      <button
-        onClick={() =>
-          patch((cur) => ({
-            ...cur,
-            matches:
-              cur.format === "groups"
-                ? [
-                    ...autoCalendarGroups(cur, getSport(cur.sport).venue),
-                    ...cur.matches.filter((m) => m.ko),
-                  ]
-                : autoCalendar(cur.teams, cur.startDate, getSport(cur.sport).venue),
-          }))
-        }
-        className="btn-ghost-gold w-full py-3 text-sm"
-      >
-        {tr(t.format === "groups" ? "cal.autoGroups" : "cal.auto")}
-      </button>
+      </div>}
 
       {sorted.length > 0 && (
         <button
           onClick={() =>
+            window.confirm("Cancellare tutto il calendario?") &&
             patch((cur) => ({ ...cur, matches: cur.matches.filter((x) => x.ko) }))
           }
           className="w-full rounded-xl border border-destructive/40 bg-destructive/15 py-3 text-sm font-semibold text-destructive"
@@ -789,29 +826,57 @@ function CalendarTab({
             tabIndex={0}
             onClick={() => onOpen(match.id)}
             onKeyDown={(e) => e.key === "Enter" && onOpen(match.id)}
-            className="card-night relative cursor-pointer p-3 pr-14"
+            className="card-night cursor-pointer p-3"
           >
             <p className="text-[11px] uppercase tracking-widest text-muted-foreground">
               {match.group ? `${tr(match.group === "A" ? "groups.a" : "groups.b")} · ` : ""}
               {tr("cal.round")} {match.round} · {match.date} {match.time} · {match.venue}
             </p>
-            <p className="mt-1 text-sm font-semibold">
-              {nameOf(t, match.teamA)} <span className="text-primary">{tr("cal.vs")}</span>{" "}
-              {nameOf(t, match.teamB)}
-            </p>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                patch((cur) => ({ ...cur, matches: cur.matches.filter((x) => x.id !== match.id) }));
-              }}
-              aria-label={tr("cal.delMatch")}
-              title={tr("cal.delMatch")}
-              className="absolute right-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-red-500/15 text-destructive"
-            >
-              🗑️
-            </button>
+            <div className="mt-3 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+              <TeamIdentity team={t.teams.find((team) => team.id === match.teamA)} sportId={t.sport} compact />
+              <span className="font-black text-primary">VS</span>
+              <div className="flex justify-end"><TeamIdentity team={t.teams.find((team) => team.id === match.teamB)} sportId={t.sport} compact /></div>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <button
+                onClick={(event) => { event.stopPropagation(); edit(match); }}
+                className="btn-ghost-gold flex items-center justify-center gap-2 py-2 text-xs"
+              >
+                <Pencil className="h-4 w-4" /> Modifica
+              </button>
+              <button
+                onClick={(event) => {
+                  event.stopPropagation();
+                  if (window.confirm("Cancellare questa partita?")) {
+                    patch((cur) => ({ ...cur, matches: cur.matches.filter((item) => item.id !== match.id) }));
+                  }
+                }}
+                aria-label={tr("cal.delMatch")}
+                className="flex items-center justify-center gap-2 rounded-lg border border-destructive/40 bg-destructive/15 py-2 text-xs font-bold text-destructive"
+              >
+                <Trash2 className="h-4 w-4" /> Cancella
+              </button>
+            </div>
           </div>
         ))}
+      </div>
+
+      <div className="sticky bottom-[calc(.75rem+env(safe-area-inset-bottom))] z-20 space-y-2 rounded-lg border border-primary/40 bg-background/95 p-3 shadow-xl backdrop-blur">
+        <button
+          onClick={() => { setEditingId(null); setManualOpen((open) => !open); }}
+          className="btn-gold flex w-full items-center justify-center gap-2 py-3 text-sm"
+        >
+          <CalendarPlus className="h-4 w-4" /> + Aggiungi Partita Manuale
+        </button>
+        <button onClick={generate} className="btn-ghost-gold w-full py-3 text-sm">
+          Rigenera Calendario Automatico
+        </button>
+        <button
+          onClick={async () => { await pushTournament(t); }}
+          className="btn-ghost-gold flex w-full items-center justify-center gap-2 py-3 text-sm"
+        >
+          <Save className="h-4 w-4" /> Salva Torneo
+        </button>
       </div>
     </div>
   );
