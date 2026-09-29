@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { CalendarPlus, Pencil, Save, Share2, Trash2 } from "lucide-react";
 import { LogoPicker } from "@/components/LogoPicker";
+import { JerseyPicker } from "@/components/JerseyPicker";
 import { ShareDialog } from "@/components/ShareDialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
@@ -26,7 +27,12 @@ import {
   playerFouls,
   teamPeriodFouls,
   type BasketState,
+  basketRosterLimit,
+  emptyBasket3x3,
+  isBasket3x3,
+  isBasket3x3Finished,
 } from "@/lib/basket";
+import { jerseyInitials, resolveJersey } from "@/data/jerseys";
 import {
   addPoint,
   emptyTennis,
@@ -145,6 +151,7 @@ function TournamentPage() {
           <h1 className="truncate text-xl gold-text">{tournament.name}</h1>
           <p className="text-xs text-muted-foreground">
             {sport.icon} {sportName(sport.id, sport.name)}
+          {tournament.basketMode === "3x3" ? " · 3vs3" : ""}
           {isFootball(tournament.sport) && variantLabel(tournament.variant)
             ? ` (${variantLabel(tournament.variant)})`
             : ""}{" "}
@@ -170,7 +177,7 @@ function TournamentPage() {
 
 
       <nav className="-mx-4 mt-4 flex gap-2 overflow-x-auto px-4 pb-1">
-        {TABS.filter((x) => x.id !== "finale" || tournament.format === "groups" || tournament.format === "singleko" || tournament.format === "knockout" || isBasket(tournament.sport)).map((t) => (
+        {TABS.filter((x) => x.id !== "finale" || tournament.format === "groups" || tournament.format === "singleko" || tournament.format === "knockout" || (isBasket(tournament.sport) && !isBasket3x3(tournament.basketMode))).map((t) => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
@@ -219,11 +226,12 @@ const teamLogoSource = (team?: Team) =>
 function TeamIdentity({ team, sportId, compact = false }: { team: Team | undefined; sportId: string; compact?: boolean }) {
   if (!team) return <span>—</span>;
   const size = compact ? "h-9 w-9" : "h-12 w-12";
-  const color = team.color1 ?? teamColor(team.name);
+  const preset = resolveJersey(team.jerseyId);
+  const color = preset?.primary ?? team.color1 ?? teamColor(team.name);
   return (
     <div className="flex min-w-0 items-center gap-2">
       <img src={teamLogoSource(team)} alt="" className={`${size} shrink-0 rounded-full object-cover`} />
-      <img src={renderTeamKit(sportId, color)} alt="" className={`${size} shrink-0 object-contain`} />
+      <img src={renderTeamKit(sportId, color, 10, preset?.secondary, preset ? jerseyInitials(preset.club) : undefined)} alt="" className={`${size} shrink-0 object-contain`} />
       <span className="truncate text-sm font-bold" translate="no">{team.name}</span>
     </div>
   );
@@ -247,6 +255,7 @@ function TeamsTab({ t, patch }: { t: Tournament; patch: Patch }) {
   const [name, setName] = useState("");
   const [openTeam, setOpenTeam] = useState<string | null>(null);
   const [logoTeamId, setLogoTeamId] = useState<string | null>(null);
+  const [jerseyTeamId, setJerseyTeamId] = useState<string | null>(null);
 
   // Tornei a 2 gironi: se nessuna squadra ha un girone, dividile automaticamente.
   const needsSplit =
@@ -286,6 +295,7 @@ function TeamsTab({ t, patch }: { t: Tournament; patch: Patch }) {
   };
 
   const selectedTeam = t.teams.find((team) => team.id === logoTeamId);
+  const selectedJerseyTeam = t.teams.find((team) => team.id === jerseyTeamId);
 
   return (
     <div className="space-y-4">
@@ -384,6 +394,14 @@ function TeamsTab({ t, patch }: { t: Tournament; patch: Patch }) {
               )}
             </div>
             <button
+              type="button"
+              onClick={() => setJerseyTeamId(team.id)}
+              aria-label={`Maglia ${team.name}`}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-primary/40 bg-secondary text-lg"
+            >
+              {sportKitIcon(t.sport)}
+            </button>
+            <button
               onClick={() => setOpenTeam(openTeam === team.id ? null : team.id)}
               className="btn-ghost-gold px-3 py-1 text-xs"
             >
@@ -433,6 +451,15 @@ function TeamsTab({ t, patch }: { t: Tournament; patch: Patch }) {
           )}
         </DialogContent>
       </Dialog>
+      <Dialog open={Boolean(jerseyTeamId)} onOpenChange={(open) => !open && setJerseyTeamId(null)}>
+        <DialogContent className="card-night max-h-[88vh] w-[calc(100%-2rem)] max-w-md overflow-y-auto p-4">
+          <DialogHeader><DialogTitle className="gold-text pr-8">Scegli maglia{selectedJerseyTeam ? ` · ${selectedJerseyTeam.name}` : ""}</DialogTitle></DialogHeader>
+          {selectedJerseyTeam && <JerseyPicker sportId={t.sport} value={selectedJerseyTeam.jerseyId} onChange={(preset) => {
+            patch((cur) => ({ ...cur, teams: cur.teams.map((team) => team.id === selectedJerseyTeam.id ? { ...team, jerseyId: preset.id, color1: preset.primary } : team) }));
+            setJerseyTeamId(null);
+          }} />}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -457,7 +484,7 @@ function Roster({ t, team, patch }: { t: Tournament; team: Team; patch: Patch })
   const addPlayer = () => {
     if (!draft.name.trim()) return;
     const target = t.teams.find((x) => x.id === targetTeamId);
-    const limit = volleyRosterLimit(t.sport);
+    const limit = volleyRosterLimit(t.sport) ?? (isBasket(t.sport) ? basketRosterLimit(t.basketMode) : undefined);
     if (limit !== undefined && (target?.players.length ?? 0) >= limit) return;
     patch((cur) => ({
       ...cur,
@@ -469,7 +496,7 @@ function Roster({ t, team, patch }: { t: Tournament; team: Team; patch: Patch })
     }));
     setDraft({ name: "", country: "IT", birth: "", season: "", role: sport.roles[0]!.id, paid: false });
   };
-  const rosterLimit = volleyRosterLimit(t.sport);
+  const rosterLimit = volleyRosterLimit(t.sport) ?? (isBasket(t.sport) ? basketRosterLimit(t.basketMode) : undefined);
   const targetRosterCount = t.teams.find((x) => x.id === targetTeamId)?.players.length ?? 0;
 
   return (
@@ -986,7 +1013,9 @@ function LiveTab({
                   key={s}
                   onClick={() => setMatch(m.id, (x) => {
                     if (basket && s === "finita" && x.scoreA === x.scoreB) {
-                      const state = x.basket ?? emptyBasket();
+                      const three = isBasket3x3(t.basketMode);
+                      const state = x.basket ?? (three ? emptyBasket3x3() : emptyBasket());
+                      if (three) return { ...x, status: "live", basket: { ...state, overtime: true, overtimeStartA: x.scoreA, overtimeStartB: x.scoreB, clockSeconds: 0, shotClockSeconds: 12, running: false } };
                       const period = Math.max(5, state.period + 1);
                       return {
                         ...x,
