@@ -78,12 +78,12 @@ export function renderPlayerAvatar(id: string, name: string, country: string): s
   return svgUrl(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><circle cx="60" cy="60" r="58" fill="#0A1931" stroke="#E5FF00" stroke-width="4"/><path d="M20 112c4-28 20-40 40-40s36 12 40 40" fill="#1746A2"/><ellipse cx="60" cy="52" rx="27" ry="32" fill="${skin}"/><path d="M33 50c0-31 54-38 56 2-8-12-16-18-29-18-12 0-20 6-27 16Z" fill="${hair}"/>${longHair ? `<path d="M33 48c-5 13-4 35 5 45l8-17V48Zm54 0c5 13 4 35-5 45l-8-17V48Z" fill="${hair}"/>` : ""}<circle cx="50" cy="54" r="3" fill="#111"/><circle cx="70" cy="54" r="3" fill="#111"/><path d="M50 67q10 8 20 0" fill="none" stroke="#7A3F35" stroke-width="3" stroke-linecap="round"/></svg>`);
 }
 
-export function renderTeamKit(sportId: string, color: string, number = 10): string {
-  const accent = color.toLowerCase() === "#e5ff00" ? "#0A1931" : "#E5FF00";
+export function renderTeamKit(sportId: string, color: string, number = 10, secondary?: string, sponsor = "ML SPORT"): string {
+  const accent = secondary ?? (color.toLowerCase() === "#e5ff00" ? "#0A1931" : "#E5FF00");
   const basket = sportId === "basket";
   const technical = ["padel", "tennis", "volley", "pallavolo", "beachvolley"].includes(sportId);
   const body = basket
     ? `<path d="M42 20h14c0 12 8 12 8 0h14l15 17-12 13-7-7v58H46V43l-7 7-12-13Z" fill="${color}" stroke="${accent}" stroke-width="4"/>`
     : `<path d="M40 22h16l4 8 4-8h16l19 16-12 16-9-8v57H42V46l-9 8-12-16Z" fill="${color}" stroke="${accent}" stroke-width="4"/><path d="M52 22l8 12 8-12" fill="none" stroke="${accent}" stroke-width="4"/>`;
-  return svgUrl(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">${body}<text x="60" y="73" text-anchor="middle" font-family="Arial,sans-serif" font-size="${basket ? 32 : 26}" font-weight="900" fill="${accent}">${number}</text><text x="60" y="91" text-anchor="middle" font-family="Arial,sans-serif" font-size="7" font-weight="700" fill="${accent}">${technical ? "ML TECH" : basket ? "MASTER" : "ML SPORT"}</text></svg>`);
+  return svgUrl(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">${body}<path d="M46 42h28" stroke="${accent}" stroke-width="4"/><text x="60" y="73" text-anchor="middle" font-family="Arial,sans-serif" font-size="${basket ? 32 : 26}" font-weight="900" fill="${accent}">${number}</text><text x="60" y="91" text-anchor="middle" font-family="Arial,sans-serif" font-size="7" font-weight="700" fill="${accent}">${technical ? "ML TECH" : sponsor.slice(0, 10)}</text></svg>`);
 }

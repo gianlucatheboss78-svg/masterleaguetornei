@@ -44,6 +44,7 @@ function TournamentsPage() {
               </span>
               <span className="min-w-0 flex-1">
                 <span className="display block truncate text-sm text-primary" translate="no">{tournament.name}</span>
+                {tournament.basketMode === "3x3" && <span className="mb-1 inline-block rounded-full bg-primary px-2 py-0.5 text-[9px] font-black text-primary-foreground">3vs3</span>}
                 <span className="block truncate text-xs text-muted-foreground">
                   {sportName(sport.id, sport.name)}{isFootball(sport.id) && variantLabel(tournament.variant) ? ` · ${variantLabel(tournament.variant)}` : ""} · {tournament.teams.length} {t("home.teams")}
                 </span>

@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Check, ChevronRight, Copy, Crown, Languages, Link2, MessageCircle, Send, Share2, Sparkles, Trash2, Trophy, Users } from "lucide-react";
+import { BarChart3, BookOpen, Check, ChevronRight, Copy, Crown, FolderOpen, Link2, MessageCircle, Send, Share2, Trash2, Trophy } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -78,28 +78,18 @@ function Home() {
         <img
           src={LOGO_URL}
           alt="Master League Tornei"
-          className="mx-auto h-24 w-24 rounded-2xl border border-primary/60 object-cover shadow-lg"
+          className="mx-auto h-28 w-28 rounded-2xl border border-primary/60 object-cover shadow-lg [image-rendering:auto]"
         />
         <h1 className="mt-4 text-2xl leading-none gold-text">Master League</h1>
         <p className="mt-2 text-[10px] font-bold uppercase text-muted-foreground">Tournament Engine</p>
         <p className="mt-3 text-xs text-muted-foreground">Organizza, gestisci e condividi i tuoi tornei</p>
       </header>
 
-      <Button onClick={() => setOpen(true)} className="mt-7 h-16 w-full justify-between rounded-lg px-5 text-left shadow-[var(--shadow-gold)]">
-        <span className="flex items-center gap-3"><Trophy className="h-5 w-5" /><span><span className="display block text-sm">Crea torneo</span><span className="block text-[10px] font-normal">Squadre e giocatori illimitati</span></span></span>
-        <ChevronRight className="h-5 w-5" />
-      </Button>
-
-      <section className="mt-3 grid grid-cols-2 gap-2">
-        {[
-          [Users, `${SPORTS.length} Sport`, "Calcio, Basket, Padel +"],
-          [Share2, "Condivisione live", "QR + Link + WhatsApp"],
-          [Sparkles, "Formato automatico", "Calendario e tabellone"],
-          [Languages, "6 Lingue", "IT · EN · ES · FR · PT · ZH"],
-        ].map(([Icon, title, copy]) => {
-          const FeatureIcon = Icon as typeof Users;
-          return <div key={String(title)} className="league-panel min-h-24 p-3"><span className="flex h-8 w-8 items-center justify-center rounded-full border border-primary/60 text-primary"><FeatureIcon className="h-4 w-4" /></span><p className="mt-2 text-xs font-bold">{String(title)}</p><p className="mt-1 text-[10px] text-muted-foreground">{String(copy)}</p></div>;
-        })}
+      <section className="mt-7 grid grid-cols-2 gap-3">
+        <Button onClick={() => setOpen(true)} className="h-24 flex-col items-start justify-center rounded-lg px-4 text-left shadow-[var(--shadow-gold)]"><Trophy className="h-6 w-6" /><span className="display text-sm">Crea Torneo</span></Button>
+        <Button asChild variant="outline" className="h-24 flex-col items-start justify-center rounded-lg px-4 text-left"><Link to="/tournaments"><FolderOpen className="h-6 w-6" /><span className="display text-sm">I Miei Tornei</span></Link></Button>
+        <Button asChild variant="outline" className="h-24 flex-col items-start justify-center rounded-lg px-4 text-left"><Link to="/classifiche"><BarChart3 className="h-6 w-6" /><span className="display text-sm">Classifiche</span></Link></Button>
+        <Button asChild variant="outline" className="h-24 flex-col items-start justify-center rounded-lg px-4 text-left"><Link to="/regolamento"><BookOpen className="h-6 w-6" /><span className="display text-sm">Regolamento</span></Link></Button>
       </section>
 
       <a href="https://buy.stripe.com/8x28wQ2WU0aY6wSgQL9AQ00" className="league-panel mt-3 flex items-center gap-3 border-primary/70 p-4">
@@ -133,6 +123,7 @@ function Home() {
               )}
               <div className="min-w-0 flex-1">
                 <p className="display truncate text-base text-primary">{x.name}</p>
+                {x.basketMode === "3x3" && <span className="mb-1 inline-block rounded-full bg-primary px-2 py-0.5 text-[9px] font-black text-primary-foreground">3vs3</span>}
                 <p className="truncate text-xs text-muted-foreground">
                   {sportName(x.sport, getSport(x.sport).name)}
                   {isFootball(x.sport) && variantLabel(x.variant)
@@ -306,6 +297,7 @@ function NewTournament({
   const [fee, setFee] = useState(0);
   const [format, setFormat] = useState<TournamentFormat>("single");
   const [variant, setVariant] = useState<string>("a11");
+  const [basketMode, setBasketMode] = useState<"5x5" | "3x3">("5x5");
 
   const create = async () => {
     if (!name.trim()) return;
@@ -316,6 +308,7 @@ function NewTournament({
       name: name.trim(),
       sport,
       ...(isFootball(sport) ? { variant } : {}),
+      ...(isBasket(sport) ? { basketMode } : {}),
       city,
       startDate,
       fee,
@@ -378,7 +371,11 @@ function NewTournament({
           )}
           {isBasket(sport) && (
             <div className="rounded-xl border border-primary/30 bg-secondary/40 p-3">
-              <p className="text-xs text-primary">🏀 {t("bk.rules")}</p>
+              <p className="text-xs font-bold text-primary">Modalità Basket</p>
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                {(["5x5", "3x3"] as const).map((mode) => <button key={mode} type="button" onClick={() => setBasketMode(mode)} className={`py-2 text-xs font-bold ${basketMode === mode ? "btn-gold" : "btn-ghost-gold"}`}>{mode === "5x5" ? "5vs5" : "3vs3"}</button>)}
+              </div>
+              <p className="mt-3 text-xs text-primary">🏀 {basketMode === "3x3" ? "FIBA 3x3: metà campo · primo a 21 · 10 minuti · 12 secondi" : t("bk.rules")}</p>
               <p className="mt-1 text-[11px] text-muted-foreground">{t("bk.tableHint")}</p>
             </div>
           )}

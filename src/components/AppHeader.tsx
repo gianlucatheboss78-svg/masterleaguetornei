@@ -5,7 +5,7 @@ import { useRouterState } from "@tanstack/react-router";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useSession } from "@/lib/auth";
 
-import brandAsset from "@/assets/master-league-icon.jpg.asset.json";
+import brandAsset from "@/assets/master-league-icon-sharp.jpg.asset.json";
 
 export const LOGO_URL = brandAsset.url;
 
@@ -20,7 +20,7 @@ export function AppHeader() {
           <img
             src={LOGO_URL}
             alt="Master League Tornei"
-            className="h-10 w-10 rounded-xl border border-primary/40 object-cover"
+            className="h-10 w-10 rounded-xl border border-primary/40 object-cover [image-rendering:auto]"
           />
           <span className="display text-sm leading-tight text-primary">Master League</span>
         </Link>
