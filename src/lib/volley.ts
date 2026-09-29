@@ -1,9 +1,9 @@
 export type VolleySet = { a: number; b: number };
 export type VolleyState = { sets: VolleySet[]; pointsA: number; pointsB: number; done?: boolean };
 
-export const isVolley = (sportId: string) => sportId === "pallavolo" || sportId === "beachvolley";
+export const isVolley = (sportId: string) => sportId === "volley" || sportId === "pallavolo" || sportId === "beachvolley";
 export const isBeachVolley = (sportId: string) => sportId === "beachvolley";
-export const volleyRosterLimit = (sportId: string) => isBeachVolley(sportId) ? 2 : sportId === "pallavolo" ? 6 : undefined;
+export const volleyRosterLimit = (sportId: string) => isBeachVolley(sportId) ? 2 : sportId === "volley" || sportId === "pallavolo" ? 6 : undefined;
 export const emptyVolley = (): VolleyState => ({ sets: [], pointsA: 0, pointsB: 0, done: false });
 
 export const volleySetsWon = (state: VolleyState) => state.sets.reduce(

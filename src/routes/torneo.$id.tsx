@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { CalendarPlus, Pencil, Save, Share2, Trash2 } from "lucide-react";
 import { LogoPicker } from "@/components/LogoPicker";
+import { JerseyPicker } from "@/components/JerseyPicker";
 import { ShareDialog } from "@/components/ShareDialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
@@ -26,7 +27,12 @@ import {
   playerFouls,
   teamPeriodFouls,
   type BasketState,
+  basketRosterLimit,
+  emptyBasket3x3,
+  isBasket3x3,
+  isBasket3x3Finished,
 } from "@/lib/basket";
+import { jerseyInitials, resolveJersey } from "@/data/jerseys";
 import {
   addPoint,
   emptyTennis,
@@ -145,6 +151,7 @@ function TournamentPage() {
           <h1 className="truncate text-xl gold-text">{tournament.name}</h1>
           <p className="text-xs text-muted-foreground">
             {sport.icon} {sportName(sport.id, sport.name)}
+          {tournament.basketMode === "3x3" ? " · 3vs3" : ""}
           {isFootball(tournament.sport) && variantLabel(tournament.variant)
             ? ` (${variantLabel(tournament.variant)})`
             : ""}{" "}
@@ -170,7 +177,7 @@ function TournamentPage() {
 
 
       <nav className="-mx-4 mt-4 flex gap-2 overflow-x-auto px-4 pb-1">
-        {TABS.filter((x) => x.id !== "finale" || tournament.format === "groups" || tournament.format === "singleko" || tournament.format === "knockout" || isBasket(tournament.sport)).map((t) => (
+        {TABS.filter((x) => x.id !== "finale" || tournament.format === "groups" || tournament.format === "singleko" || tournament.format === "knockout" || (isBasket(tournament.sport) && !isBasket3x3(tournament.basketMode))).map((t) => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
@@ -219,11 +226,12 @@ const teamLogoSource = (team?: Team) =>
 function TeamIdentity({ team, sportId, compact = false }: { team: Team | undefined; sportId: string; compact?: boolean }) {
   if (!team) return <span>—</span>;
   const size = compact ? "h-9 w-9" : "h-12 w-12";
-  const color = team.color1 ?? teamColor(team.name);
+  const preset = resolveJersey(team.jerseyId);
+  const color = preset?.primary ?? team.color1 ?? teamColor(team.name);
   return (
     <div className="flex min-w-0 items-center gap-2">
       <img src={teamLogoSource(team)} alt="" className={`${size} shrink-0 rounded-full object-cover`} />
-      <img src={renderTeamKit(sportId, color)} alt="" className={`${size} shrink-0 object-contain`} />
+      <img src={renderTeamKit(sportId, color, 10, preset?.secondary, preset ? jerseyInitials(preset.club) : undefined)} alt="" className={`${size} shrink-0 object-contain`} />
       <span className="truncate text-sm font-bold" translate="no">{team.name}</span>
     </div>
   );
@@ -247,6 +255,7 @@ function TeamsTab({ t, patch }: { t: Tournament; patch: Patch }) {
   const [name, setName] = useState("");
   const [openTeam, setOpenTeam] = useState<string | null>(null);
   const [logoTeamId, setLogoTeamId] = useState<string | null>(null);
+  const [jerseyTeamId, setJerseyTeamId] = useState<string | null>(null);
 
   // Tornei a 2 gironi: se nessuna squadra ha un girone, dividile automaticamente.
   const needsSplit =
@@ -286,6 +295,7 @@ function TeamsTab({ t, patch }: { t: Tournament; patch: Patch }) {
   };
 
   const selectedTeam = t.teams.find((team) => team.id === logoTeamId);
+  const selectedJerseyTeam = t.teams.find((team) => team.id === jerseyTeamId);
 
   return (
     <div className="space-y-4">
@@ -384,6 +394,14 @@ function TeamsTab({ t, patch }: { t: Tournament; patch: Patch }) {
               )}
             </div>
             <button
+              type="button"
+              onClick={() => setJerseyTeamId(team.id)}
+              aria-label={`Maglia ${team.name}`}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-primary/40 bg-secondary text-lg"
+            >
+              {sportKitIcon(t.sport)}
+            </button>
+            <button
               onClick={() => setOpenTeam(openTeam === team.id ? null : team.id)}
               className="btn-ghost-gold px-3 py-1 text-xs"
             >
@@ -433,6 +451,15 @@ function TeamsTab({ t, patch }: { t: Tournament; patch: Patch }) {
           )}
         </DialogContent>
       </Dialog>
+      <Dialog open={Boolean(jerseyTeamId)} onOpenChange={(open) => !open && setJerseyTeamId(null)}>
+        <DialogContent className="card-night max-h-[88vh] w-[calc(100%-2rem)] max-w-md overflow-y-auto p-4">
+          <DialogHeader><DialogTitle className="gold-text pr-8">Scegli maglia{selectedJerseyTeam ? ` · ${selectedJerseyTeam.name}` : ""}</DialogTitle></DialogHeader>
+          {selectedJerseyTeam && <JerseyPicker sportId={t.sport} value={selectedJerseyTeam.jerseyId} onChange={(preset) => {
+            patch((cur) => ({ ...cur, teams: cur.teams.map((team) => team.id === selectedJerseyTeam.id ? { ...team, jerseyId: preset.id, color1: preset.primary } : team) }));
+            setJerseyTeamId(null);
+          }} />}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -457,7 +484,7 @@ function Roster({ t, team, patch }: { t: Tournament; team: Team; patch: Patch })
   const addPlayer = () => {
     if (!draft.name.trim()) return;
     const target = t.teams.find((x) => x.id === targetTeamId);
-    const limit = volleyRosterLimit(t.sport);
+    const limit = volleyRosterLimit(t.sport) ?? (isBasket(t.sport) ? basketRosterLimit(t.basketMode) : undefined);
     if (limit !== undefined && (target?.players.length ?? 0) >= limit) return;
     patch((cur) => ({
       ...cur,
@@ -469,7 +496,7 @@ function Roster({ t, team, patch }: { t: Tournament; team: Team; patch: Patch })
     }));
     setDraft({ name: "", country: "IT", birth: "", season: "", role: sport.roles[0]!.id, paid: false });
   };
-  const rosterLimit = volleyRosterLimit(t.sport);
+  const rosterLimit = volleyRosterLimit(t.sport) ?? (isBasket(t.sport) ? basketRosterLimit(t.basketMode) : undefined);
   const targetRosterCount = t.teams.find((x) => x.id === targetTeamId)?.players.length ?? 0;
 
   return (
@@ -899,6 +926,7 @@ function LiveTab({
   const sport = getSport(t.sport);
   const racket = isRacket(t.sport);
   const basket = isBasket(t.sport);
+  const basket3x3 = basket && isBasket3x3(t.basketMode);
   const volley = isVolley(t.sport);
   const { t: tr, scoreName } = useI18n();
   const statusLabel = (s: string) =>
@@ -986,7 +1014,9 @@ function LiveTab({
                   key={s}
                   onClick={() => setMatch(m.id, (x) => {
                     if (basket && s === "finita" && x.scoreA === x.scoreB) {
-                      const state = x.basket ?? emptyBasket();
+                      const three = isBasket3x3(t.basketMode);
+                      const state = x.basket ?? (three ? emptyBasket3x3() : emptyBasket());
+                      if (three) return { ...x, status: "live", basket: { ...state, overtime: true, overtimeStartA: x.scoreA, overtimeStartB: x.scoreB, clockSeconds: 0, shotClockSeconds: 12, running: false } };
                       const period = Math.max(5, state.period + 1);
                       return {
                         ...x,
@@ -1060,7 +1090,8 @@ function BasketBoard({
   setMatch: (id: string, fn: (x: Match) => Match) => void;
 }) {
   const { t: tr } = useI18n();
-  const state: BasketState = m.basket ?? emptyBasket();
+  const three = isBasket3x3(t.basketMode);
+  const state: BasketState = m.basket ?? (three ? emptyBasket3x3() : emptyBasket());
   const roster = t.teams
     .filter((team) => team.id === m.teamA || team.id === m.teamB)
     .flatMap((team) => team.players.map((player) => ({ player, team })));
@@ -1071,28 +1102,43 @@ function BasketBoard({
     if (!state.running || state.clockSeconds <= 0) return;
     const timer = window.setInterval(() => {
       setMatch(m.id, (current) => {
-        const basket = current.basket ?? emptyBasket();
+        const basket = current.basket ?? (three ? emptyBasket3x3() : emptyBasket());
         if (!basket.running || basket.clockSeconds <= 0) return current;
         const clockSeconds = basket.clockSeconds - 1;
+        const shotClockSeconds = Math.max(0, (basket.shotClockSeconds ?? 12) - 1);
+        if (three && clockSeconds === 0) {
+          if (current.scoreA === current.scoreB) {
+            return { ...current, status: "live", basket: { ...basket, clockSeconds: 0, shotClockSeconds: 12, running: false, overtime: true, overtimeStartA: current.scoreA, overtimeStartB: current.scoreB } };
+          }
+          return { ...current, status: "finita", basket: { ...basket, clockSeconds: 0, shotClockSeconds, running: false } };
+        }
+        if (!three) return { ...current, status: "live", basket: { ...basket, clockSeconds, running: clockSeconds > 0 } };
         return {
           ...current,
           status: "live",
-          basket: { ...basket, clockSeconds, running: clockSeconds > 0 },
+          basket: { ...basket, clockSeconds, shotClockSeconds, running: clockSeconds > 0 },
         };
       });
     }, 1000);
     return () => window.clearInterval(timer);
-  }, [m.id, setMatch, state.running, state.clockSeconds]);
+  }, [m.id, setMatch, state.running, state.clockSeconds, three]);
 
   const updateBasket = (fn: (basket: BasketState) => BasketState) =>
-    setMatch(m.id, (current) => ({ ...current, basket: fn(current.basket ?? emptyBasket()) }));
+    setMatch(m.id, (current) => ({ ...current, basket: fn(current.basket ?? (three ? emptyBasket3x3() : emptyBasket())) }));
   const addScore = (side: "A" | "B", points: number) =>
-    setMatch(m.id, (current) => ({
-      ...current,
-      status: "live",
-      [side === "A" ? "scoreA" : "scoreB"]: current[side === "A" ? "scoreA" : "scoreB"] + points,
-    }));
+    setMatch(m.id, (current) => {
+      const scoreA = current.scoreA + (side === "A" ? points : 0);
+      const scoreB = current.scoreB + (side === "B" ? points : 0);
+      const basket = { ...(current.basket ?? (three ? emptyBasket3x3() : emptyBasket())), ...(three ? { shotClockSeconds: 12 } : {}) };
+      return { ...current, scoreA, scoreB, basket, status: three && isBasket3x3Finished(basket, scoreA, scoreB) ? "finita" : "live" };
+    });
   const nextPeriod = () => {
+    if (three) {
+      if (state.clockSeconds > 0) return;
+      if (m.scoreA === m.scoreB && !state.overtime) updateBasket((basket) => ({ ...basket, overtime: true, overtimeStartA: m.scoreA, overtimeStartB: m.scoreB, shotClockSeconds: 12, running: false }));
+      else if (m.scoreA !== m.scoreB) setMatch(m.id, (current) => ({ ...current, status: "finita" }));
+      return;
+    }
     if (state.clockSeconds > 0) return;
     if (state.period < 4 || m.scoreA === m.scoreB) {
       updateBasket((basket) => {
@@ -1111,7 +1157,7 @@ function BasketBoard({
       fouls: [...basket.fouls, { id: uid(), playerId, teamId: found.team.id, period: basket.period }],
     }));
   };
-  const periodLabel = state.period <= 4
+  const periodLabel = three ? (state.overtime ? "OVERTIME · PRIMI 2 PUNTI" : "FIBA 3x3 · METÀ CAMPO") : state.period <= 4
     ? tr("bk.quarter", { n: state.period })
     : tr("bk.overtime", { n: state.period - 4 });
 
@@ -1121,10 +1167,11 @@ function BasketBoard({
         <span>{periodLabel}</span>
         <span className="display text-3xl tabular-nums">{formatBasketClock(state.clockSeconds)}</span>
       </div>
+      {three && <div className="mt-2 flex items-center justify-between rounded-lg border border-primary/30 bg-background/50 px-3 py-2"><span className="text-[10px] font-bold uppercase text-muted-foreground">Shot clock</span><span className={`display text-2xl tabular-nums ${(state.shotClockSeconds ?? 12) <= 3 ? "text-destructive" : "text-primary"}`}>{state.shotClockSeconds ?? 12}</span><button type="button" onClick={() => updateBasket((basket) => ({ ...basket, shotClockSeconds: 12 }))} className="btn-ghost-gold px-3 py-1 text-[10px]">12s</button></div>}
       <div className="mt-2 grid grid-cols-2 gap-2">
         {(["A", "B"] as const).map((side) => (
-          <div key={side} className="grid grid-cols-3 gap-1">
-            {[1, 2, 3].map((points) => (
+          <div key={side} className={`grid gap-1 ${three ? "grid-cols-2" : "grid-cols-3"}`}>
+            {(three ? [1, 2] : [1, 2, 3]).map((points) => (
               <button key={points} onClick={() => addScore(side, points)} className="btn-gold py-2 text-xs">
                 +{points}
               </button>
@@ -1132,24 +1179,24 @@ function BasketBoard({
           </div>
         ))}
       </div>
-      <div className="mt-2 grid grid-cols-2 gap-2 text-center text-[11px]">
+      {!three && <div className="mt-2 grid grid-cols-2 gap-2 text-center text-[11px]">
         {[m.teamA, m.teamB].map((teamId) => {
           const fouls = teamPeriodFouls(state, teamId);
           return <p key={teamId} className={fouls >= 5 ? "font-bold text-destructive" : "text-muted-foreground"}>
             {fouls} {tr("bk.foul")} {fouls >= 5 ? `· ${tr("bk.bonus")}` : ""}
           </p>;
         })}
-      </div>
+      </div>}
       <div className="mt-3 grid grid-cols-2 gap-2">
         <button
           onClick={() => updateBasket((basket) => ({ ...basket, running: !basket.running }))}
-          disabled={state.clockSeconds === 0}
+          disabled={state.clockSeconds === 0 || m.status === "finita"}
           className="btn-ghost-gold py-2 text-xs disabled:opacity-40"
         >
           {state.running ? `⏸ ${tr("bk.pause")}` : `▶ ${tr("bk.start")}`}
         </button>
-        <button onClick={nextPeriod} disabled={state.clockSeconds > 0} className="btn-ghost-gold py-2 text-xs disabled:opacity-40">
-          {tr("bk.next")}
+        <button onClick={nextPeriod} disabled={state.clockSeconds > 0 || m.status === "finita"} className="btn-ghost-gold py-2 text-xs disabled:opacity-40">
+          {three ? (state.overtime ? "Overtime" : "Chiudi tempo") : tr("bk.next")}
         </button>
       </div>
       {roster.length ? (
@@ -1167,9 +1214,9 @@ function BasketBoard({
       {roster.filter(({ player }) => playerFouls(state, player.id) >= 5).map(({ player }) => (
         <p key={player.id} className="mt-1 text-xs text-destructive">{player.name}: {tr("bk.fouledOut")}</p>
       ))}
-      <p className="mt-3 text-center text-[11px] text-muted-foreground">{tr("bk.rules")}</p>
+      <p className="mt-3 text-center text-[11px] text-muted-foreground">{three ? "FIBA 3x3 · primo a 21 · 10:00 · 12 secondi · overtime ai primi 2 punti" : tr("bk.rules")}</p>
       <button
-        onClick={() => setMatch(m.id, (current) => ({ ...current, scoreA: 0, scoreB: 0, status: "programmata", basket: emptyBasket() }))}
+        onClick={() => setMatch(m.id, (current) => ({ ...current, scoreA: 0, scoreB: 0, status: "programmata", basket: three ? emptyBasket3x3() : emptyBasket() }))}
         className="btn-ghost-gold mt-2 w-full py-2 text-xs"
       >
         {tr("bk.reset")}
@@ -1448,6 +1495,7 @@ function StandingsTable({
   const sport = getSport(t.sport);
   const rows = standings(t, sport.winPoints, sport.drawPoints, group);
   const basket = isBasket(t.sport);
+  const basket3x3 = basket && isBasket3x3(t.basketMode);
   const volley = isVolley(t.sport);
   const volleyRows = volley ? rows.map((row) => {
     let sf = 0, sa = 0, pf = 0, pa = 0, pts = 0;
@@ -1475,6 +1523,7 @@ function StandingsTable({
           {tr(group === "A" ? "groups.a" : "groups.b")}
         </p>
       )}
+      {basket3x3 && <div className="flex items-center justify-between border-b border-primary/20 px-3 py-3"><p className="text-xs font-black uppercase text-primary">Classifica Basket 3vs3</p><span className="rounded-full bg-primary px-2 py-1 text-[10px] font-black text-primary-foreground">3vs3</span></div>}
       <table className={`${basket || volley ? "min-w-[34rem]" : "w-full"} text-xs`}>
         <thead className="bg-secondary/70 text-muted-foreground">
           <tr>
@@ -1540,7 +1589,7 @@ function StandingsTable({
       {isRacket(t.sport) && (
         <p className="px-3 pb-3 text-[11px] text-muted-foreground">{tr("tn.tableHint")}</p>
       )}
-      {basket && <p className="px-3 pb-3 text-[11px] text-muted-foreground">{tr("bk.tableHint")}</p>}
+      {basket && <p className="px-3 pb-3 text-[11px] text-muted-foreground">{basket3x3 ? "Classifica separata 3vs3: vittorie, sconfitte, punti realizzati/subiti, differenza e percentuale vittorie." : tr("bk.tableHint")}</p>}
       {volley && <p className="px-3 pb-3 text-[11px] text-muted-foreground">{tr("vl.tableHint")}</p>}
       {shownRows.length === 0 && (
         <p className="p-4 text-center text-sm text-muted-foreground">{tr("tbl.noTeams")}</p>
@@ -1597,9 +1646,10 @@ function FinalTab({ t, patch }: { t: Tournament; patch: Patch }) {
   const { t: tr } = useI18n();
   const sport = getSport(t.sport);
   const basket = isBasket(t.sport);
+  const basket3x3 = basket && isBasket3x3(t.basketMode);
   const singleKo = t.format === "singleko";
   const ko = t.matches.filter((m) => m.ko);
-  const ready = basket
+  const ready = basket && !basket3x3
     ? t.teams.length >= 8 && t.matches.some((m) => !m.ko) && t.matches.filter((m) => !m.ko).every((m) => m.status === "finita")
     : groupPhaseDone(t);
   const perGroup = Math.min(
@@ -1613,7 +1663,7 @@ function FinalTab({ t, patch }: { t: Tournament; patch: Patch }) {
   const [err, setErr] = useState("");
 
   const generate = () => {
-    const built = basket
+    const built = basket && !basket3x3
       ? buildBasketPlayoffs(t)
       : singleKo
         ? buildKnockoutSingle(t, q, sport.winPoints, sport.drawPoints)

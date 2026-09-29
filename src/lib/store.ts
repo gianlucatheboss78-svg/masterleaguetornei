@@ -21,6 +21,8 @@ export type Team = {
   name: string;
   logo?: string;
   color1?: string;
+  /** Optional world-league jersey preset. Older teams keep their generated kit. */
+  jerseyId?: string;
   group?: GroupId;
   players: Player[];
 };
@@ -80,6 +82,8 @@ export type Tournament = {
   sport: string;
   /** Variante del calcio: a5 | a6 | a7 | a8 | a11 */
   variant?: string;
+  /** Basket mode. Missing means legacy 5x5. */
+  basketMode?: "5x5" | "3x3";
   logo?: string;
   city: string;
   startDate: string;

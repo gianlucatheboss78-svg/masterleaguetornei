@@ -11,7 +11,9 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as ClassificheRouteImport } from './routes/classifiche'
 import { Route as ProRouteImport } from './routes/pro'
+import { Route as RegolamentoRouteImport } from './routes/regolamento'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as TournamentsRouteImport } from './routes/tournaments'
 import { Route as TorneoIdRouteImport } from './routes/torneo.$id'
@@ -26,9 +28,19 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ClassificheRoute = ClassificheRouteImport.update({
+  id: '/classifiche',
+  path: '/classifiche',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProRoute = ProRouteImport.update({
   id: '/pro',
   path: '/pro',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegolamentoRoute = RegolamentoRouteImport.update({
+  id: '/regolamento',
+  path: '/regolamento',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsRoute = SettingsRouteImport.update({
@@ -50,7 +62,9 @@ const TorneoIdRoute = TorneoIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/classifiche': typeof ClassificheRoute
   '/pro': typeof ProRoute
+  '/regolamento': typeof RegolamentoRoute
   '/settings': typeof SettingsRoute
   '/tournaments': typeof TournamentsRoute
   '/torneo/$id': typeof TorneoIdRoute
@@ -58,7 +72,9 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/classifiche': typeof ClassificheRoute
   '/pro': typeof ProRoute
+  '/regolamento': typeof RegolamentoRoute
   '/settings': typeof SettingsRoute
   '/tournaments': typeof TournamentsRoute
   '/torneo/$id': typeof TorneoIdRoute
@@ -67,7 +83,9 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/classifiche': typeof ClassificheRoute
   '/pro': typeof ProRoute
+  '/regolamento': typeof RegolamentoRoute
   '/settings': typeof SettingsRoute
   '/tournaments': typeof TournamentsRoute
   '/torneo/$id': typeof TorneoIdRoute
@@ -75,14 +93,31 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/auth' | '/pro' | '/settings' | '/tournaments' | '/torneo/$id'
+    | '/'
+    | '/auth'
+    | '/classifiche'
+    | '/pro'
+    | '/regolamento'
+    | '/settings'
+    | '/tournaments'
+    | '/torneo/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/pro' | '/settings' | '/tournaments' | '/torneo/$id'
+  to:
+    | '/'
+    | '/auth'
+    | '/classifiche'
+    | '/pro'
+    | '/regolamento'
+    | '/settings'
+    | '/tournaments'
+    | '/torneo/$id'
   id:
     | '__root__'
     | '/'
     | '/auth'
+    | '/classifiche'
     | '/pro'
+    | '/regolamento'
     | '/settings'
     | '/tournaments'
     | '/torneo/$id'
@@ -91,7 +126,9 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
+  ClassificheRoute: typeof ClassificheRoute
   ProRoute: typeof ProRoute
+  RegolamentoRoute: typeof RegolamentoRoute
   SettingsRoute: typeof SettingsRoute
   TournamentsRoute: typeof TournamentsRoute
   TorneoIdRoute: typeof TorneoIdRoute
@@ -113,11 +150,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/classifiche': {
+      id: '/classifiche'
+      path: '/classifiche'
+      fullPath: '/classifiche'
+      preLoaderRoute: typeof ClassificheRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pro': {
       id: '/pro'
       path: '/pro'
       fullPath: '/pro'
       preLoaderRoute: typeof ProRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/regolamento': {
+      id: '/regolamento'
+      path: '/regolamento'
+      fullPath: '/regolamento'
+      preLoaderRoute: typeof RegolamentoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings': {
@@ -147,7 +198,9 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
+  ClassificheRoute: ClassificheRoute,
   ProRoute: ProRoute,
+  RegolamentoRoute: RegolamentoRoute,
   SettingsRoute: SettingsRoute,
   TournamentsRoute: TournamentsRoute,
   TorneoIdRoute: TorneoIdRoute,

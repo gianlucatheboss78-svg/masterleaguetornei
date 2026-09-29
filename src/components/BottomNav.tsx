@@ -1,9 +1,10 @@
-import { Home, Settings, Trophy } from "lucide-react";
+import { BarChart3, Home, Settings, Trophy } from "lucide-react";
 import { Link, useRouterState } from "@tanstack/react-router";
 
 const items = [
   { to: "/" as const, label: "Home", icon: Home },
   { to: "/tournaments" as const, label: "Tornei", icon: Trophy },
+  { to: "/classifiche" as const, label: "Classifiche", icon: BarChart3 },
   { to: "/settings" as const, label: "Impostazioni", icon: Settings },
 ];
 
@@ -13,7 +14,7 @@ export function BottomNav() {
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur" aria-label="Navigazione principale">
-      <div className="mx-auto grid h-16 w-full max-w-lg grid-cols-3">
+      <div className="mx-auto grid h-16 w-full max-w-lg grid-cols-4">
         {items.map(({ to, label, icon: Icon }) => {
           const active = pathname === to;
           return (
