@@ -1105,13 +1105,14 @@ function BasketBoard({
         const basket = current.basket ?? (three ? emptyBasket3x3() : emptyBasket());
         if (!basket.running || basket.clockSeconds <= 0) return current;
         const clockSeconds = basket.clockSeconds - 1;
-        const shotClockSeconds = three ? Math.max(0, (basket.shotClockSeconds ?? 12) - 1) : basket.shotClockSeconds;
+        const shotClockSeconds = Math.max(0, (basket.shotClockSeconds ?? 12) - 1);
         if (three && clockSeconds === 0) {
           if (current.scoreA === current.scoreB) {
             return { ...current, status: "live", basket: { ...basket, clockSeconds: 0, shotClockSeconds: 12, running: false, overtime: true, overtimeStartA: current.scoreA, overtimeStartB: current.scoreB } };
           }
           return { ...current, status: "finita", basket: { ...basket, clockSeconds: 0, shotClockSeconds, running: false } };
         }
+        if (!three) return { ...current, status: "live", basket: { ...basket, clockSeconds, running: clockSeconds > 0 } };
         return {
           ...current,
           status: "live",
@@ -1645,6 +1646,7 @@ function FinalTab({ t, patch }: { t: Tournament; patch: Patch }) {
   const { t: tr } = useI18n();
   const sport = getSport(t.sport);
   const basket = isBasket(t.sport);
+  const basket3x3 = basket && isBasket3x3(t.basketMode);
   const singleKo = t.format === "singleko";
   const ko = t.matches.filter((m) => m.ko);
   const ready = basket && !basket3x3

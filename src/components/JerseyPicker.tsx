@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { JERSEY_PRESETS, jerseyInitials, type JerseyPreset } from "@/data/jerseys";
 import { renderTeamKit } from "@/data/teamLogos";
 
-export function JerseyPicker({ sportId, value, onChange }: { sportId: string; value?: string; onChange: (preset: JerseyPreset) => void }) {
+export function JerseyPicker({ sportId, value, onChange }: { sportId: string; value?: string | undefined; onChange: (preset: JerseyPreset) => void }) {
   const sport = sportId === "basket" ? "basket" : "football";
   const leagues = useMemo(() => [...new Set(JERSEY_PRESETS.filter((item) => item.sport === sport).map((item) => item.league))], [sport]);
   const [league, setLeague] = useState(leagues[0] ?? "");
