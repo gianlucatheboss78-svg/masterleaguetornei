@@ -32,7 +32,7 @@ import {
   isBasket3x3,
   isBasket3x3Finished,
 } from "@/lib/basket";
-import { jerseyInitials, resolveJersey } from "@/data/jerseys";
+import { defaultJerseyForTeam, jerseyInitials, resolveJersey } from "@/data/jerseys";
 import {
   addPoint,
   emptyTennis,
@@ -267,6 +267,8 @@ function TeamsTab({ t, patch }: { t: Tournament; patch: Patch }) {
   const addTeam = () => {
     if (!name.trim()) return;
     patch((cur) => {
+      const teamName = name.trim();
+      const jersey = defaultJerseyForTeam(teamName, cur.sport);
       const auto =
         cur.format === "groups"
           ? {
@@ -282,9 +284,10 @@ function TeamsTab({ t, patch }: { t: Tournament; patch: Patch }) {
           ...cur.teams,
           {
             id: uid(),
-            name: name.trim(),
-            logo: createTeamLogo(name.trim()).id,
-            color1: teamColor(name.trim()),
+            name: teamName,
+            logo: createTeamLogo(teamName).id,
+            jerseyId: jersey.id,
+            color1: jersey.primary,
             players: [],
             ...auto,
           },
@@ -545,7 +548,11 @@ function Roster({ t, team, patch }: { t: Tournament; team: Team; patch: Patch })
             {draft.photo ? (
               <img src={draft.photo} alt="" className="h-full w-full object-cover" />
             ) : (
-              "📷"
+              <img
+                src={renderPlayerAvatar(`draft-${targetTeamId}`, draft.name || "Nuovo giocatore", draft.country)}
+                alt=""
+                className="h-full w-full object-cover"
+              />
             )}
           </button>
           <input

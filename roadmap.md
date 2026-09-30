@@ -9,3 +9,6 @@
 - [x] Add world-league jersey presets and team jersey selection.
 - [x] Add backward-compatible FIBA Basket 3vs3 creation, scoring, roster, badges, and standings.
 - [x] Verify the final package on mobile and desktop, then publish.
+- [ ] Add the full-width 6 SPORT entry and unlocked world-kit selection page.
+- [ ] Replace initial-only team identities, restore roster faces, and remove the duplicate IT marker.
+- [ ] Verify the focused fixes on mobile and desktop.
