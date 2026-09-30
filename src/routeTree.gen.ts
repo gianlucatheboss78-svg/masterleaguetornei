@@ -15,6 +15,7 @@ import { Route as ClassificheRouteImport } from './routes/classifiche'
 import { Route as ProRouteImport } from './routes/pro'
 import { Route as RegolamentoRouteImport } from './routes/regolamento'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as SportRouteImport } from './routes/sport'
 import { Route as TournamentsRouteImport } from './routes/tournaments'
 import { Route as TorneoIdRouteImport } from './routes/torneo.$id'
 
@@ -48,6 +49,11 @@ const SettingsRoute = SettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SportRoute = SportRouteImport.update({
+  id: '/sport',
+  path: '/sport',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TournamentsRoute = TournamentsRouteImport.update({
   id: '/tournaments',
   path: '/tournaments',
@@ -66,6 +72,7 @@ export interface FileRoutesByFullPath {
   '/pro': typeof ProRoute
   '/regolamento': typeof RegolamentoRoute
   '/settings': typeof SettingsRoute
+  '/sport': typeof SportRoute
   '/tournaments': typeof TournamentsRoute
   '/torneo/$id': typeof TorneoIdRoute
 }
@@ -76,6 +83,7 @@ export interface FileRoutesByTo {
   '/pro': typeof ProRoute
   '/regolamento': typeof RegolamentoRoute
   '/settings': typeof SettingsRoute
+  '/sport': typeof SportRoute
   '/tournaments': typeof TournamentsRoute
   '/torneo/$id': typeof TorneoIdRoute
 }
@@ -87,6 +95,7 @@ export interface FileRoutesById {
   '/pro': typeof ProRoute
   '/regolamento': typeof RegolamentoRoute
   '/settings': typeof SettingsRoute
+  '/sport': typeof SportRoute
   '/tournaments': typeof TournamentsRoute
   '/torneo/$id': typeof TorneoIdRoute
 }
@@ -99,6 +108,7 @@ export interface FileRouteTypes {
     | '/pro'
     | '/regolamento'
     | '/settings'
+    | '/sport'
     | '/tournaments'
     | '/torneo/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -109,6 +119,7 @@ export interface FileRouteTypes {
     | '/pro'
     | '/regolamento'
     | '/settings'
+    | '/sport'
     | '/tournaments'
     | '/torneo/$id'
   id:
@@ -119,6 +130,7 @@ export interface FileRouteTypes {
     | '/pro'
     | '/regolamento'
     | '/settings'
+    | '/sport'
     | '/tournaments'
     | '/torneo/$id'
   fileRoutesById: FileRoutesById
@@ -130,6 +142,7 @@ export interface RootRouteChildren {
   ProRoute: typeof ProRoute
   RegolamentoRoute: typeof RegolamentoRoute
   SettingsRoute: typeof SettingsRoute
+  SportRoute: typeof SportRoute
   TournamentsRoute: typeof TournamentsRoute
   TorneoIdRoute: typeof TorneoIdRoute
 }
@@ -178,6 +191,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sport': {
+      id: '/sport'
+      path: '/sport'
+      fullPath: '/sport'
+      preLoaderRoute: typeof SportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/tournaments': {
       id: '/tournaments'
       path: '/tournaments'
@@ -202,6 +222,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProRoute: ProRoute,
   RegolamentoRoute: RegolamentoRoute,
   SettingsRoute: SettingsRoute,
+  SportRoute: SportRoute,
   TournamentsRoute: TournamentsRoute,
   TorneoIdRoute: TorneoIdRoute,
 }
