@@ -217,7 +217,9 @@ type Patch = (fn: (t: Tournament) => Tournament) => void;
 const logoSource = (value?: string) => {
   if (!value) return undefined;
   const logo = TEAM_LOGOS.find((item) => item.id === value);
-  return logo ? renderTeamLogo(logo) : value.startsWith("initials:") ? renderTeamLogo(resolveTeamLogo(value)) : value;
+  return logo || value.startsWith("initials:") || value.startsWith("crest:")
+    ? renderTeamLogo(logo ?? resolveTeamLogo(value))
+    : value;
 };
 
 const teamLogoSource = (team?: Team) =>
