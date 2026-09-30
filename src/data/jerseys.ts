@@ -68,5 +68,7 @@ const jerseyHash = (value: string) =>
 export function defaultJerseyForTeam(name: string, sportId: string): JerseyPreset {
   const kind = sportId === "basket" ? "basket" : "football";
   const available = JERSEY_PRESETS.filter((preset) => preset.sport === kind);
-  return available[jerseyHash(name) % available.length] ?? JERSEY_PRESETS[0]!;
+  const preset = available[jerseyHash(name) % available.length] ?? JERSEY_PRESETS[0];
+  if (!preset) throw new Error("Nessuna maglia disponibile");
+  return preset;
 }
