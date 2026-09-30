@@ -61,3 +61,12 @@ export const JERSEY_PRESETS: JerseyPreset[] = [
 
 export const jerseyInitials = (club: string) => club.split(/\s+/).map((word) => word[0]).join("").slice(0, 3).toUpperCase();
 export const resolveJersey = (id?: string) => JERSEY_PRESETS.find((preset) => preset.id === id);
+
+const jerseyHash = (value: string) =>
+  [...value.toLocaleUpperCase()].reduce((total, char) => (total * 31 + char.charCodeAt(0)) >>> 0, 7);
+
+export function defaultJerseyForTeam(name: string, sportId: string): JerseyPreset {
+  const kind = sportId === "basket" ? "basket" : "football";
+  const available = JERSEY_PRESETS.filter((preset) => preset.sport === kind);
+  return available[jerseyHash(name) % available.length] ?? JERSEY_PRESETS[0]!;
+}

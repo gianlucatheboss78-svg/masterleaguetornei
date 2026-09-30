@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { TEAM_LOGOS as teamLogos } from "@/data/teamLogos";
+import { renderTeamLogo, TEAM_LOGOS as teamLogos } from "@/data/teamLogos";
 
 type Props = {
   value?: string | undefined;
@@ -33,10 +33,9 @@ export function LogoPicker({ value, onChange, onSelect, placeholder }: Props) {
           <button
             key={logo.id}
             onClick={() => pick(logo.id)}
-            className="aspect-square rounded-full flex items-center justify-center text-2xl border border-yellow-500/20"
-            style={{ background: logo.bgColor }}
+            className="aspect-square overflow-hidden rounded-full border border-primary/20"
           >
-            {logo.icon}
+            <img src={renderTeamLogo(logo)} alt={logo.name} className="h-full w-full object-cover" />
           </button>
         ))}
       </div>

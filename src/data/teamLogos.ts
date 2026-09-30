@@ -36,13 +36,13 @@ export function createTeamLogo(name: string): TeamLogo {
   const paletteIndex = hash(name) % PRO_PALETTES.length;
   const [bgColor, textColor] = PRO_PALETTES[paletteIndex] ?? PRO_PALETTES[0];
   return {
-    id: `initials:${encodeURIComponent(name.trim() || "Master League")}`,
+    id: `crest:${encodeURIComponent(name.trim() || "Master League")}`,
     category: "generico",
     name: name.trim() || "Master League",
-    searchTags: ["iniziali", "automatico", "pro"],
+    searchTags: ["stemma", "automatico", "pro"],
     bgColor,
     textColor,
-    icon: teamInitials(name),
+    icon: "",
   };
 }
 
@@ -55,12 +55,17 @@ export const teamLogos = TEAM_LOGOS;
 const svgUrl = (svg: string) => `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
 
 export function renderTeamLogo(logo: TeamLogo): string {
-  const initials = logo.icon || teamInitials(logo.name);
-  return svgUrl(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160"><circle cx="80" cy="80" r="76" fill="${logo.bgColor}" stroke="#E5FF00" stroke-width="7"/><circle cx="80" cy="80" r="62" fill="none" stroke="${logo.textColor ?? "#FFFFFF"}" stroke-opacity=".35" stroke-width="2"/><text x="80" y="92" text-anchor="middle" font-family="Arial,sans-serif" font-size="54" font-weight="900" fill="${logo.textColor ?? "#FFFFFF"}">${initials}</text></svg>`);
+  if (logo.id.startsWith("initials:")) {
+    const initials = logo.icon || teamInitials(logo.name);
+    return svgUrl(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160"><circle cx="80" cy="80" r="76" fill="${logo.bgColor}" stroke="#E5FF00" stroke-width="7"/><circle cx="80" cy="80" r="62" fill="none" stroke="${logo.textColor ?? "#FFFFFF"}" stroke-opacity=".35" stroke-width="2"/><text x="80" y="92" text-anchor="middle" font-family="Arial,sans-serif" font-size="54" font-weight="900" fill="${logo.textColor ?? "#FFFFFF"}">${initials}</text></svg>`);
+  }
+  const accent = logo.textColor ?? "#FFFFFF";
+  return svgUrl(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160"><circle cx="80" cy="80" r="76" fill="#0A1931" stroke="#D4AF37" stroke-width="7"/><path d="M80 17 129 36v39c0 36-20 57-49 70-29-13-49-34-49-70V36Z" fill="${logo.bgColor}" stroke="${accent}" stroke-width="5"/><path d="m80 42 10 21 23 3-17 16 4 23-20-11-20 11 4-23-17-16 23-3Z" fill="${accent}"/><circle cx="80" cy="80" r="55" fill="none" stroke="#D4AF37" stroke-width="3"/></svg>`);
 }
 
 export function resolveTeamLogo(value?: string, fallbackName = "Master League"): TeamLogo {
   if (value?.startsWith("initials:")) return createTeamLogo(decodeURIComponent(value.slice(9)));
+  if (value?.startsWith("crest:")) return createTeamLogo(decodeURIComponent(value.slice(6)));
   return TEAM_LOGOS.find((logo) => logo.id === value) ?? createTeamLogo(fallbackName);
 }
 
