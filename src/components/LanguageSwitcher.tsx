@@ -22,7 +22,6 @@ export function LanguageSwitcher() {
         onClick={() => setOpen((o) => !o)}
         className="btn-ghost-gold flex items-center gap-1 px-3 py-1.5 text-sm"
       >
-        <span className="text-base leading-none">{current.flag}</span>
         <span className="text-[10px] font-bold tracking-widest">{current.code.toUpperCase()}</span>
       </button>
 

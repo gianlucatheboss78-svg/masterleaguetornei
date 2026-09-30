@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { BarChart3, BookOpen, Check, ChevronRight, Copy, Crown, FolderOpen, Link2, MessageCircle, Send, Share2, Trash2, Trophy } from "lucide-react";
+import { BarChart3, BookOpen, Check, ChevronRight, CircleDot, Copy, Crown, FolderOpen, Link2, MessageCircle, Send, Share2, Trash2, Trophy } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -90,6 +90,7 @@ function Home() {
         <Button asChild variant="outline" className="h-24 flex-col items-start justify-center rounded-lg px-4 text-left"><Link to="/tournaments"><FolderOpen className="h-6 w-6" /><span className="display text-sm">I Miei Tornei</span></Link></Button>
         <Button asChild variant="outline" className="h-24 flex-col items-start justify-center rounded-lg px-4 text-left"><Link to="/classifiche"><BarChart3 className="h-6 w-6" /><span className="display text-sm">Classifiche</span></Link></Button>
         <Button asChild variant="outline" className="h-24 flex-col items-start justify-center rounded-lg px-4 text-left"><Link to="/regolamento"><BookOpen className="h-6 w-6" /><span className="display text-sm">Regolamento</span></Link></Button>
+        <Button asChild variant="outline" className="col-span-2 h-16 justify-start rounded-lg bg-primary/5 px-4 text-left"><Link to="/sport"><CircleDot className="h-6 w-6" /><span className="display text-sm">6 SPORT</span></Link></Button>
       </section>
 
       <a href="https://buy.stripe.com/8x28wQ2WU0aY6wSgQL9AQ00" className="league-panel mt-3 flex items-center gap-3 border-primary/70 p-4">

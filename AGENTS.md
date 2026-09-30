@@ -13,3 +13,4 @@
 - Preserve the existing tournament data model while matching the supplied public site's presentation and navigation.
 - Generate team marks, player avatars, and sport kits deterministically from stored names/IDs so shared tournaments render identically without storing extra media.
 - Treat missing optional tournament modes and jersey IDs as legacy defaults so published JSON records remain backward-compatible.
+- Keep the unlocked sport and world-kit catalogue on its own `/sport` route so the home remains focused.
