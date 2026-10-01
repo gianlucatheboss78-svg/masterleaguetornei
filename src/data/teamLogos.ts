@@ -48,7 +48,8 @@ export function createTeamLogo(name: string): TeamLogo {
 
 export const TEAM_LOGOS: TeamLogo[] = [
   "Milano", "Roma", "Torino", "Napoli", "Bologna", "Firenze", "Palermo", "Bari",
-  "Venezia", "Genova", "Verona", "Cagliari",
+  "Venezia", "Genova", "Verona", "Cagliari", "Parma", "Lecce", "Udine", "Bergamo",
+  "Empoli", "Monza", "Como", "Salerno",
 ].map(createTeamLogo);
 export const teamLogos = TEAM_LOGOS;
 

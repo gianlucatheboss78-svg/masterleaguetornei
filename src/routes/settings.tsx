@@ -1,5 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { ChevronRight, Crown, Languages, UserRound } from "lucide-react";
+import { createFileRoute } from "@tanstack/react-router";
+import { ChevronRight, Crown, Languages } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { LANGS, useI18n } from "@/lib/i18n";
@@ -36,11 +36,6 @@ function SettingsPage() {
         </div>
       </section>
 
-      <Link to="/auth" className="league-panel mt-3 flex items-center gap-3 p-4">
-        <UserRound className="h-5 w-5 text-primary" aria-hidden="true" />
-        <span className="flex-1 text-sm font-semibold">Account e sincronizzazione</span>
-        <ChevronRight className="h-4 w-4 text-muted-foreground" />
-      </Link>
       <a href="https://buy.stripe.com/8x28wQ2WU0aY6wSgQL9AQ00" className="league-panel mt-3 flex items-center gap-3 border-primary/60 p-4">
         <Crown className="h-5 w-5 text-primary" aria-hidden="true" />
         <span className="min-w-0 flex-1"><span className="block text-sm font-semibold text-primary">Abbonati</span><span className="block text-[11px] text-muted-foreground">6 giorni gratis, poi 9,99 € al mese</span></span>

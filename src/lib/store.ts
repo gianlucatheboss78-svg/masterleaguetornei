@@ -252,8 +252,35 @@ export function useTournament(id: string) {
       }
       setRemoteDone(true);
     })();
+    // Aggiornamenti in tempo reale: risultati e classifica si aggiornano da soli.
+    let cleanup: (() => void) | undefined;
+    void import("./supabase-safe").then(({ getSupabase }) => {
+      const supabase = getSupabase();
+      if (!supabase || !alive) return;
+      const channel = supabase
+        .channel(`tournament-${id}`)
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "tournaments", filter: `id=eq.${id}` },
+          (payload) => {
+            const incoming = (payload.new as { data?: Tournament } | null)?.data;
+            if (!incoming || !incoming.id) return;
+            const list = read();
+            const current = list.find((t) => t.id === incoming.id);
+            if (current && JSON.stringify(current) === JSON.stringify(incoming)) return;
+            writeLocal(
+              current ? list.map((t) => (t.id === incoming.id ? incoming : t)) : [incoming, ...list],
+            );
+            emit();
+          },
+        )
+        .subscribe();
+      cleanup = () => void supabase.removeChannel(channel);
+      if (!alive) cleanup();
+    });
     return () => {
       alive = false;
+      cleanup?.();
     };
   }, [id]);
 
