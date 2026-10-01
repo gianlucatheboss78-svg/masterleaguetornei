@@ -227,7 +227,7 @@ const initialsLogo = (name: string) =>
   renderTeamLogo({ ...createTeamLogo(name), id: `initials:${encodeURIComponent(name)}`, icon: "" });
 
 /** Se il logo non si carica, mostra sempre il cerchio con le iniziali. */
-const logoFallback = (name: string) => (e: React.SyntheticEvent<HTMLImageElement>) => {
+const logoFallback = (name: string) => (e: { currentTarget: HTMLImageElement }) => {
   const img = e.currentTarget;
   const fallback = initialsLogo(name || "ML");
   if (img.src !== fallback) img.src = fallback;
