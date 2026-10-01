@@ -86,15 +86,6 @@ function AuthPage() {
           <p className="text-sm text-muted-foreground">Sei connesso come</p>
           <p className="display text-base text-primary">{user.email}</p>
           <button
-            className="btn-gold w-full py-3"
-            onClick={async () => {
-              await syncFromCloud();
-              setMsg("Dati sincronizzati.");
-            }}
-          >
-            Sincronizza adesso
-          </button>
-          <button
             className="btn-ghost-gold w-full py-3"
             onClick={async () => {
               await signOut();
