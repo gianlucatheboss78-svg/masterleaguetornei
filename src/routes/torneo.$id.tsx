@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { CalendarPlus, Pencil, Save, Share2, Trash2 } from "lucide-react";
+import { Camera, CalendarPlus, Pencil, Save, Share2, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { LogoPicker } from "@/components/LogoPicker";
 import { JerseyPicker } from "@/components/JerseyPicker";
 import { ShareDialog } from "@/components/ShareDialog";
@@ -222,6 +223,16 @@ const logoSource = (value?: string) => {
     : value;
 };
 
+const initialsLogo = (name: string) =>
+  renderTeamLogo({ ...createTeamLogo(name), id: `initials:${encodeURIComponent(name)}`, icon: "" });
+
+/** Se il logo non si carica, mostra sempre il cerchio con le iniziali. */
+const logoFallback = (name: string) => (e: React.SyntheticEvent<HTMLImageElement>) => {
+  const img = e.currentTarget;
+  const fallback = initialsLogo(name || "ML");
+  if (img.src !== fallback) img.src = fallback;
+};
+
 const teamLogoSource = (team?: Team) =>
   team ? logoSource(team.logo) ?? renderTeamLogo(createTeamLogo(team.name)) : "";
 
@@ -232,7 +243,7 @@ function TeamIdentity({ team, sportId, compact = false }: { team: Team | undefin
   const color = preset?.primary ?? team.color1 ?? teamColor(team.name);
   return (
     <div className="flex min-w-0 items-center gap-2">
-      <img src={teamLogoSource(team)} alt="" className={`${size} shrink-0 rounded-full object-cover`} />
+      <img src={teamLogoSource(team)} onError={logoFallback(team.name)} alt="" className={`${size} shrink-0 rounded-full object-cover`} />
       <img src={renderTeamKit(sportId, color, 10, preset?.secondary, preset ? jerseyInitials(preset.club) : undefined)} alt="" className={`${size} shrink-0 object-contain`} />
       <span className="truncate text-sm font-bold" translate="no">{team.name}</span>
     </div>
@@ -258,6 +269,7 @@ function TeamsTab({ t, patch }: { t: Tournament; patch: Patch }) {
   const [openTeam, setOpenTeam] = useState<string | null>(null);
   const [logoTeamId, setLogoTeamId] = useState<string | null>(null);
   const [jerseyTeamId, setJerseyTeamId] = useState<string | null>(null);
+  const [newLogo, setNewLogo] = useState<string | undefined>(undefined);
 
   // Tornei a 2 gironi: se nessuna squadra ha un girone, dividile automaticamente.
   const needsSplit =
@@ -287,7 +299,7 @@ function TeamsTab({ t, patch }: { t: Tournament; patch: Patch }) {
           {
             id: uid(),
             name: teamName,
-            logo: createTeamLogo(teamName).id,
+            logo: newLogo ?? createTeamLogo(teamName).id,
             jerseyId: jersey.id,
             color1: jersey.primary,
             players: [],
@@ -297,6 +309,7 @@ function TeamsTab({ t, patch }: { t: Tournament; patch: Patch }) {
       };
     });
     setName("");
+    setNewLogo(undefined);
   };
 
   const selectedTeam = t.teams.find((team) => team.id === logoTeamId);
@@ -311,9 +324,43 @@ function TeamsTab({ t, patch }: { t: Tournament; patch: Patch }) {
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
+        <label className="btn-ghost-gold flex shrink-0 cursor-pointer items-center px-3" aria-label="Logo dalla galleria">
+          <Camera className="h-5 w-5" />
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={async (e) => {
+              const f = e.target.files?.[0];
+              if (f) setNewLogo(await readCircleImage(f, 200));
+              e.target.value = "";
+            }}
+          />
+        </label>
         <button onClick={addTeam} className="btn-gold shrink-0 px-5">
           +
         </button>
+      </div>
+      <div className="card-night p-3">
+        <p className="mb-2 text-xs text-muted-foreground">Logo squadra</p>
+        <div className="grid grid-cols-10 gap-1.5">
+          {newLogo?.startsWith("data:") && (
+            <button type="button" onClick={() => setNewLogo(newLogo)} className="aspect-square overflow-hidden rounded-full ring-2 ring-primary">
+              <img src={newLogo} alt="" className="h-full w-full object-cover" />
+            </button>
+          )}
+          {TEAM_LOGOS.slice(0, 20).map((logo) => (
+            <button
+              key={logo.id}
+              type="button"
+              onClick={() => setNewLogo(logo.id)}
+              aria-label={logo.name}
+              className={`aspect-square overflow-hidden rounded-full ${newLogo === logo.id ? "ring-2 ring-primary" : "opacity-80"}`}
+            >
+              <img src={renderTeamLogo(logo)} alt="" className="h-full w-full object-cover" />
+            </button>
+          ))}
+        </div>
       </div>
 
       {t.format === "groups" && (
@@ -367,7 +414,7 @@ function TeamsTab({ t, patch }: { t: Tournament; patch: Patch }) {
               aria-label={`${tr("lp.logo")} ${team.name}`}
               className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border border-primary/40 bg-secondary text-xl"
             >
-              <img src={teamLogoSource(team)} alt="" className="h-full w-full object-cover" />
+              <img src={teamLogoSource(team)} onError={logoFallback(team.name)} alt="" className="h-full w-full object-cover" />
             </button>
             <div className="min-w-0 flex-1">
               <p className="display truncate text-primary" translate="no">{team.name}</p>
@@ -440,6 +487,26 @@ function TeamsTab({ t, patch }: { t: Tournament; patch: Patch }) {
               {tr("lp.logo")}{selectedTeam ? ` · ${selectedTeam.name}` : ""}
             </DialogTitle>
           </DialogHeader>
+          {selectedTeam && (
+            <label className="btn-ghost-gold mx-4 flex cursor-pointer items-center justify-center gap-2 py-2 text-sm">
+              <Camera className="h-4 w-4" /> Galleria / Fotocamera
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={async (e) => {
+                  const f = e.target.files?.[0];
+                  if (!f) return;
+                  const logo = await readCircleImage(f, 200);
+                  patch((cur) => ({
+                    ...cur,
+                    teams: cur.teams.map((team) => (team.id === selectedTeam.id ? { ...team, logo } : team)),
+                  }));
+                  setLogoTeamId(null);
+                }}
+              />
+            </label>
+          )}
           {selectedTeam && (
             <LogoPicker
               value={selectedTeam.logo}
@@ -529,7 +596,7 @@ function Roster({ t, team, patch }: { t: Tournament; team: Team; patch: Patch })
                     }`}
                     style={tm.color1 ? { backgroundColor: tm.color1 } : undefined}
                   >
-                    <img src={teamLogoSource(tm)} alt="" className="h-full w-full rounded-full object-cover" />
+                    <img src={teamLogoSource(tm)} onError={logoFallback(tm.name)} alt="" className="h-full w-full rounded-full object-cover" />
                   </div>
                   <span
                     className="w-full truncate text-center text-[10px] text-muted-foreground"
@@ -941,8 +1008,10 @@ function LiveTab({
   const statusLabel = (s: string) =>
     s === "live" ? tr("live.live") : s === "finita" ? tr("live.ended") : tr("live.scheduled");
 
-  const setMatch = (id: string, fn: (m: Match) => Match) =>
+  const setMatch = (id: string, fn: (m: Match) => Match) => {
     patch((cur) => ({ ...cur, matches: cur.matches.map((m) => (m.id === id ? fn(m) : m)) }));
+    toast.success("Live · classifica aggiornata", { id: "live-update", duration: 1200 });
+  };
 
   if (t.matches.length === 0)
     return (
@@ -1557,8 +1626,8 @@ function StandingsTable({
             <tr key={r.team.id} className="border-t border-primary/10">
               <td className={`p-2 ${accent}`}>{i + 1}</td>
               <td className="flex items-center gap-2 p-2">
-                {r.team.logo && (
-                  <img src={r.team.logo} alt="" className="h-5 w-5 rounded-full object-cover" />
+                {r.team && (
+                  <img src={teamLogoSource(r.team)} onError={logoFallback(r.team.name)} alt="" className="h-5 w-5 rounded-full object-cover" />
                 )}
                 <span className="truncate" translate="no">{r.team.name}</span>
               </td>
@@ -1689,11 +1758,13 @@ function FinalTab({ t, patch }: { t: Tournament; patch: Patch }) {
     }));
   };
 
-  const setMatch = (id: string, fn: (m: Match) => Match) =>
+  const setMatch = (id: string, fn: (m: Match) => Match) => {
     patch((cur) => ({
       ...cur,
       matches: syncKnockout(cur.matches.map((m) => (m.id === id ? fn(m) : m))),
     }));
+    toast.success("Live · tabellone aggiornato", { id: "live-update", duration: 1200 });
+  };
 
   if (!ready && ko.length === 0)
     return (
