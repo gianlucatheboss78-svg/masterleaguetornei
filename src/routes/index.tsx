@@ -1,6 +1,21 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { BarChart3, BookOpen, Check, ChevronRight, CircleDot, Copy, Crown, FolderOpen, Link2, MessageCircle, Send, Share2, Trash2, Trophy } from "lucide-react";
+import {
+  BarChart3,
+  BookOpen,
+  Check,
+  ChevronRight,
+  CircleDot,
+  Copy,
+  Crown,
+  FolderOpen,
+  Link2,
+  MessageCircle,
+  Send,
+  Share2,
+  Trash2,
+  Trophy,
+} from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -12,7 +27,6 @@ import { isBasket } from "@/lib/basket";
 import { usePro, useOwner } from "@/lib/pro";
 import { uid, useTournaments, type Tournament, type TournamentFormat } from "@/lib/store";
 import { pushTournament } from "@/lib/cloud";
-
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -49,9 +63,7 @@ function Home() {
   const [torneoDaCondividere, setTorneoDaCondividere] = useState<Tournament | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const shareUrl = torneoDaCondividere
-    ? `https://masterleaguetornei.lovable.app/torneo/${torneoDaCondividere.id}`
-    : "";
+  const shareUrl = torneoDaCondividere ? `https://masterleaguetornei.lovable.app/torneo/${torneoDaCondividere.id}` : "";
 
   const copyShareLink = async () => {
     if (!shareUrl) return;
@@ -86,35 +98,88 @@ function Home() {
       </header>
 
       <section className="mt-7 grid grid-cols-2 gap-3">
-        <Button onClick={() => setOpen(true)} className="h-24 flex-col items-start justify-center rounded-lg px-4 text-left shadow-[var(--shadow-gold)]"><Trophy className="h-6 w-6" /><span className="display text-sm">Crea Torneo</span></Button>
-        <Button asChild variant="outline" className="h-24 flex-col items-start justify-center rounded-lg px-4 text-left"><Link to="/tournaments"><FolderOpen className="h-6 w-6" /><span className="display text-sm">I Miei Tornei</span></Link></Button>
-        <Button asChild variant="outline" className="h-24 flex-col items-start justify-center rounded-lg px-4 text-left"><Link to="/classifiche"><BarChart3 className="h-6 w-6" /><span className="display text-sm">Classifiche</span></Link></Button>
-        <Button asChild variant="outline" className="h-24 flex-col items-start justify-center rounded-lg px-4 text-left"><Link to="/regolamento"><BookOpen className="h-6 w-6" /><span className="display text-sm">Regolamento</span></Link></Button>
-        <Button asChild variant="outline" className="col-span-2 h-16 justify-start rounded-lg bg-primary/5 px-4 text-left"><Link to="/sport"><CircleDot className="h-6 w-6" /><span className="display text-sm">6 SPORT</span></Link></Button>
+        <Button
+          onClick={() => setOpen(true)}
+          className="h-24 flex-col items-start justify-center rounded-lg px-4 text-left shadow-[var(--shadow-gold)]"
+        >
+          <Trophy className="h-6 w-6" />
+          <span className="display text-sm">Crea Torneo</span>
+        </Button>
+        <Button
+          asChild
+          variant="outline"
+          className="h-24 flex-col items-start justify-center rounded-lg px-4 text-left"
+        >
+          <Link to="/tournaments">
+            <FolderOpen className="h-6 w-6" />
+            <span className="display text-sm">I Miei Tornei</span>
+          </Link>
+        </Button>
+        <Button
+          asChild
+          variant="outline"
+          className="h-24 flex-col items-start justify-center rounded-lg px-4 text-left"
+        >
+          <Link to="/classifiche">
+            <BarChart3 className="h-6 w-6" />
+            <span className="display text-sm">Classifiche</span>
+          </Link>
+        </Button>
+        <Button
+          asChild
+          variant="outline"
+          className="h-24 flex-col items-start justify-center rounded-lg px-4 text-left"
+        >
+          <Link to="/regolamento">
+            <BookOpen className="h-6 w-6" />
+            <span className="display text-sm">Regolamento</span>
+          </Link>
+        </Button>
+        <Button
+          asChild
+          variant="outline"
+          className="col-span-2 h-16 justify-start rounded-lg bg-primary/5 px-4 text-left"
+        >
+          <Link to="/sport">
+            <CircleDot className="h-6 w-6" />
+            <span className="display text-sm">6 SPORT</span>
+          </Link>
+        </Button>
       </section>
 
-      <a href="https://buy.stripe.com/8x28wQ2WU0aY6wSgQL9AQ00" className="league-panel mt-3 flex items-center gap-3 border-primary/70 p-4">
+      <a
+        href="https://buy.stripe.com/8x28wQ2WU8aY6wSgQL9AQ00"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="league-panel mt-3 flex items-center gap-3 border-primary/70 p-4"
+      >
         <Crown className="h-5 w-5 text-primary" aria-hidden="true" />
-        <span className="min-w-0 flex-1"><span className="block text-xs font-bold text-primary">Abbonati</span><span className="block text-[10px] text-muted-foreground">6 GIORNI GRATIS · poi 9,99 €/mese</span></span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-xs font-bold text-primary">Abbonati</span>
+          <span className="block text-[10px] text-muted-foreground">6 GIORNI GRATIS · poi 9,99 €/mese</span>
+        </span>
         <ChevronRight className="h-4 w-4 text-primary" aria-hidden="true" />
       </a>
 
-      {(owner || pro) && <p className="mt-3 text-center text-xs text-primary">{owner ? "👑 OWNER — tutto sbloccato" : t("home.proActive")}</p>}
+      {(owner || pro) && (
+        <p className="mt-3 text-center text-xs text-primary">
+          {owner ? "👑 OWNER — tutto sbloccato" : t("home.proActive")}
+        </p>
+      )}
 
       <section className="mt-8 space-y-3">
-        <div className="flex items-center justify-between"><h2 className="text-sm text-muted-foreground">{t("home.yours")}</h2><Link to="/tournaments" className="text-xs text-primary">Vedi tutti ›</Link></div>
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm text-muted-foreground">{t("home.yours")}</h2>
+          <Link to="/tournaments" className="text-xs text-primary">
+            Vedi tutti ›
+          </Link>
+        </div>
         {ready && data.length === 0 && (
-          <p className="card-night p-6 text-center text-sm text-muted-foreground">
-            {t("home.empty")}
-          </p>
+          <p className="card-night p-6 text-center text-sm text-muted-foreground">{t("home.empty")}</p>
         )}
         {data.map((x) => (
           <article key={x.id} className="card-night overflow-hidden">
-            <Link
-              to="/torneo/$id"
-              params={{ id: x.id }}
-              className="flex items-center gap-3 p-3"
-            >
+            <Link to="/torneo/$id" params={{ id: x.id }} className="flex items-center gap-3 p-3">
               {x.logo ? (
                 <img src={x.logo} alt={x.name} className="h-14 w-14 rounded-full object-cover" />
               ) : (
@@ -124,14 +189,15 @@ function Home() {
               )}
               <div className="min-w-0 flex-1">
                 <p className="display truncate text-base text-primary">{x.name}</p>
-                {x.basketMode === "3x3" && <span className="mb-1 inline-block rounded-full bg-primary px-2 py-0.5 text-[9px] font-black text-primary-foreground">3vs3</span>}
+                {x.basketMode === "3x3" && (
+                  <span className="mb-1 inline-block rounded-full bg-primary px-2 py-0.5 text-[9px] font-black text-primary-foreground">
+                    3vs3
+                  </span>
+                )}
                 <p className="truncate text-xs text-muted-foreground">
                   {sportName(x.sport, getSport(x.sport).name)}
-                  {isFootball(x.sport) && variantLabel(x.variant)
-                    ? ` (${variantLabel(x.variant)})`
-                    : ""}{" "}
-                  · {x.teams.length} {t("home.teams")} ·{" "}
-                  {x.city || "—"}
+                  {isFootball(x.sport) && variantLabel(x.variant) ? ` (${variantLabel(x.variant)})` : ""} ·{" "}
+                  {x.teams.length} {t("home.teams")} · {x.city || "—"}
                 </p>
               </div>
               <span className="text-primary">›</span>
@@ -204,7 +270,9 @@ function Home() {
           </DialogHeader>
 
           <div className="mx-auto rounded-lg bg-qr p-3 text-qr-foreground">
-            {shareUrl && <QRCodeSVG value={shareUrl} size={176} level="H" fgColor="currentColor" bgColor="transparent" />}
+            {shareUrl && (
+              <QRCodeSVG value={shareUrl} size={176} level="H" fgColor="currentColor" bgColor="transparent" />
+            )}
           </div>
 
           <div className="flex min-w-0 items-center gap-2 rounded-md border border-border bg-secondary/60 p-2">
@@ -231,13 +299,17 @@ function Home() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={openDialog} onOpenChange={(v) => { setOpenDialog(v); if (!v) setCodeInput(""); }}>
+      <Dialog
+        open={openDialog}
+        onOpenChange={(v) => {
+          setOpenDialog(v);
+          if (!v) setCodeInput("");
+        }}
+      >
         <DialogContent className="card-night max-w-sm">
           <DialogHeader>
             <DialogTitle className="gold-text text-lg">
-              {torneoDaEliminare
-                ? t("home.deleteConfirm", { name: torneoDaEliminare.name })
-                : t("home.delete")}
+              {torneoDaEliminare ? t("home.deleteConfirm", { name: torneoDaEliminare.name }) : t("home.delete")}
             </DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground">
               {t("home.deleteIrreversible")}
@@ -252,19 +324,13 @@ function Home() {
             onChange={(e) => setCodeInput(e.target.value)}
           />
           <div className="mt-2 flex gap-2">
-            <Button
-              variant="ghost"
-              className="btn-ghost-gold flex-1 py-3"
-              onClick={() => setOpenDialog(false)}
-            >
+            <Button variant="ghost" className="btn-ghost-gold flex-1 py-3" onClick={() => setOpenDialog(false)}>
               {t("common.cancel")}
             </Button>
             <Button
               disabled={codeInput !== code}
               className={`flex-1 py-3 text-white ${
-                codeInput !== code
-                  ? "bg-gray-500 cursor-not-allowed"
-                  : "bg-red-600 hover:bg-red-700"
+                codeInput !== code ? "bg-gray-500 cursor-not-allowed" : "bg-red-600 hover:bg-red-700"
               }`}
               onClick={() => {
                 if (!torneoDaEliminare) return;
@@ -302,8 +368,7 @@ function NewTournament({
 
   const create = async () => {
     if (!name.trim()) return;
-    const id =
-      typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : uid();
+    const id = typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : uid();
     const item: Tournament = {
       id,
       name: name.trim(),
@@ -329,12 +394,7 @@ function NewTournament({
         <h2 className="text-xl gold-text">{t("nt.title")}</h2>
 
         <div className="mt-5 space-y-3">
-          <input
-            className="field"
-            placeholder={t("nt.name")}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
+          <input className="field" placeholder={t("nt.name")} value={name} onChange={(e) => setName(e.target.value)} />
           <select className="field" value={sport} onChange={(e) => setSport(e.target.value)}>
             {SPORTS.map((s) => (
               <option key={s.id} value={s.id}>
@@ -374,51 +434,44 @@ function NewTournament({
             <div className="rounded-xl border border-primary/30 bg-secondary/40 p-3">
               <p className="text-xs font-bold text-primary">Modalità Basket</p>
               <div className="mt-2 grid grid-cols-2 gap-2">
-                {(["5x5", "3x3"] as const).map((mode) => <button key={mode} type="button" onClick={() => setBasketMode(mode)} className={`py-2 text-xs font-bold ${basketMode === mode ? "btn-gold" : "btn-ghost-gold"}`}>{mode === "5x5" ? "5vs5" : "3vs3"}</button>)}
+                {(["5x5", "3x3"] as const).map((mode) => (
+                  <button
+                    key={mode}
+                    type="button"
+                    onClick={() => setBasketMode(mode)}
+                    className={`py-2 text-xs font-bold ${basketMode === mode ? "btn-gold" : "btn-ghost-gold"}`}
+                  >
+                    {mode === "5x5" ? "5vs5" : "3vs3"}
+                  </button>
+                ))}
               </div>
-              <p className="mt-3 text-xs text-primary">🏀 {basketMode === "3x3" ? "FIBA 3x3: metà campo · primo a 21 · 10 minuti · 12 secondi" : t("bk.rules")}</p>
+              <p className="mt-3 text-xs text-primary">
+                🏀 {basketMode === "3x3" ? "FIBA 3x3: metà campo · primo a 21 · 10 minuti · 12 secondi" : t("bk.rules")}
+              </p>
               <p className="mt-1 text-[11px] text-muted-foreground">{t("bk.tableHint")}</p>
             </div>
           )}
           {(sport === "volley" || sport === "beachvolley") && (
             <div className="rounded-xl border border-primary/30 bg-secondary/40 p-3">
-              <p className="text-xs text-primary">🏐 {t(sport === "beachvolley" ? "vl.beachRules" : "vl.volleyRules")}</p>
+              <p className="text-xs text-primary">
+                🏐 {t(sport === "beachvolley" ? "vl.beachRules" : "vl.volleyRules")}
+              </p>
               <p className="mt-1 text-[11px] text-muted-foreground">{t("vl.tableHint")}</p>
             </div>
           )}
           <label className="block text-xs text-muted-foreground">{t("nt.format")}</label>
-          <select
-            className="field"
-            value={format}
-            onChange={(e) => setFormat(e.target.value as TournamentFormat)}
-          >
+          <select className="field" value={format} onChange={(e) => setFormat(e.target.value as TournamentFormat)}>
             <option value="single">{t("nt.fmtSingle")}</option>
             <option value="return">Girone unico A/R</option>
             <option value="singleko">{t("nt.fmtSingleKo")}</option>
             <option value="groups">{t("nt.fmtGroups")}</option>
             <option value="knockout">Eliminazione diretta</option>
           </select>
-          <input
-            className="field"
-            placeholder={t("nt.city")}
-            value={city}
-            onChange={(e) => setCity(e.target.value)}
-          />
+          <input className="field" placeholder={t("nt.city")} value={city} onChange={(e) => setCity(e.target.value)} />
           <label className="block text-xs text-muted-foreground">{t("nt.start")}</label>
-          <input
-            className="field"
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-          />
+          <input className="field" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
           <label className="block text-xs text-muted-foreground">{t("nt.fee")}</label>
-          <input
-            className="field"
-            type="number"
-            min={0}
-            value={fee}
-            onChange={(e) => setFee(Number(e.target.value))}
-          />
+          <input className="field" type="number" min={0} value={fee} onChange={(e) => setFee(Number(e.target.value))} />
         </div>
 
         <div className="mt-5 flex gap-2">
