@@ -12,3 +12,4 @@
 - [x] Add the full-width 6 SPORT entry and unlocked world-kit selection page.
 - [x] Replace initial-only team identities, restore roster faces, and remove the duplicate IT marker.
 - [x] Verify the focused fixes on mobile and desktop.
+- [x] Hide every Stripe/Abbonati entry point when the app runs inside the installed Android package.
