@@ -12,6 +12,7 @@ export const LOGO_URL = brandAsset.url;
 
 export function AppHeader() {
   const { user } = useSession();
+  const inApp = useInApp();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   if (pathname === "/") return null;
   return (
@@ -26,13 +27,15 @@ export function AppHeader() {
           <span className="display text-sm leading-tight text-primary">Master League</span>
         </Link>
         <div className="flex items-center gap-2">
-          <a
-            href="https://buy.stripe.com/8x28wQ2WU0aY6wSgQL9AQ00"
-            className="flex h-9 items-center gap-1 rounded-md bg-primary px-2 text-[10px] font-extrabold text-primary-foreground sm:px-3 sm:text-xs"
-          >
-            <Crown className="h-4 w-4" aria-hidden="true" />
-            Abbonati
-          </a>
+          {!inApp && (
+            <a
+              href="https://buy.stripe.com/8x28wQ2WU0aY6wSgQL9AQ00"
+              className="flex h-9 items-center gap-1 rounded-md bg-primary px-2 text-[10px] font-extrabold text-primary-foreground sm:px-3 sm:text-xs"
+            >
+              <Crown className="h-4 w-4" aria-hidden="true" />
+              Abbonati
+            </a>
+          )}
           <LanguageSwitcher />
           <Link
             to="/auth"
