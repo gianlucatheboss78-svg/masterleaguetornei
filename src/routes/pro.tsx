@@ -11,6 +11,7 @@ import {
   ownerEmail,
 } from "@/lib/pro";
 import { useI18n } from "@/lib/i18n";
+import { useInApp } from "@/lib/app-shell";
 import { LOGO_URL } from "@/components/AppHeader";
 
 export const Route = createFileRoute("/pro")({
@@ -40,6 +41,7 @@ function ProPage() {
   const pro = usePro();
   const owner = useOwner();
   const { t } = useI18n();
+  const inApp = useInApp();
   const nav = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>();
@@ -63,6 +65,8 @@ function ProPage() {
       nav({ to: "/" });
       return;
     }
+    // Inside the Android app there is no Stripe path at all.
+    if (inApp) return;
     setLoading(true);
     try {
       window.location.href = "https://buy.stripe.com/8x28wQ2WU0aY6wSgQL9AQ00";
@@ -132,19 +136,23 @@ function ProPage() {
             />
             <button
               onClick={start}
-              disabled={loading}
+              disabled={loading || (inApp && !isOwnerEmail(ownerInput))}
               className="btn-gold mt-3 w-full py-3 text-base disabled:opacity-60"
             >
-              {loading ? t("pro.wait") : "Abbonati"}
+              {loading ? t("pro.wait") : inApp ? t("pro.activate") : "Abbonati"}
             </button>
             {error && (
               <p className="mt-3 rounded-xl bg-destructive/15 p-3 text-xs text-destructive">
                 {error}
               </p>
             )}
-            <p className="mt-3 text-xs text-muted-foreground">
-              Nessun addebito oggi. Dopo 6 giorni {PRO_PRICE} al mese.
-            </p>
+            {inApp ? (
+              <p className="mt-3 text-xs text-muted-foreground">{t("pro.inAppNote")}</p>
+            ) : (
+              <p className="mt-3 text-xs text-muted-foreground">
+                Nessun addebito oggi. Dopo 6 giorni {PRO_PRICE} al mese.
+              </p>
+            )}
           </>
         )}
       </div>

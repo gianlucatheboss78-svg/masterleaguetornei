@@ -62,6 +62,8 @@ const it: Dict = {
   "pro.wait": "Attendi…",
   "pro.active": "PRO attivo — tornei illimitati sbloccati.",
   "pro.off": "Disattiva PRO",
+  "pro.activate": "Attiva",
+  "pro.inAppNote": "Dentro l'app Android l'abbonamento non è disponibile: attivalo sul sito masterleaguetornei.lovable.app",
   "pro.noCharge": "Nessun addebito oggi. Dopo 7 giorni {price} al mese, rinnovo automatico.",
   "pro.err": "Collega Stripe nelle Environment Variables",
 
@@ -202,6 +204,8 @@ const en: Dict = {
   "pro.wait": "Please wait…",
   "pro.active": "PRO active — unlimited tournaments unlocked.",
   "pro.off": "Turn off PRO",
+  "pro.activate": "Activate",
+  "pro.inAppNote": "Inside the Android app the subscription is not available: activate it on masterleaguetornei.lovable.app",
   "pro.noCharge": "No charge today. After 7 days {price} per month, renews automatically.",
   "pro.err": "Connect Stripe in the Environment Variables",
 
@@ -342,6 +346,8 @@ const es: Dict = {
   "pro.wait": "Espera…",
   "pro.active": "PRO activo — torneos ilimitados desbloqueados.",
   "pro.off": "Desactivar PRO",
+  "pro.activate": "Activar",
+  "pro.inAppNote": "Dentro de la app Android la suscripción no está disponible: actívala en masterleaguetornei.lovable.app",
   "pro.noCharge": "Hoy no se cobra nada. Tras 7 días {price} al mes, renovación automática.",
   "pro.err": "Conecta Stripe en las Environment Variables",
 
@@ -482,6 +488,8 @@ const fr: Dict = {
   "pro.wait": "Patientez…",
   "pro.active": "PRO actif — tournois illimités débloqués.",
   "pro.off": "Désactiver PRO",
+  "pro.activate": "Activer",
+  "pro.inAppNote": "Dans l'app Android l'abonnement n'est pas disponible : activez-le sur masterleaguetornei.lovable.app",
   "pro.noCharge": "Aucun débit aujourd'hui. Après 7 jours {price} par mois, renouvellement automatique.",
   "pro.err": "Connectez Stripe dans les Environment Variables",
 
@@ -622,6 +630,8 @@ const pt: Dict = {
   "pro.wait": "Aguarda…",
   "pro.active": "PRO ativo — torneios ilimitados desbloqueados.",
   "pro.off": "Desativar PRO",
+  "pro.activate": "Ativar",
+  "pro.inAppNote": "Dentro da app Android a subscrição não está disponível: ativa-a em masterleaguetornei.lovable.app",
   "pro.noCharge": "Sem cobrança hoje. Após 7 dias {price} por mês, renovação automática.",
   "pro.err": "Liga o Stripe nas Environment Variables",
 
@@ -762,6 +772,8 @@ const zh: Dict = {
   "pro.wait": "请稍候…",
   "pro.active": "PRO 已激活 — 无限赛事已解锁。",
   "pro.off": "关闭 PRO",
+  "pro.activate": "激活",
+  "pro.inAppNote": "在 Android 应用内无法订阅：请在 masterleaguetornei.lovable.app 网站开通",
   "pro.noCharge": "今天不扣费。7 天后每月 {price}，自动续订。",
   "pro.err": "请在环境变量中连接 Stripe",
 
