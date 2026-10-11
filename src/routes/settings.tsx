@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { ChevronRight, Crown, Languages } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { useInApp } from "@/lib/app-shell";
 import { LANGS, useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/settings")({
@@ -20,6 +21,7 @@ export const Route = createFileRoute("/settings")({
 
 function SettingsPage() {
   const { lang, setLang } = useI18n();
+  const inApp = useInApp();
   return (
     <main className="mx-auto min-h-screen w-full max-w-lg px-4 pb-[calc(6rem+env(safe-area-inset-bottom))] pt-8">
       <p className="text-[10px] font-bold uppercase text-muted-foreground">Master League</p>
@@ -36,11 +38,19 @@ function SettingsPage() {
         </div>
       </section>
 
-      <a href="https://buy.stripe.com/8x28wQ2WU0aY6wSgQL9AQ00" className="league-panel mt-3 flex items-center gap-3 border-primary/60 p-4">
-        <Crown className="h-5 w-5 text-primary" aria-hidden="true" />
-        <span className="min-w-0 flex-1"><span className="block text-sm font-semibold text-primary">Abbonati</span><span className="block text-[11px] text-muted-foreground">6 giorni gratis, poi 9,99 € al mese</span></span>
-        <ChevronRight className="h-4 w-4 text-primary" />
-      </a>
+      {!inApp && (
+        <a
+          href="https://buy.stripe.com/8x28wQ2WU0aY6wSgQL9AQ00"
+          className="league-panel mt-3 flex items-center gap-3 border-primary/60 p-4"
+        >
+          <Crown className="h-5 w-5 text-primary" aria-hidden="true" />
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-semibold text-primary">Abbonati</span>
+            <span className="block text-[11px] text-muted-foreground">6 giorni gratis, poi 9,99 € al mese</span>
+          </span>
+          <ChevronRight className="h-4 w-4 text-primary" />
+        </a>
+      )}
     </main>
   );
 }

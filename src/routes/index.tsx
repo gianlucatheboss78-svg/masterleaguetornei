@@ -25,6 +25,7 @@ import { useI18n } from "@/lib/i18n";
 import { isRacket } from "@/lib/tennis";
 import { isBasket } from "@/lib/basket";
 import { usePro, useOwner } from "@/lib/pro";
+import { useInApp } from "@/lib/app-shell";
 import { uid, useTournaments, type Tournament, type TournamentFormat } from "@/lib/store";
 import { pushTournament } from "@/lib/cloud";
 
@@ -54,6 +55,7 @@ function Home() {
   const { t, sportName } = useI18n();
   const pro = usePro();
   const owner = useOwner();
+  const inApp = useInApp();
   const [open, setOpen] = useState(false);
   const [boss, setBoss] = useState(false);
   const [code, setCode] = useState("");
@@ -147,19 +149,21 @@ function Home() {
         </Button>
       </section>
 
-      <a
-        href="https://buy.stripe.com/8x28wQ2WU8aY6wSgQL9AQ00"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="league-panel mt-3 flex items-center gap-3 border-primary/70 p-4"
-      >
-        <Crown className="h-5 w-5 text-primary" aria-hidden="true" />
-        <span className="min-w-0 flex-1">
-          <span className="block text-xs font-bold text-primary">Abbonati</span>
-          <span className="block text-[10px] text-muted-foreground">6 GIORNI GRATIS · poi 9,99 €/mese</span>
-        </span>
-        <ChevronRight className="h-4 w-4 text-primary" aria-hidden="true" />
-      </a>
+      {!inApp && (
+        <a
+          href="https://buy.stripe.com/8x28wQ2WU8aY6wSgQL9AQ00"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="league-panel mt-3 flex items-center gap-3 border-primary/70 p-4"
+        >
+          <Crown className="h-5 w-5 text-primary" aria-hidden="true" />
+          <span className="min-w-0 flex-1">
+            <span className="block text-xs font-bold text-primary">Abbonati</span>
+            <span className="block text-[10px] text-muted-foreground">6 GIORNI GRATIS · poi 9,99 €/mese</span>
+          </span>
+          <ChevronRight className="h-4 w-4 text-primary" aria-hidden="true" />
+        </a>
+      )}
 
       {(owner || pro) && (
         <p className="mt-3 text-center text-xs text-primary">
