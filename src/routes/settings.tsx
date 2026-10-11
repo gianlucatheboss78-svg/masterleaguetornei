@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { ChevronRight, Crown, Languages } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { useInApp } from "@/lib/app-shell";
 import { LANGS, useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/settings")({

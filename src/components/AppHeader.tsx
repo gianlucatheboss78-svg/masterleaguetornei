@@ -3,6 +3,7 @@ import { CloudOff, Crown, UserRound } from "lucide-react";
 import { useRouterState } from "@tanstack/react-router";
 
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { useInApp } from "@/lib/app-shell";
 import { useSession } from "@/lib/auth";
 
 import brandAsset from "@/assets/master-league-icon-sharp.jpg.asset.json";
