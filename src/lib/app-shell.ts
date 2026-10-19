@@ -1,5 +1,4 @@
-// Detects whether the app is running inside the installable Android package
-// (Trusted Web Activity / WebView / installed PWA) instead of a normal browser tab.
+// Detects Android browsers, native wrappers, and installed apps.
 // Browser-safe module: no server code, no Node APIs.
 
 import { useEffect, useLayoutEffect, useState } from "react";
@@ -10,6 +9,9 @@ const useIsoLayoutEffect = canUseDOM ? useLayoutEffect : useEffect;
 export function detectInApp(): boolean {
   if (!canUseDOM) return false;
 
+  const ua = navigator.userAgent || "";
+  if (ua.includes("Android") || (window as Window & { isNativeApp?: boolean }).isNativeApp) return true;
+
   // Testing escape hatch: ?app=1 forces "inside the app", ?app=0 forces "browser".
   try {
     const forced = new URLSearchParams(window.location.search).get("app");
@@ -19,7 +21,6 @@ export function detectInApp(): boolean {
     /* ignore */
   }
 
-  const ua = navigator.userAgent || "";
   // Bubblewrap / Chrome Trusted Web Activities add a "twa" token to the user agent.
   if (/\btwa\b|twa[./]/i.test(ua)) return true;
   // Android WebView announces itself with "; wv)".
@@ -36,7 +37,7 @@ export function detectInApp(): boolean {
   return false;
 }
 
-/** False while server-rendering and on the very first paint, then true only inside the installed app. */
+/** False during server rendering, then detects Android, native wrappers, and installed apps. */
 export function useInApp(): boolean {
   const [inApp, setInApp] = useState(false);
   useIsoLayoutEffect(() => {
