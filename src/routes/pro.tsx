@@ -69,7 +69,7 @@ function ProPage() {
     if (inApp) return;
     setLoading(true);
     try {
-      window.location.href = "https://buy.stripe.com/8x28wQ2WU0aY6wSgQL9AQ00";
+      window.location.href = "https://buy.stripe.com/9B614nejU48ybQV5PzgMw03";
     } catch {
       setError(t("pro.err"));
     }
