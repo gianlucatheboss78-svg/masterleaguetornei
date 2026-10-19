@@ -40,7 +40,7 @@ function SettingsPage() {
 
       {!inApp && (
         <a
-          href="https://buy.stripe.com/8x28wQ2WU0aY6wSgQL9AQ00"
+          href="https://buy.stripe.com/9B614nejU48ybQV5PzgMw03"
           className="league-panel mt-3 flex items-center gap-3 border-primary/60 p-4"
         >
           <Crown className="h-5 w-5 text-primary" aria-hidden="true" />

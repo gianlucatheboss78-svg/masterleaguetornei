@@ -29,7 +29,7 @@ export function AppHeader() {
         <div className="flex items-center gap-2">
           {!inApp && (
             <a
-              href="https://buy.stripe.com/8x28wQ2WU0aY6wSgQL9AQ00"
+              href="https://buy.stripe.com/9B614nejU48ybQV5PzgMw03"
               className="flex h-9 items-center gap-1 rounded-md bg-primary px-2 text-[10px] font-extrabold text-primary-foreground sm:px-3 sm:text-xs"
             >
               <Crown className="h-4 w-4" aria-hidden="true" />

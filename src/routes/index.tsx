@@ -151,7 +151,7 @@ function Home() {
 
       {!inApp && (
         <a
-          href="https://buy.stripe.com/8x28wQ2WU8aY6wSgQL9AQ00"
+          href="https://buy.stripe.com/9B614nejU48ybQV5PzgMw03"
           target="_blank"
           rel="noopener noreferrer"
           className="league-panel mt-3 flex items-center gap-3 border-primary/70 p-4"
