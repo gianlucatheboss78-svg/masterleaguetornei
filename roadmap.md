@@ -13,3 +13,4 @@
 - [x] Replace initial-only team identities, restore roster faces, and remove the duplicate IT marker.
 - [x] Verify the focused fixes on mobile and desktop.
 - [x] Hide every Stripe/Abbonati entry point when the app runs inside the installed Android package.
+- [x] Configure the separate Capacitor SPA build targeting dist/index.html; verify client-only startup, navigation, reload, and unchanged web startup in the browser (native APK verification requires the existing Android project on the PC).
