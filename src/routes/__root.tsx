@@ -9,6 +9,7 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { Analytics } from "@vercel/analytics/react";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -109,6 +110,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function RootShell({ children }: { children: ReactNode }) {
+  // A Capacitor SPA mounts into #root, not into an SSR HTML document.
+  // Keep the web document shell and Start hydration scripts unchanged.
+  if (import.meta.env.MODE === "mobile") {
+    return (
+      <>
+        {createPortal(<HeadContent />, document.head)}
+        {children}
+        <Toaster position="top-center" richColors />
+      </>
+    );
+  }
   return (
     <html lang="it" translate="no">
       <head>

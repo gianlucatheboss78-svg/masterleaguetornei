@@ -14,3 +14,5 @@
 - Generate team marks, player avatars, and sport kits deterministically from stored names/IDs so shared tournaments render identically without storing extra media.
 - Treat missing optional tournament modes and jersey IDs as legacy defaults so published JSON records remain backward-compatible.
 - Keep the unlocked sport and world-kit catalogue on its own `/sport` route so the home remains focused.
+- Build Capacitor through the separate mobile Vite config and browser entry using the existing TanStack route tree; the mobile root shell omits SSR document/hydration scripts so dist contains a runnable SPA without changing the web build.
+- Do not set Android package identifiers or signing keys in the web-only Capacitor config; retain those in the existing Android project to preserve Play Store upgrade identity.
