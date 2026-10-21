@@ -8,7 +8,8 @@ import { useSession } from "@/lib/auth";
 
 import brandAsset from "@/assets/master-league-icon-sharp.jpg.asset.json";
 
-export const LOGO_URL = brandAsset.url;
+// Bundle the supplied icon for native startup instead of relying on a remote image.
+export const LOGO_URL = import.meta.env.MODE === "mobile" ? "/icon-192.png" : brandAsset.url;
 
 export function AppHeader() {
   const { user } = useSession();
